@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+  # Database
   postgres:
     image: postgres:15-alpine
     container_name: collab-postgres
@@ -12,7 +11,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U editor_user -d collaborative_editor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  # Cache & Pub/Sub
   redis:
     image: redis:7-alpine
     container_name: collab-redis
@@ -21,6 +26,62 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: collab-api
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=collaborative_editor
+      - DB_USER=editor_user
+      - DB_PASSWORD=editor_pass123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=dev_jwt_secret_key
+      - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/server/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Frontend Application
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: collab-client
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_WS_URL=ws://localhost:5000
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   postgres_data:

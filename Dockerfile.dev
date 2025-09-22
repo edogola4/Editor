@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY server/package.json ./server/package.json
+
+# Install dependencies
+RUN cd server && npm install
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Set working directory to server
+WORKDIR /app/server
+
+# Expose the application port
+EXPOSE 5000
+
+# Start the application with hot-reload
+CMD ["npm", "run", "dev"]
