@@ -46,8 +46,133 @@
 - **Frontend**: React 18+, TypeScript, Vite
 - **Code Editor**: Monaco Editor
 - **Real-time**: Socket.io v4+
-- **Backend**: Node.js 18+, Express.js
-- **Database**: Redis (real-time), PostgreSQL (persistence)
+- **Backend**: Node.js 18+, Express.js, TypeScript
+- **Database**: PostgreSQL (persistence), Redis (pub/sub)
+- **Containerization**: Docker, Docker Compose
+- **Reverse Proxy**: Nginx
+
+## 📋 Prerequisites
+
+- Docker 20.10+
+- Docker Compose 2.0+
+- Node.js 18+
+- npm 9+ or yarn 1.22+
+
+## 🚀 Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/edogola4/Editor.git
+   cd Editor
+   ```
+
+2. **Set up environment variables**
+   Copy the example environment file and update the values:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Start the development environment**
+   ```bash
+   # Start database and Redis
+   docker-compose -f docker-compose.dev.yml up -d postgres redis
+   
+   # Install dependencies and start the server
+   cd server
+   npm install
+   npm run dev
+   
+   # In a new terminal, start the client
+   cd ../client
+   npm install
+   npm run dev
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+   - WebSocket: ws://localhost:5000
+
+## 🔧 Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Server Configuration
+NODE_ENV=development
+PORT=5000
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=collaborative_editor
+DB_USER=editor_user
+DB_PASSWORD=editor_pass123
+DB_SSL=false
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRES_IN=7d
+
+# Redis Configuration (for session management and pub/sub)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:3000
+```
+
+## 🐳 Docker Deployment
+
+### Development
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+### Production
+```bash
+docker-compose -f docker-compose.prod.yml up --build -d
+```
+
+## 📂 Project Structure
+
+```
+collaborative-code-editor/
+├── client/                 # Frontend React application
+├── server/                 # Backend Node.js/Express server
+│   ├── src/                # Source files
+│   │   ├── controllers/    # Request handlers
+│   │   ├── middleware/     # Express middleware
+│   │   ├── routes/         # API routes
+│   │   ├── services/       # Business logic
+│   │   ├── utils/          # Utility functions
+│   │   └── index.ts        # Application entry point
+│   └── db/                 # Database configuration and migrations
+├── nginx/                  # Nginx configuration
+├── docker-compose.dev.yml   # Development Docker Compose
+├── docker-compose.prod.yml  # Production Docker Compose
+└── .env.example            # Example environment variables
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/)
+- [Socket.IO](https://socket.io/)
+- [Express.js](https://expressjs.com/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Redis](https://redis.io/)
 - **Authentication**: JWT, GitHub OAuth
 - **Styling**: Tailwind CSS
 - **Testing**: Jest, React Testing Library
