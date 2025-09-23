@@ -21,52 +21,55 @@ class SocketManager {
     })
 
     this.socket.on('connect', () => {
-      console.log('Connected to server')
+      console.log('🔌 WebSocket connected successfully!')
+      console.log('👤 User ID:', userId)
+      console.log('📄 Document ID:', documentId)
       this.reconnectAttempts = 0
       // Join the document room after connection
       this.joinDocument(documentId)
     })
 
     this.socket.on('disconnect', () => {
-      console.log('Disconnected from server')
+      console.log('🔌 WebSocket disconnected')
     })
 
     this.socket.on('connect_error', (error) => {
-      console.error('Connection error:', error)
+      console.error('❌ WebSocket connection error:', error)
       this.handleReconnect()
     })
 
     // Listen for code changes from other users
     this.socket.on('code-change', (data: { code: string; userId: string }) => {
-      console.log('Received code change from:', data.userId)
+      console.log('📝 Received code change from:', data.userId)
       useEditorStore.getState().setCode(data.code)
     })
 
     // Listen for language changes
     this.socket.on('language-change', (data: { language: string; userId: string }) => {
-      console.log('Received language change from:', data.userId)
+      console.log('🌐 Received language change from:', data.userId)
       useEditorStore.getState().setLanguage(data.language)
     })
 
     // Listen for cursor position updates
     this.socket.on('cursor-update', (data: { userId: string; position: { line: number; column: number } }) => {
+      console.log('🎯 Received cursor update from:', data.userId, 'at', data.position)
       useEditorStore.getState().updateCursorPosition(data.userId, data.position)
     })
 
     // Listen for user connections/disconnections
     this.socket.on('user-joined', (data: { userId: string }) => {
-      console.log('User joined:', data.userId)
+      console.log('👋 User joined:', data.userId)
       useEditorStore.getState().addConnectedUser(data.userId)
     })
 
     this.socket.on('user-left', (data: { userId: string }) => {
-      console.log('User left:', data.userId)
+      console.log('👋 User left:', data.userId)
       useEditorStore.getState().removeConnectedUser(data.userId)
     })
 
     // Listen for document state updates
     this.socket.on('document:state', (data: { code: string; language: string; users: string[] }) => {
-      console.log('Received document state:', data)
+      console.log('📄 Received document state:', data)
       useEditorStore.getState().setCode(data.code)
       useEditorStore.getState().setLanguage(data.language)
       // Update connected users
@@ -77,10 +80,12 @@ class SocketManager {
 
     // Listen for typing indicators
     this.socket.on('typing:start', (data: { userId: string }) => {
+      console.log('⌨️ Typing started:', data.userId)
       useEditorStore.getState().setUserTyping(data.userId, true)
     })
 
     this.socket.on('typing:stop', (data: { userId: string }) => {
+      console.log('⌨️ Typing stopped:', data.userId)
       useEditorStore.getState().setUserTyping(data.userId, false)
     })
 
@@ -92,13 +97,13 @@ class SocketManager {
       // Leave current document room
       if (this.currentDocumentId !== 'default') {
         this.socket.emit('document:leave', { documentId: this.currentDocumentId })
+        console.log('🚪 Leaving document room:', this.currentDocumentId)
       }
 
       // Join new document room
       this.currentDocumentId = documentId
       this.socket.emit('document:join', { documentId })
-
-      console.log(`Joining document: ${documentId}`)
+      console.log('🚪 Joining document room:', documentId)
     }
   }
 
