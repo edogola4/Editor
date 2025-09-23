@@ -1,5 +1,5 @@
-import { Model, DataTypes, Sequelize, Optional } from 'sequelize';
-import bcrypt from 'bcryptjs';
+import { Model, DataTypes, Sequelize, Optional } from "sequelize";
+import bcrypt from "bcryptjs";
 
 // Define the attributes of the User model
 interface UserAttributes {
@@ -7,16 +7,19 @@ interface UserAttributes {
   username: string;
   email: string;
   password: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
 // Define the attributes required to create a new User
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+interface UserCreationAttributes
+  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt"> {}
 
 // Define the User instance methods
-interface UserInstance extends Model<UserAttributes, UserCreationAttributes>, UserAttributes {
+interface UserInstance
+  extends Model<UserAttributes, UserCreationAttributes>,
+    UserAttributes {
   comparePassword(candidatePassword: string): Promise<boolean>;
   [key: string]: any; // Allow additional methods
 }
@@ -28,13 +31,13 @@ type UserModelStatic = typeof Model & {
   findByPk: (id: string, options?: any) => Promise<UserInstance | null>;
   findOne: (options: any) => Promise<UserInstance | null>;
   // Add other static methods as needed
-}
+};
 
 // Define the model initialization function
 export default function User(sequelize: Sequelize): UserModelStatic {
   // Define the model
   const User = sequelize.define<UserInstance>(
-    'User',
+    "User",
     {
       id: {
         type: DataTypes.UUID,
@@ -62,8 +65,8 @@ export default function User(sequelize: Sequelize): UserModelStatic {
         allowNull: false,
       },
       role: {
-        type: DataTypes.ENUM('user', 'admin'),
-        defaultValue: 'user',
+        type: DataTypes.ENUM("user", "admin"),
+        defaultValue: "user",
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -75,7 +78,7 @@ export default function User(sequelize: Sequelize): UserModelStatic {
       },
     },
     {
-      tableName: 'users',
+      tableName: "users",
       timestamps: true,
       hooks: {
         beforeCreate: async (user: UserInstance) => {
@@ -85,18 +88,20 @@ export default function User(sequelize: Sequelize): UserModelStatic {
           }
         },
         beforeUpdate: async (user: UserInstance) => {
-          if (user.changed('password')) {
+          if (user.changed("password")) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(user.password, salt);
           }
         },
       },
-    }
-    ) as unknown as UserModelStatic;
+    },
+  ) as unknown as UserModelStatic;
 
   // Add instance method to check password
   const userPrototype = User.prototype as UserInstance;
-  userPrototype.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  userPrototype.comparePassword = async function (
+    candidatePassword: string,
+  ): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
   };
 
@@ -104,4 +109,4 @@ export default function User(sequelize: Sequelize): UserModelStatic {
 }
 
 // Export the User model and interfaces
-export { UserAttributes, UserInstance, UserModelStatic };
+export type { UserAttributes, UserInstance, UserModelStatic };
