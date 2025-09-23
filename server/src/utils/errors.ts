@@ -9,27 +9,27 @@ export class CustomError extends Error {
     Object.setPrototypeOf(this, CustomError.prototype);
   }
 
-  static badRequest(message: string = 'Bad Request', errors?: any[]) {
+  static badRequest(message: string = "Bad Request", errors?: any[]) {
     return new CustomError(message, 400, errors);
   }
 
-  static unauthorized(message: string = 'Unauthorized') {
+  static unauthorized(message: string = "Unauthorized") {
     return new CustomError(message, 401);
   }
 
-  static forbidden(message: string = 'Forbidden') {
+  static forbidden(message: string = "Forbidden") {
     return new CustomError(message, 403);
   }
 
-  static notFound(message: string = 'Not Found') {
+  static notFound(message: string = "Not Found") {
     return new CustomError(message, 404);
   }
 
-  static conflict(message: string = 'Conflict') {
+  static conflict(message: string = "Conflict") {
     return new CustomError(message, 409);
   }
 
-  static internal(message: string = 'Internal Server Error') {
+  static internal(message: string = "Internal Server Error") {
     return new CustomError(message, 500);
   }
 
@@ -40,6 +40,6 @@ export class CustomError extends Error {
       path: err.path,
       value: err.value,
     }));
-    return new CustomError('Validation Error', 400, errors);
+    return new CustomError("Validation Error", 400, errors);
   }
 }
