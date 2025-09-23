@@ -1,6 +1,6 @@
-import { Sequelize } from 'sequelize';
-import config from '../config/config.js';
-import User, { UserAttributes, UserInstance, UserModelStatic } from './User.js';
+import { Sequelize } from "sequelize";
+import config from "../config/config.js";
+import User, { UserAttributes, UserInstance, UserModelStatic } from "./User.js";
 
 // Initialize Sequelize with configuration
 const sequelize = new Sequelize(
@@ -10,13 +10,13 @@ const sequelize = new Sequelize(
   {
     host: config.db.host,
     port: config.db.port,
-    dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    dialect: "postgres",
+    logging: process.env.NODE_ENV === "development" ? console.log : false,
     define: {
       timestamps: true,
       underscored: true,
     },
-  }
+  },
 );
 
 // Initialize models
@@ -29,9 +29,9 @@ const UserModel = User(sequelize);
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
+    console.log("Database connection has been established successfully.");
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error("Unable to connect to the database:", error);
     process.exit(1);
   }
 };
