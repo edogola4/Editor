@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { sequelize } from '../config/database.js';
-import UserModel, { UserInstance } from '../models/User.js';
-import { CustomError } from '../utils/errors.js';
-import config from '../config/config.js';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { sequelize } from "../config/database.js";
+import UserModel, { UserInstance } from "../models/User.js";
+import { CustomError } from "../utils/errors.js";
+import config from "../config/config.js";
 
 // Initialize the User model with the sequelize instance
 const User = UserModel(sequelize);
@@ -26,13 +26,18 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Authentication middleware
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     // Get token from header or cookie
-    let token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.token;
+    const token =
+      req.header("Authorization")?.replace("Bearer ", "") || req.cookies?.token;
 
     if (!token) {
-      throw new CustomError('Authentication required', 401);
+      throw new CustomError("Authentication required", 401);
     }
 
     // Verify token
@@ -40,11 +45,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     // Find user by id from token
     const user = await User.findByPk(decoded.id, {
-      attributes: { exclude: ['password'] },
+      attributes: { exclude: ["password"] },
     });
 
     if (!user) {
-      throw new CustomError('User not found', 404);
+      throw new CustomError("User not found", 404);
     }
 
     // Add user to request object
@@ -52,9 +57,9 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      next(new CustomError('Token expired', 401));
+      next(new CustomError("Token expired", 401));
     } else if (error instanceof jwt.JsonWebTokenError) {
-      next(new CustomError('Invalid token', 401));
+      next(new CustomError("Invalid token", 401));
     } else {
       next(error);
     }
@@ -65,15 +70,15 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 export const authorize = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return next(new CustomError('Authentication required', 401));
+      return next(new CustomError("Authentication required", 401));
     }
 
     if (!roles.includes(req.user.role)) {
       return next(
         new CustomError(
           `User role ${req.user.role} is not authorized to access this route`,
-          403
-        )
+          403,
+        ),
       );
     }
 
@@ -82,12 +87,15 @@ export const authorize = (roles: string[]) => {
 };
 
 // Socket.IO authentication middleware
-export const socketAuthenticate = (socket: any, next: (err?: Error) => void) => {
+export const socketAuthenticate = (
+  socket: any,
+  next: (err?: Error) => void,
+) => {
   try {
     const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
     if (!token) {
-      return next(new Error('Authentication error: No token provided'));
+      return next(new Error("Authentication error: No token provided"));
     }
 
     const decoded = jwt.verify(token, config.jwt.secret) as { id: string };
@@ -95,11 +103,11 @@ export const socketAuthenticate = (socket: any, next: (err?: Error) => void) => 
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      next(new Error('Authentication error: Token expired'));
+      next(new Error("Authentication error: Token expired"));
     } else if (error instanceof jwt.JsonWebTokenError) {
-      next(new Error('Authentication error: Invalid token'));
+      next(new Error("Authentication error: Invalid token"));
     } else {
-      next(new Error('Authentication error'));
+      next(new Error("Authentication error"));
     }
   }
 };
