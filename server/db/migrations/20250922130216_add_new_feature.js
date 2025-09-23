@@ -1,44 +1,42 @@
-/* eslint-disable camelcase */
-
 exports.up = (pgm) => {
-  pgm.createTable('users', {
+  pgm.createTable("users", {
     id: {
-      type: 'uuid',
+      type: "uuid",
       primaryKey: true,
-      default: pgm.func('gen_random_uuid()'),
+      default: pgm.func("gen_random_uuid()"),
     },
     username: {
-      type: 'varchar(100)',
+      type: "varchar(100)",
       notNull: true,
-      unique: true
+      unique: true,
     },
     email: {
-      type: 'varchar(255)',
+      type: "varchar(255)",
       notNull: true,
-      unique: true
+      unique: true,
     },
     password: {
-      type: 'varchar(255)',
-      notNull: true
+      type: "varchar(255)",
+      notNull: true,
     },
     role: {
-      type: 'varchar(20)',
+      type: "varchar(20)",
       notNull: true,
-      default: 'user'
+      default: "user",
     },
     created_at: {
-      type: 'timestamp',
+      type: "timestamp",
       notNull: true,
-      default: pgm.func('current_timestamp'),
+      default: pgm.func("current_timestamp"),
     },
     updated_at: {
-      type: 'timestamp',
+      type: "timestamp",
       notNull: true,
-      default: pgm.func('current_timestamp'),
-    }
+      default: pgm.func("current_timestamp"),
+    },
   });
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('users');
+  pgm.dropTable("users");
 };

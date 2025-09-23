@@ -1,32 +1,12 @@
 import { Toaster } from 'react-hot-toast'
-import { Login } from './components/Login'
 import { CodeEditor } from './components/CodeEditor'
 import { UserPresence } from './components/UserPresence'
 import { StatusBar } from './components/StatusBar'
 import { useEditorStore } from './store/editorStore'
-import { useAuthStore } from './store/authStore'
 import './App.css'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
-
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Login />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#374151',
-              color: '#fff',
-            },
-          }}
-        />
-      </>
-    )
-  }
+  const { connectedUsers } = useEditorStore()
 
   return (
     <>
@@ -40,7 +20,7 @@ function App() {
                   Collaborative Code Editor
                 </h1>
                 <div className="text-sm text-gray-300">
-                  Welcome back!
+                  {connectedUsers.length + 1} user{connectedUsers.length !== 0 ? 's' : ''} online
                 </div>
               </div>
               <UserPresence />
