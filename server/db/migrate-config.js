@@ -1,9 +1,10 @@
 // @ts-check
-'use strict';
 
-require('dotenv').config({ path: '../.env' });
+import dotenv from 'dotenv';
 
-module.exports = {
+dotenv.config({ path: '../.env' });
+
+export default {
   database: process.env.DB_NAME || 'collaborative_editor',
   user: process.env.DB_USER || 'editor_user',
   password: process.env.DB_PASSWORD || 'editor_pass123',

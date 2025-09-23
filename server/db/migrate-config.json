@@ -1,0 +1,10 @@
+{
+  "database": "collaborative_editor",
+  "user": "editor_user",
+  "password": "editor_pass123",
+  "host": "localhost",
+  "port": 5432,
+  "migrationsTable": "pgmigrations",
+  "dir": "migrations",
+  "ssl": false
+}
