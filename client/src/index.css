@@ -1,5 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -13,6 +17,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+  --editor-bg: #1e1e1e;
+  --editor-fg: #d4d4d4;
+  --editor-selection: #264f78;
+  --editor-line-highlight: #2a2d2e;
+  --border-color: #3e3e3e;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -24,10 +36,9 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--editor-bg);
 }
 
 h1 {

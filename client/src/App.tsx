@@ -1,34 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { CodeEditor } from './components/CodeEditor'
+import { UserPresence } from './components/UserPresence'
+import { StatusBar } from './components/StatusBar'
+import { useEditorStore } from './store/editorStore'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { connectedUsers, cursorPositions } = useEditorStore()
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="h-screen w-screen bg-gray-900 overflow-hidden">
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <header className="bg-gray-800 border-b border-gray-700 px-4 py-3 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl font-bold text-white">
+                Collaborative Code Editor
+              </h1>
+              <div className="text-sm text-gray-300">
+                {connectedUsers.length + 1} user{connectedUsers.length !== 0 ? 's' : ''} online
+              </div>
+            </div>
+            <UserPresence />
+          </div>
+        </header>
+
+        {/* Main Editor */}
+        <main className="flex-1">
+          <CodeEditor height="calc(100vh - 120px)" />
+        </main>
+
+        {/* Status Bar */}
+        <StatusBar showDetailed={true} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
