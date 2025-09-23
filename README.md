@@ -4,13 +4,14 @@
   <h1>🚀 Real-time Collaborative Code Editor</h1>
   <p><strong>Professional VS Code-like collaborative coding experience</strong></p>
 
-  [![React](https://img.shields.io/badge/React-19+-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-  [![Vite](https://img.shields.io/badge/Vite-5+-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-  [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4+-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-  [![Socket.IO](https://img.shields.io/badge/Socket.IO-4+-010101?logo=socket.io&logoColor=white)](https://socket.io/)
-  [![Monaco Editor](https://img.shields.io/badge/Monaco_Editor-0.53+-007ACC?logo=visual-studio-code&logoColor=white)](https://microsoft.github.io/monaco-editor/)
+  ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+  ![React](https://img.shields.io/badge/React-19+-61dafb.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
+  ![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4+-010101.svg)
+  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53+-007acc.svg)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)
+
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </div>
 
@@ -77,11 +78,12 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js 18+**
+- **Node.js 18+** (preferably 22+)
+- **PostgreSQL 15+**
 - **npm 9+** or **yarn 1.22+**
 - **Git**
 
-### Local Development Setup
+### Installation & Setup
 
 1. **Clone the repository**
    ```bash
@@ -91,166 +93,424 @@
 
 2. **Set up environment variables**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   # Create .env file in server directory
+   cp server/.env.example server/.env
+
+   # Create .env.local file in client directory
+   cp client/.env.example client/.env.local
    ```
 
-3. **Start the backend server**
+3. **Install dependencies**
    ```bash
+   # Install server dependencies
    cd server
    npm install
-   npm run dev
-   # Server runs on http://localhost:5000
-   ```
 
-4. **Start the frontend client** (in a new terminal)
-   ```bash
-   cd client
+   # Install client dependencies
+   cd ../client
    npm install
-   npm run dev
-   # Client runs on http://localhost:5173
+
+   # Return to root
+   cd ..
    ```
 
-5. **Access the application**
+4. **Set up the database**
+   ```bash
+   # Run database migrations
+   cd server
+   npm run db:migrate
+
+   # Seed the database (optional)
+   npm run db:seed
+   ```
+
+5. **Start the servers**
+   ```bash
+   # Start backend server (Terminal 1)
+   cd server
+   npm run dev
+   # Backend runs on http://localhost:5000
+
+   # Start frontend server (Terminal 2)
+   cd ../client
+   npm run dev
+   # Frontend runs on http://localhost:5173
+   ```
+
+6. **Access the application**
    - **Frontend**: http://localhost:5173
    - **Backend API**: http://localhost:5000
-   - **WebSocket**: ws://localhost:5000
    - **API Documentation**: http://localhost:5000/
+
+## 🔑 Demo Credentials
+
+For testing the application, use these demo credentials:
+
+```javascript
+Username: admin
+Password: admin123
+```
+
+Or register a new account directly in the application.
 
 ## 📱 Usage
 
 ### Basic Usage
-1. Open the application in your browser
-2. Start typing code in the editor
-3. Use the language selector to change programming languages
-4. See syntax highlighting and IntelliSense in action
+1. Open the application in your browser at `http://localhost:5173`
+2. The application will automatically create a shared collaboration session
+3. Start typing code in the Monaco Editor
+4. Use the language selector to change programming languages
+5. Experience real-time collaboration features
 
 ### Collaborative Features
-1. Open multiple browser tabs/windows
-2. Each tab represents a different user
-3. See real-time cursor positions and user presence
-4. Experience live code synchronization
+1. **Open Multiple Tabs**: Each tab represents a different user session
+2. **Live Synchronization**: All code changes appear instantly across tabs
+3. **Cursor Tracking**: See other users' cursors moving in real-time
+4. **User Presence**: Visual indicators show connected users and their activity
+5. **Typing Indicators**: See when other users are actively typing
+6. **Language Sync**: Programming language changes sync across all users
 
 ### Supported Languages
-- JavaScript & TypeScript
-- Python
-- Java
-- C++ & C#
-- Go & Rust
-- PHP & Ruby
-- HTML & CSS
-- JSON & YAML
-- Markdown
-- And more...
+- **JavaScript & TypeScript** - Full IntelliSense and error checking
+- **Python** - Syntax highlighting and basic completion
+- **Java** - Class and method completion
+- **C++ & C#** - Syntax highlighting and basic support
+- **Go & Rust** - Modern language support
+- **PHP & Ruby** - Web development languages
+- **HTML & CSS** - Frontend development
+- **JSON & YAML** - Configuration files
+- **Markdown** - Documentation and notes
+- **And more...**
 
-## 🐳 Docker Deployment
+## 🧪 Testing Real-time Collaboration
 
-### Development Environment
+### Quick Test
+1. **Open Multiple Browser Tabs** with `http://localhost:5173`
+2. **Verify Collaboration**: All tabs should show:
+   - Same document ID: "shared_collaboration_session"
+   - "🔗 Shared Session - All tabs collaborate here!"
+   - Increasing user count as tabs open
+
+3. **Test Features**:
+   - **Code Sync**: Type in one tab → See instantly in others
+   - **Cursors**: Move cursor in one tab → See colored cursor in others
+   - **Users**: Watch user avatars appear as tabs connect
+   - **Typing**: Type in any tab → See "tab_xxx typing..." in others
+
+### Debug Information
+- **Browser Console**: Press F12 → Console for WebSocket logs
+- **Server Logs**: Check terminal for connection events
+- **Test Script**: Run `./collaboration-test.sh` for comprehensive testing
+
+## 🏗 Architecture
+
+### **Frontend (Client)**
+- **React 19+** - Modern React with concurrent features
+- **TypeScript 5.8+** - Full type safety and excellent DX
+- **Vite 5+** - Lightning-fast build tool and dev server
+- **Tailwind CSS 4+** - Utility-first CSS framework
+- **Monaco Editor 0.53+** - VS Code's editor component
+- **Socket.IO Client 4+** - Real-time WebSocket communication
+- **Zustand 5+** - Lightweight state management with Immer
+
+### **Backend (Server)**
+- **Node.js 18+** - Modern JavaScript runtime
+- **Express.js 4+** - Web application framework
+- **Socket.IO 4+** - Real-time bidirectional communication
+- **PostgreSQL 15+** - Robust relational database
+- **Sequelize 6+** - Promise-based ORM
+- **JWT Authentication** - Secure token-based auth
+- **Winston** - Logging and monitoring
+
+### **Real-time Communication**
+- **WebSocket Protocol** - Bidirectional real-time communication
+- **Document Rooms** - Isolated collaboration spaces
+- **Event Broadcasting** - Efficient message distribution
+- **User Management** - Connection tracking and presence
+- **State Synchronization** - Consistent document state across users
+
+## 🔧 Development Commands
+
+### Backend Development
 ```bash
-docker-compose -f docker-compose.dev.yml up --build
+cd server
+
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate test coverage
+npm run test:coverage
+
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Database operations
+npm run db:migrate    # Run migrations
+npm run db:seed       # Seed database
+npm run db:reset      # Reset database
 ```
 
-### Production Environment
+### Frontend Development
 ```bash
-docker-compose -f docker-compose.prod.yml up --build -d
+cd client
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate test coverage
+npm run test:coverage
+
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
 ```
 
 ## 📂 Project Structure
 
 ```
 collaborative-code-editor/
-├── client/                    # Frontend React application
+├── client/                      # Frontend React application
 │   ├── src/
-│   │   ├── components/        # React components
-│   │   │   ├── CodeEditor.tsx # Main editor component
+│   │   ├── components/          # React components
+│   │   │   ├── CodeEditor.tsx   # Main Monaco editor component
 │   │   │   ├── UserPresence.tsx # User presence indicators
-│   │   │   └── StatusBar.tsx  # Status bar component
-│   │   ├── store/             # State management
-│   │   │   └── editorStore.ts # Zustand store with Immer
-│   │   ├── utils/             # Utility functions
-│   │   │   └── socket.ts      # Socket.IO client setup
-│   │   ├── App.tsx            # Main application component
-│   │   └── main.tsx           # Application entry point
-│   ├── package.json           # Frontend dependencies
-│   └── tailwind.config.js     # Tailwind CSS configuration
-├── server/                    # Backend Node.js/Express server
+│   │   │   └── StatusBar.tsx    # Status bar with connection info
+│   ├── store/                   # State management
+│   │   │   ├── authStore.ts     # Authentication state
+│   │   │   └── editorStore.ts   # Editor state with collaboration
+│   ├── utils/                   # Utility functions
+│   │   │   ├── api.ts           # HTTP API client
+│   │   │   └── socket.ts        # WebSocket connection manager
+│   ├── App.tsx                  # Main application component
+│   ├── main.tsx                 # Application entry point
+│   └── index.css                # Global styles
+├── server/                      # Backend Node.js application
 │   ├── src/
-│   │   ├── controllers/       # Request handlers
-│   │   ├── middleware/        # Express middleware
-│   │   ├── routes/            # API routes
-│   │   ├── models/            # Data models
-│   │   └── index.ts           # Server entry point
-│   ├── db/                    # Database migrations
-│   └── package.json           # Backend dependencies
-├── nginx/                     # Nginx configuration
-├── docker-compose.dev.yml     # Development Docker setup
-├── docker-compose.prod.yml    # Production Docker setup
-├── .env.example               # Environment variables template
-└── README.md                  # This file
+│   │   ├── config/              # Configuration files
+│   │   │   ├── config.ts        # Application configuration
+│   │   │   └── database.ts      # Database configuration
+│   │   ├── middleware/          # Express middleware
+│   │   │   ├── auth.ts          # Authentication middleware
+│   │   │   └── errorHandler.ts  # Error handling middleware
+│   │   ├── models/              # Database models
+│   │   │   ├── User.ts          # User model
+│   │   │   ├── Room.ts          # Room model
+│   │   │   ├── Session.ts       # Session model
+│   │   │   └── index.ts         # Model associations
+│   │   ├── services/            # Business logic services
+│   │   │   └── redis.ts         # Redis service for caching
+│   │   ├── utils/               # Utility functions
+│   │   │   ├── errors.ts        # Custom error classes
+│   │   │   └── logger.ts        # Winston logger configuration
+│   │   ├── app.ts               # Express application setup
+│   │   ├── index.ts             # Server entry point
+│   │   └── __tests__/           # Test files
+│   ├── db/                      # Database files
+│   │   ├── config.json          # Sequelize configuration
+│   │   ├── migrate-config.json  # Migration configuration
+│   │   ├── migrations/          # Database migrations
+│   │   └── seeders/             # Database seeders
+│   ├── scripts/                 # Utility scripts
+│   │   ├── load-env.js         # Environment loading
+│   │   └── test-db.ts          # Database testing
+│   ├── package.json            # Dependencies and scripts
+│   ├── tsconfig.json           # TypeScript configuration
+│   ├── jest.config.mjs         # Jest configuration
+│   ├── eslint.config.js        # ESLint configuration
+│   └── .sequelizerc            # Sequelize CLI configuration
+├── test-collaboration.sh       # Collaboration testing script
+├── debug-guide.sh              # Debugging guide script
+├── collaboration-test.sh       # Comprehensive testing guide
+├── .gitignore                  # Git ignore rules
+├── README.md                   # Main project documentation
+└── LICENSE                     # Project license
 ```
 
 ## 🔧 Environment Variables
 
-Create a `.env` file in the root directory:
-
+### Server Environment (.env)
 ```env
-# Server Configuration
-NODE_ENV=development
-PORT=3001
-
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=collaborative_editor
-DB_USER=editor_user
-DB_PASSWORD=editor_pass123
-DB_SSL=false
-
-# Redis Configuration
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
+DB_USER=postgres
+DB_PASSWORD=your_password
 
 # JWT Configuration
-JWT_SECRET=your_jwt_secret_key_here
-JWT_EXPIRES_IN=7d
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=24h
 
-# CORS Configuration
+# Server Configuration
+PORT=5000
+NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
 
-# WebSocket Configuration
-WS_PATH=/socket.io/
-WS_CORS_ORIGIN=http://localhost:5173
+# Redis Configuration (optional)
+REDIS_URL=redis://localhost:6379
+```
 
-# Client Configuration
+### Client Environment (.env.local)
+```env
+# Backend API Configuration
 VITE_API_URL=http://localhost:5000
 VITE_SERVER_URL=http://localhost:5000
+
+# Application Configuration
+VITE_APP_NAME=Collaborative Code Editor
+VITE_APP_VERSION=1.0.0
+
+# Feature Flags (optional)
+VITE_ENABLE_DEBUG=false
+VITE_ENABLE_ANALYTICS=false
 ```
+
+## 🚀 Production Deployment
+
+### Docker Deployment
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or build individual services
+docker build -t collaborative-editor-client ./client
+docker build -t collaborative-editor-server ./server
+```
+
+### Manual Deployment
+1. **Build frontend**
+   ```bash
+   cd client
+   npm run build
+   ```
+
+2. **Configure production environment**
+   ```bash
+   cd ../server
+   # Set production environment variables
+   export NODE_ENV=production
+   ```
+
+3. **Start production server**
+   ```bash
+   npm start
+   ```
+
+### Deployment Options
+- **Static Hosting**: Deploy `client/dist/` to any static host (Netlify, Vercel, etc.)
+- **Docker**: Use provided Dockerfiles for containerized deployment
+- **Cloud Platforms**: AWS, Google Cloud, Azure, DigitalOcean
+- **CDN**: Serve static assets through CDN for better performance
+
+## 🔒 Security Features
+
+- **CORS Protection**: Configured to accept requests from authorized origins
+- **Input Validation**: Client-side and server-side validation
+- **XSS Prevention**: React's built-in XSS protection
+- **CSRF Protection**: Token-based request validation
+- **Secure Headers**: Helmet.js security headers
+- **Environment Variables**: Sensitive data in environment files
+- **JWT Authentication**: Secure token-based authentication
+- **Database Security**: Parameterized queries and connection pooling
+
+## 📊 Performance Optimization
+
+- **Code Splitting**: Automatic route-based code splitting
+- **Lazy Loading**: Components loaded on demand
+- **Bundle Analysis**: Vite's built-in bundle analyzer
+- **Caching**: Aggressive caching strategies for static assets
+- **Minification**: Automatic CSS and JS minification
+- **Compression**: Gzip compression for all responses
+- **Database Optimization**: Connection pooling and query optimization
+
+## 🧪 Testing Strategy
+
+### Unit Tests
+- Component rendering and behavior
+- Utility function logic
+- State management actions
+- API service functions
+
+### Integration Tests
+- User authentication flows
+- Real-time collaboration features
+- API integration testing
+- Database operations
+
+### E2E Tests
+- Complete user journeys
+- Multi-user collaboration scenarios
+- Cross-browser compatibility testing
+- Performance testing
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Run tests: `npm test`
+4. Run linting: `npm run lint`
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Development Guidelines
+- Write tests for new components and features
+- Follow React and TypeScript best practices
+- Use ESLint and Prettier formatting
+- Document component APIs
+- Keep bundle size in mind
+- Test across different browsers and devices
+
+## 📱 Browser Support
+
+- **Chrome 90+** ✅ (Recommended)
+- **Firefox 88+** ✅
+- **Safari 14+** ✅
+- **Edge 90+** ✅
+- **Mobile Browsers** ✅ (Responsive design)
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
 - **Monaco Editor** - For the excellent code editing experience
-- **Socket.IO** - For real-time communication capabilities
 - **React & TypeScript** - For the robust frontend framework
-- **Tailwind CSS** - For the beautiful and responsive UI
 - **Vite** - For the incredibly fast development experience
+- **Tailwind CSS** - For the beautiful and responsive UI
+- **Socket.IO** - For real-time communication capabilities
+- **PostgreSQL & Sequelize** - For reliable data persistence
 - **Zustand & Immer** - For lightweight and efficient state management
+- **Express.js** - For the solid backend framework
+- **JWT** - For secure authentication
 
 ---
 
 <div align="center">
-  <p>Made with ❤️ using cutting-edge web technologies</p>
-  <p><strong>Experience the future of collaborative coding! 🚀</strong></p>
+  <p>Built with ❤️ for seamless collaborative coding</p>
+  <p><strong>Experience the future of collaborative development 🚀</strong></p>
 </div>
