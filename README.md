@@ -100,7 +100,7 @@
    cd server
    npm install
    npm run dev
-   # Server runs on http://localhost:3001
+   # Server runs on http://localhost:5000
    ```
 
 4. **Start the frontend client** (in a new terminal)
@@ -113,8 +113,9 @@
 
 5. **Access the application**
    - **Frontend**: http://localhost:5173
-   - **Backend API**: http://localhost:3001
-   - **WebSocket**: ws://localhost:3001
+   - **Backend API**: http://localhost:5000
+   - **WebSocket**: ws://localhost:5000
+   - **API Documentation**: http://localhost:5000/
 
 ## 📱 Usage
 
@@ -222,7 +223,8 @@ WS_PATH=/socket.io/
 WS_CORS_ORIGIN=http://localhost:5173
 
 # Client Configuration
-VITE_SERVER_URL=http://localhost:3001
+VITE_API_URL=http://localhost:5000
+VITE_SERVER_URL=http://localhost:5000
 ```
 
 ## 🤝 Contributing
