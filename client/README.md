@@ -1,69 +1,364 @@
-# React + TypeScript + Vite
+# Collaborative Code Editor - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend client for the Collaborative Code Editor application, built with React, TypeScript, Vite, and Monaco Editor for real-time collaborative coding.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🎯 **Core Features**
+- **Real-time Collaboration**: Multi-user editing with live synchronization
+- **Professional Code Editor**: Monaco Editor with VS Code's powerful features
+- **Live Cursor Sharing**: See other users' cursors and positions in real-time
+- **User Presence**: Visual indicators showing connected users and their activity
+- **Authentication System**: JWT-based login and registration
+- **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
 
-## Expanding the ESLint configuration
+### 🎨 **Editor Features**
+- **Monaco Editor**: Full VS Code editing experience
+- **IntelliSense**: Code completion, hover information, and error detection
+- **Syntax Highlighting**: Beautiful syntax highlighting for 15+ languages
+- **Bracket Matching**: Automatic bracket pair colorization
+- **Word Wrap**: Configurable text wrapping
+- **Minimap**: Code overview for easy navigation
+- **Multiple Themes**: Dark theme optimized for coding
+- **Language Support**: JavaScript, TypeScript, Python, Java, C++, and more
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🛠 **Technical Features**
+- **React 19+**: Modern React with latest features
+- **TypeScript 5.8+**: Full type safety and developer experience
+- **Vite 5+**: Lightning-fast build tool and dev server
+- **Zustand + Immer**: Lightweight state management with immutable updates
+- **Socket.IO Client**: Real-time communication with backend
+- **Tailwind CSS 4+**: Utility-first CSS framework with custom theme
+- **Axios**: HTTP client for API communication
+- **React Hot Toast**: Beautiful notifications
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠 Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### **Frontend**
+- **React 19+** - Modern React with concurrent features
+- **TypeScript 5.8+** - Full type safety and excellent DX
+- **Vite 5+** - Lightning-fast build tool and dev server
+- **Tailwind CSS 4+** - Utility-first CSS framework
+- **Monaco Editor 0.53+** - VS Code's editor component
+- **Socket.IO Client 4+** - Real-time communication
+- **Zustand 5+** - Lightweight state management
+- **Immer 10+** - Immutable state updates
+- **Axios 1+** - HTTP client for API requests
+- **React Hot Toast 2+** - Toast notifications
+- **React Icons 5+** - Icon library
+- **React Router DOM 7+** - Client-side routing
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### **Development & Quality**
+- **ESLint 8+** - Code linting and formatting
+- **Prettier 3+** - Code formatting
+- **TypeScript ESLint** - TypeScript-specific linting
+- **Vitest 3+** - Testing framework
+- **Testing Library** - React component testing
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js 18+** (preferably 22+)
+- **npm 9+** or **yarn 1.22+**
+- **Git**
+
+### Installation & Setup
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   # Create .env file with backend connection details
+   # VITE_API_URL=http://localhost:5000
+   # VITE_SERVER_URL=http://localhost:5000
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   # Frontend runs on http://localhost:5173
+   ```
+
+4. **Access the application**
+   - **Frontend**: http://localhost:5173
+   - **Login Required**: Use demo credentials to authenticate
+
+## 🔑 Demo Credentials
+
+For testing the application, use these demo credentials:
+
+```javascript
+Username: admin
+Password: admin123
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📱 Usage
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Basic Usage
+1. Open the application in your browser at `http://localhost:5173`
+2. Login using the demo credentials (or register a new account)
+3. Start typing code in the Monaco Editor
+4. Use the language selector to change programming languages
+5. Experience syntax highlighting and IntelliSense in action
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Collaborative Features
+1. Open multiple browser tabs/windows with different users
+2. Each tab represents a different user session
+3. See real-time cursor positions and user presence indicators
+4. Experience live code synchronization across all connected clients
+5. Watch as other users' changes appear instantly
+
+### Supported Languages
+- **JavaScript & TypeScript** - Full IntelliSense and error checking
+- **Python** - Syntax highlighting and basic completion
+- **Java** - Class and method completion
+- **C++ & C#** - Syntax highlighting and basic support
+- **Go & Rust** - Modern language support
+- **PHP & Ruby** - Web development languages
+- **HTML & CSS** - Frontend development
+- **JSON & YAML** - Configuration files
+- **Markdown** - Documentation and notes
+- **And more...**
+
+## 🧪 Testing
+
+### Available Commands
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- src/components/Editor.test.tsx
 ```
+
+### Test Structure
+- **Component Tests**: React component behavior and rendering
+- **Integration Tests**: Full user workflows and interactions
+- **Utility Tests**: Helper functions and business logic
+- **E2E Tests**: End-to-end user journeys (planned)
+
+## 🔧 Development Commands
+
+```bash
+# Development
+npm run dev              # Start development server with hot reload
+npm run build           # Build for production
+npm run preview         # Preview production build locally
+
+# Code Quality
+npm run lint            # Check code quality
+npm run lint:fix        # Auto-fix linting issues
+
+# Testing
+npm test                # Run tests
+npm run test:watch      # Watch mode for tests
+npm run test:coverage   # Generate coverage report
+```
+
+## 📂 Project Structure
+
+```
+client/
+├── src/
+│   ├── components/              # React components
+│   │   ├── CodeEditor.tsx       # Main Monaco editor component
+│   │   ├── Login.tsx            # Authentication component
+│   │   ├── UserPresence.tsx     # User presence indicators
+│   │   └── StatusBar.tsx        # Status bar with connection info
+│   ├── store/                   # State management
+│   │   ├── authStore.ts         # Authentication state
+│   │   └── editorStore.ts       # Editor state with collaboration
+│   ├── utils/                   # Utility functions
+│   │   ├── api.ts               # HTTP API client
+│   │   └── socket.ts            # WebSocket connection manager
+│   ├── App.tsx                  # Main application component
+│   ├── main.tsx                 # Application entry point
+│   └── index.css                # Global styles
+├── public/                      # Static assets
+├── index.html                   # HTML template
+├── package.json                 # Dependencies and scripts
+├── vite.config.ts               # Vite configuration
+├── tailwind.config.js           # Tailwind CSS configuration
+├── tsconfig.json                # TypeScript configuration
+└── .env                         # Environment variables
+```
+
+## 🔧 Environment Variables
+
+Create a `.env` file in the client directory:
+
+```env
+# Backend API Configuration
+VITE_API_URL=http://localhost:5000
+VITE_SERVER_URL=http://localhost:5000
+
+# Application Configuration
+VITE_APP_NAME=Collaborative Code Editor
+VITE_APP_VERSION=1.0.0
+
+# Feature Flags (optional)
+VITE_ENABLE_DEBUG=false
+VITE_ENABLE_ANALYTICS=false
+```
+
+## 🏗 **Architecture Overview**
+
+### **State Management**
+- **Zustand**: Lightweight state management with TypeScript support
+- **Immer**: Immutable state updates for complex objects
+- **Auth Store**: User authentication and session management
+- **Editor Store**: Code state, cursor positions, and collaboration data
+
+### **Real-time Communication**
+- **Socket.IO Client**: WebSocket connection with fallback to polling
+- **Event-driven Architecture**: Clean separation of socket events
+- **Optimistic Updates**: Immediate UI updates with server synchronization
+- **Connection Management**: Automatic reconnection and error handling
+
+### **Authentication Flow**
+- **JWT-based Auth**: Secure token-based authentication
+- **Protected Routes**: Route-level authentication guards
+- **Session Persistence**: Token storage in localStorage
+- **Auto-logout**: Token expiration handling
+
+### **Component Architecture**
+- **Atomic Design**: Reusable components with clear interfaces
+- **TypeScript Interfaces**: Strongly typed component props
+- **Custom Hooks**: Reusable logic extraction
+- **Error Boundaries**: Graceful error handling
+
+## 🎨 Customization
+
+### **Themes**
+- **Dark Theme**: Professional coding environment
+- **Custom Colors**: Tailwind CSS color palette
+- **Monaco Editor**: VS Code-compatible theming
+
+### **Editor Configuration**
+- **Font Settings**: Fira Code with ligatures
+- **Tab Size**: 2-space indentation
+- **Line Height**: Optimized for readability
+- **Minimap**: Code overview navigation
+
+### **Language Support**
+- **TypeScript**: Full IntelliSense and error checking
+- **JavaScript**: Modern ES6+ features
+- **Python**: Popular web and data science language
+- **Java**: Enterprise application development
+
+## 🚀 Production Deployment
+
+### **Prerequisites**
+- Node.js 18+ and npm
+- Backend server running
+- Domain name (optional)
+
+### **Build Process**
+```bash
+# Install dependencies
+npm install
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### **Deployment Options**
+- **Static Hosting**: Deploy `dist/` folder to any static host
+- **Docker**: Use the provided Dockerfile
+- **CDN**: Serve assets through a CDN for better performance
+- **SSR**: Future enhancement for SEO and performance
+
+## 🔒 Security Features
+
+- **CORS Protection**: Configured to accept requests from authorized origins
+- **Input Validation**: Client-side and server-side validation
+- **XSS Prevention**: React's built-in XSS protection
+- **CSRF Protection**: Token-based request validation
+- **Secure Headers**: Helmet.js on backend
+- **Environment Variables**: Sensitive data in environment files
+
+## 📊 Performance Optimization
+
+- **Code Splitting**: Automatic route-based code splitting
+- **Lazy Loading**: Components loaded on demand
+- **Image Optimization**: WebP format support
+- **Bundle Analysis**: Vite's built-in bundle analyzer
+- **Caching**: Aggressive caching strategies
+- **Minification**: Automatic CSS and JS minification
+
+## 🧪 Testing Strategy
+
+### **Unit Tests**
+- Component rendering and behavior
+- Utility function logic
+- State management actions
+
+### **Integration Tests**
+- User authentication flows
+- Real-time collaboration features
+- API integration
+
+### **E2E Tests (Planned)**
+- Complete user journeys
+- Multi-user collaboration
+- Cross-browser compatibility
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Run tests: `npm test`
+4. Run linting: `npm run lint`
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Development Guidelines
+- Write tests for new components and features
+- Follow React and TypeScript best practices
+- Use ESLint and Prettier formatting
+- Document component APIs
+- Keep bundle size in mind
+- Test across different browsers
+
+## 📱 Browser Support
+
+- **Chrome 90+** ✅ (Recommended)
+- **Firefox 88+** ✅
+- **Safari 14+** ✅
+- **Edge 90+** ✅
+- **Mobile Browsers** ✅ (Responsive design)
+
+## 📄 License
+
+MIT License - see the [LICENSE](../LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Monaco Editor** - For the excellent code editing experience
+- **React & TypeScript** - For the robust frontend framework
+- **Vite** - For the incredibly fast development experience
+- **Tailwind CSS** - For the beautiful and responsive UI
+- **Socket.IO** - For real-time communication capabilities
+- **Zustand & Immer** - For lightweight and efficient state management
+- **Axios** - For reliable HTTP client functionality
+- **React Hot Toast** - For beautiful notifications
+
+---
+
+<div align="center">
+  <p>Built with ❤️ for seamless collaborative coding</p>
+  <p><strong>Experience the future of collaborative development 🚀</strong></p>
+</div>
