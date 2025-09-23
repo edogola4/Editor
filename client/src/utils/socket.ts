@@ -11,7 +11,7 @@ class SocketManager {
       return this.socket
     }
 
-    this.socket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:3001', {
+    this.socket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:5000', {
       auth: { userId },
       transports: ['websocket', 'polling']
     })
