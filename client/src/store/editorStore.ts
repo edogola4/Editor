@@ -40,7 +40,7 @@ console.log(fibonacci(10)); // Output: 55
     connectedUsers: [],
     cursorPositions: {},
     typingUsers: {},
-    documentId: 'default',
+    documentId: 'shared_collaboration_session',
 
     setCode: (code) =>
       set((state) => {
@@ -102,7 +102,7 @@ console.log(fibonacci(10)); // Output: 55
         state.connectedUsers = []
         state.cursorPositions = {}
         state.typingUsers = {}
-        state.documentId = 'default'
+        state.documentId = 'shared_collaboration_session'
       }),
   }))
 )

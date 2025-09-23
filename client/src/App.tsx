@@ -13,11 +13,12 @@ function App() {
   const { user } = useAuthStore()
   const { joinDocument } = useSocket()
 
-  // Initialize with a unique document ID if not set
+  // Use a fixed document ID so all tabs can collaborate together
   useEffect(() => {
     if (!documentId || documentId === 'default') {
-      const newDocumentId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      useEditorStore.getState().setDocumentId(newDocumentId)
+      // Use a fixed document ID for all tabs to enable collaboration
+      const sharedDocumentId = 'shared_collaboration_session'
+      useEditorStore.getState().setDocumentId(sharedDocumentId)
     }
   }, [documentId])
 
@@ -40,7 +41,10 @@ function App() {
                   Collaborative Code Editor
                 </h1>
                 <div className="text-sm text-gray-300">
-                  Document: {documentId ? documentId.slice(0, 12) + '...' : 'Loading...'}
+                  Document: {documentId ? documentId : 'Loading...'}
+                </div>
+                <div className="text-sm text-green-400 font-medium">
+                  🔗 Shared Session - All tabs collaborate here!
                 </div>
                 {user && (
                   <div className="text-sm text-gray-400">

@@ -16,26 +16,27 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
   const { emitCodeChange, emitLanguageChange, emitCursorUpdate, emitTypingStart, emitTypingStop, joinDocument } = useSocket()
   const { user } = useAuthStore()
 
-  const userId = user?.id || 'anonymous'
+  const userId = user?.id || `tab_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
   const userColor = useRef(`#${Math.floor(Math.random()*16777215).toString(16)}`).current
 
-  // Connect to socket when user is authenticated
+  // Connect to socket when user is authenticated or use generated userId
   useEffect(() => {
-    if (user) {
-      const socket = useSocket().socket
-      if (socket) {
-        socket.auth = { userId: user.id, username: user.username }
-        socket.connect(userId, documentId)
-      }
+    const socket = useSocket().socket
+    if (socket) {
+      const authData = user
+        ? { userId: user.id, username: user.username }
+        : { userId, username: userId.slice(0, 8) }
+      socket.auth = authData
+      socket.connect(userId, documentId)
     }
-  }, [user, documentId])
+  }, [user, userId, documentId])
 
   // Join document room when documentId changes
   useEffect(() => {
-    if (documentId && user) {
+    if (documentId && documentId !== 'default') {
       joinDocument(documentId)
     }
-  }, [documentId, user])
+  }, [documentId])
 
   // Color palette for different users
   const userColors = [
@@ -50,8 +51,11 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
 
     // Connect to socket with user authentication
     const socket = useSocket().socket
-    if (socket && user) {
-      socket.auth = { userId: user.id, username: user.username }
+    if (socket) {
+      const authData = user
+        ? { userId: user.id, username: user.username }
+        : { userId, username: userId.slice(0, 8) }
+      socket.auth = authData
       socket.connect(userId, documentId)
     }
 
