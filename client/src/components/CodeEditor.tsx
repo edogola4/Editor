@@ -12,8 +12,8 @@ interface CodeEditorProps {
 export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
   const editorRef = useRef<any>(null)
   const decorationsRef = useRef<string[]>([])
-  const { code, language, theme, connectedUsers, cursorPositions } = useEditorStore()
-  const { emitCodeChange, emitLanguageChange, emitCursorUpdate } = useSocket()
+  const { code, language, theme, connectedUsers, cursorPositions, typingUsers, documentId } = useEditorStore()
+  const { emitCodeChange, emitLanguageChange, emitCursorUpdate, emitTypingStart, emitTypingStop, joinDocument } = useSocket()
   const { user } = useAuthStore()
 
   const userId = user?.id || 'anonymous'
@@ -21,10 +21,21 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
 
   // Connect to socket when user is authenticated
   useEffect(() => {
-    if (user && useSocket().socket) {
-      useSocket().socket?.connect()
+    if (user) {
+      const socket = useSocket().socket
+      if (socket) {
+        socket.auth = { userId: user.id, username: user.username }
+        socket.connect(userId, documentId)
+      }
     }
-  }, [user])
+  }, [user, documentId])
+
+  // Join document room when documentId changes
+  useEffect(() => {
+    if (documentId && user) {
+      joinDocument(documentId)
+    }
+  }, [documentId, user])
 
   // Color palette for different users
   const userColors = [
@@ -41,7 +52,7 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
     const socket = useSocket().socket
     if (socket && user) {
       socket.auth = { userId: user.id, username: user.username }
-      socket.connect()
+      socket.connect(userId, documentId)
     }
 
     // Focus the editor
@@ -53,7 +64,22 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
         line: e.position.lineNumber,
         column: e.position.column,
       }
-      emitCursorUpdate(position)
+      emitCursorUpdate(position, documentId)
+    })
+
+    // Handle typing indicators
+    let typingTimer: NodeJS.Timeout
+    editor.onDidChangeModelContent(() => {
+      // Start typing indicator
+      emitTypingStart(documentId)
+
+      // Clear previous timer
+      clearTimeout(typingTimer)
+
+      // Stop typing indicator after 1 second of inactivity
+      typingTimer = setTimeout(() => {
+        emitTypingStop(documentId)
+      }, 1000)
     })
 
     // Handle selection changes for collaborative cursors
@@ -67,13 +93,13 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       useEditorStore.getState().setCode(value)
-      emitCodeChange(value)
+      emitCodeChange(value, documentId)
     }
   }
 
   const handleLanguageChange = (newLanguage: string) => {
     useEditorStore.getState().setLanguage(newLanguage)
-    emitLanguageChange(newLanguage)
+    emitLanguageChange(newLanguage, documentId)
   }
 
   // Update decorations for remote cursors
@@ -124,10 +150,11 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
     return () => {
       const socket = useSocket().socket
       if (socket) {
+        emitTypingStop(documentId)
         socket.disconnect()
       }
     }
-  }, [])
+  }, [documentId])
 
   return (
     <div className="h-full w-full">
@@ -177,6 +204,15 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
               </div>
             )}
           </div>
+          {/* Typing indicators */}
+          {Object.entries(typingUsers).some(([_, isTyping]) => isTyping) && (
+            <div className="text-gray-400 text-xs">
+              {Object.entries(typingUsers)
+                .filter(([_, isTyping]) => isTyping)
+                .map(([userId]) => userId.slice(0, 8))
+                .join(', ')} typing...
+            </div>
+          )}
         </div>
       </div>
 

@@ -113,14 +113,112 @@ app.get("/api/auth/profile", authenticate, async (req, res, next) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+  // Get user ID from auth or generate one
+  const userId = socket.handshake.auth.userId || `user_${socket.id}`;
+
+  // Join user to their personal room for direct communication
+  socket.join(`user:${userId}`);
 
   // Handle document operations
   socket.on("document:join", (data) => {
-    socket.join(`document:${data.documentId}`);
-    console.log(`User ${socket.id} joined document ${data.documentId}`);
+    const { documentId } = data;
+    socket.join(`document:${documentId}`);
+    console.log(`User ${userId} joined document ${documentId}`);
+
+    // Notify other users in the document
+    socket.to(`document:${documentId}`).emit('user-joined', {
+      userId,
+      timestamp: new Date().toISOString()
+    });
+
+    // Send current document state to the new user
+    // TODO: Get actual document state from database
+    socket.emit('document:state', {
+      code: '// Welcome to Collaborative Code Editor\n// Start typing your code here...',
+      language: 'javascript',
+      users: [] // TODO: Get current users in document
+    });
+  });
+
+  socket.on("document:leave", (data) => {
+    const { documentId } = data;
+    socket.leave(`document:${documentId}`);
+    console.log(`User ${userId} left document ${documentId}`);
+
+    // Notify other users
+    socket.to(`document:${documentId}`).emit('user-left', {
+      userId,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Handle code changes
+  socket.on("code-change", (data) => {
+    const { code, documentId = 'default' } = data;
+
+    // Broadcast to all users in the same document except sender
+    socket.to(`document:${documentId}`).emit('code-change', {
+      code,
+      userId,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log(`Code change from ${userId}: ${code.length} characters`);
+  });
+
+  // Handle language changes
+  socket.on("language-change", (data) => {
+    const { language, documentId = 'default' } = data;
+
+    socket.to(`document:${documentId}`).emit('language-change', {
+      language,
+      userId,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log(`Language change from ${userId}: ${language}`);
+  });
+
+  // Handle cursor position updates
+  socket.on("cursor-update", (data) => {
+    const { position, documentId = 'default' } = data;
+
+    // Broadcast cursor position to all users in the same document
+    socket.to(`document:${documentId}`).emit('cursor-update', {
+      userId,
+      position,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Handle user typing indicators
+  socket.on("typing:start", (data) => {
+    const { documentId = 'default' } = data;
+
+    socket.to(`document:${documentId}`).emit('typing:start', {
+      userId,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  socket.on("typing:stop", (data) => {
+    const { documentId = 'default' } = data;
+
+    socket.to(`document:${documentId}`).emit('typing:stop', {
+      userId,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", userId);
+
+    // Notify all documents that this user left
+    // In a real implementation, you'd track which documents the user was in
+    io.emit('user-left', {
+      userId,
+      timestamp: new Date().toISOString()
+    });
   });
 });
 

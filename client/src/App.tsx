@@ -4,9 +4,29 @@ import { UserPresence } from './components/UserPresence'
 import { StatusBar } from './components/StatusBar'
 import { useEditorStore } from './store/editorStore'
 import './App.css'
+import { useEffect } from 'react'
+import { useSocket } from './utils/socket'
+import { useAuthStore } from './store/authStore'
 
 function App() {
-  const { connectedUsers } = useEditorStore()
+  const { connectedUsers, documentId } = useEditorStore()
+  const { user } = useAuthStore()
+  const { joinDocument } = useSocket()
+
+  // Initialize with a unique document ID if not set
+  useEffect(() => {
+    if (!documentId || documentId === 'default') {
+      const newDocumentId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      useEditorStore.getState().setDocumentId(newDocumentId)
+    }
+  }, [documentId])
+
+  // Join document room when documentId is available
+  useEffect(() => {
+    if (documentId && documentId !== 'default') {
+      joinDocument(documentId)
+    }
+  }, [documentId])
 
   return (
     <>
@@ -20,8 +40,13 @@ function App() {
                   Collaborative Code Editor
                 </h1>
                 <div className="text-sm text-gray-300">
-                  {connectedUsers.length + 1} user{connectedUsers.length !== 0 ? 's' : ''} online
+                  Document: {documentId ? documentId.slice(0, 12) + '...' : 'Loading...'}
                 </div>
+                {user && (
+                  <div className="text-sm text-gray-400">
+                    User: {user.username}
+                  </div>
+                )}
               </div>
               <UserPresence />
             </div>
