@@ -261,7 +261,7 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
       />
 
       {/* Custom CSS for remote cursors */}
-      <style jsx>{`
+      <style>{`
         .remote-cursor {
           position: relative;
           border-left: 2px solid;
