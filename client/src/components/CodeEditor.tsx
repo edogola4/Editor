@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import Editor from '@monaco-editor/react'
 import { useEditorStore } from '../store/editorStore'
 import { useSocket } from '../utils/socket'
+import { useAuthStore } from '../store/authStore'
 import { nanoid } from 'nanoid'
 
 interface CodeEditorProps {
@@ -13,9 +14,17 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
   const decorationsRef = useRef<string[]>([])
   const { code, language, theme, connectedUsers, cursorPositions } = useEditorStore()
   const { emitCodeChange, emitLanguageChange, emitCursorUpdate } = useSocket()
+  const { user } = useAuthStore()
 
-  const userId = useRef(nanoid()).current
+  const userId = user?.id || 'anonymous'
   const userColor = useRef(`#${Math.floor(Math.random()*16777215).toString(16)}`).current
+
+  // Connect to socket when user is authenticated
+  useEffect(() => {
+    if (user && useSocket().socket) {
+      useSocket().socket?.connect()
+    }
+  }, [user])
 
   // Color palette for different users
   const userColors = [
@@ -28,8 +37,12 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor
 
-    // Connect to socket
-    useSocket().socket?.connect()
+    // Connect to socket with user authentication
+    const socket = useSocket().socket
+    if (socket && user) {
+      socket.auth = { userId: user.id, username: user.username }
+      socket.connect()
+    }
 
     // Focus the editor
     editor.focus()
@@ -109,8 +122,9 @@ export const CodeEditor = ({ height = '100vh' }: CodeEditorProps) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (useSocket().socket) {
-        useSocket().socket?.disconnect()
+      const socket = useSocket().socket
+      if (socket) {
+        socket.disconnect()
       }
     }
   }, [])
