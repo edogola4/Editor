@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { ValidationError } from 'sequelize';
-import jwt from 'jsonwebtoken';
-import { CustomError } from '../utils/errors.js';
+import { Request, Response, NextFunction } from "express";
+import { ValidationError } from "sequelize";
+import jwt from "jsonwebtoken";
+import { CustomError } from "../utils/errors.js";
 
 interface ErrorResponse {
   statusCode: number;
@@ -14,11 +14,11 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const errorResponse: ErrorResponse = {
     statusCode: 500,
-    message: 'Internal Server Error',
+    message: "Internal Server Error",
   };
 
   // Handle different types of errors
@@ -27,23 +27,23 @@ export const errorHandler = (
     errorResponse.message = err.message;
   } else if (err instanceof ValidationError) {
     errorResponse.statusCode = 400;
-    errorResponse.message = 'Validation Error';
+    errorResponse.message = "Validation Error";
     errorResponse.errors = err.errors.map((e) => ({
       message: e.message,
       type: e.type,
       path: e.path,
       value: e.value,
     }));
-  } else if (err.name === 'JsonWebTokenError') {
+  } else if (err.name === "JsonWebTokenError") {
     errorResponse.statusCode = 401;
-    errorResponse.message = 'Invalid token';
-  } else if (err.name === 'TokenExpiredError') {
+    errorResponse.message = "Invalid token";
+  } else if (err.name === "TokenExpiredError") {
     errorResponse.statusCode = 401;
-    errorResponse.message = 'Token expired';
+    errorResponse.message = "Token expired";
   }
 
   // Log the error in development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.error(err);
     errorResponse.stack = err.stack;
   }
@@ -53,7 +53,9 @@ export const errorHandler = (
     success: false,
     message: errorResponse.message,
     errors: errorResponse.errors,
-    ...(process.env.NODE_ENV === 'development' && { stack: errorResponse.stack }),
+    ...(process.env.NODE_ENV === "development" && {
+      stack: errorResponse.stack,
+    }),
   });
 };
 
