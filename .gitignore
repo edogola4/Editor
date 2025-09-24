@@ -132,3 +132,4 @@ public
 *.swp
 *.swo
 *~
+.env
