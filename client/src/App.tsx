@@ -1,19 +1,24 @@
 import { Toaster } from 'react-hot-toast'
 import { CodeEditor } from './components/CodeEditor'
-import { UserPresence } from './components/UserPresence'
-import { StatusBar } from './components/StatusBar'
+import { Header } from './components/Header'
 import { Toolbar } from './components/Toolbar'
-import { FileExplorer } from './components/FileExplorer'
+import { StatusBar } from './components/StatusBar'
 import { useEditorStore } from './store/editorStore'
 import './App.css'
 import { useEffect } from 'react'
 import { useSocket } from './utils/socket'
-import { useAuthStore } from './store/authStore'
 
 function App() {
-  const { connectedUsers, documentId } = useEditorStore()
-  const { user } = useAuthStore()
+  const { connectedUsers, documentId, cursorPositions } = useEditorStore()
   const { joinDocument } = useSocket()
+  
+  // Get current user's cursor position (using a placeholder for current user ID)
+  const currentUser = 'current-user' // TODO: Replace with actual user ID from auth
+  const cursorPosition = cursorPositions[currentUser] || { line: 0, column: 0 }
+  const selection = {
+    start: { line: 0, column: 0 },
+    end: { line: 0, column: 0 }
+  }
 
   // Use a fixed document ID so all tabs can collaborate together
   useEffect(() => {
@@ -31,88 +36,84 @@ function App() {
     }
   }, [documentId])
 
+  // Handler functions for header actions
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}?session=${documentId}`
+    navigator.clipboard.writeText(shareUrl)
+    // Could show a toast notification here
+    console.log('Session URL copied to clipboard:', shareUrl)
+  }
+
+  const handleSettings = () => {
+    console.log('Settings clicked')
+    // Could open settings modal
+  }
+
+  const handleThemeToggle = () => {
+    console.log('Theme toggle clicked')
+    // Could toggle theme
+  }
+
+  const handleCommandPalette = () => {
+    console.log('Command palette clicked')
+    // Could open command palette
+  }
+
   return (
     <>
-      <div className="h-screen w-screen bg-gray-900 overflow-hidden flex flex-col">
-        {/* Modern Header */}
-        <header className="bg-gray-800/50 backdrop-blur-md border-b border-gray-700/50 px-6 py-3 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {/* Logo and Title */}
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">CE</span>
-                </div>
-                <div>
-                  <h1 className="text-xl font-semibold text-white tracking-tight">
-                    Collaborative Editor
-                  </h1>
-                  <p className="text-xs text-gray-400 -mt-1">Real-time code collaboration</p>
-                </div>
-              </div>
+      <div className="h-screen w-screen bg-slate-900 overflow-hidden relative">
+        {/* Animated background gradient */}
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-900/20 via-slate-900 to-purple-900/20 pointer-events-none"></div>
 
-              {/* Document Info */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-300 font-mono">
-                    {documentId ? documentId.slice(0, 20) + '...' : 'Loading...'}
-                  </span>
-                </div>
-                <div className="text-sm text-green-400 font-medium px-3 py-1 bg-green-400/10 rounded-full border border-green-400/20">
-                  🔗 Live Session
-                </div>
-                {user && (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-medium">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-300">{user.username}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="h-full flex flex-col relative z-10">
+          {/* Header */}
+          <Header
+            documentId={documentId || 'Loading...'}
+            users={connectedUsers.map((userId) => ({
+              id: userId,
+              name: `User ${userId.slice(0, 8)}`,
+              avatar: '',
+              cursor: { line: 1, column: 1 },
+              selection: null,
+              color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+              isTyping: false,
+              lastSeen: Date.now(),
+              connectionStatus: 'online' as const
+            }))}
+            onShare={handleShare}
+            onSettings={handleSettings}
+            onThemeToggle={handleThemeToggle}
+            onCommandPalette={handleCommandPalette}
+          />
 
-            <div className="flex items-center space-x-3">
-              <UserPresence />
-              <Toolbar />
-            </div>
-          </div>
-        </header>
+          {/* Toolbar */}
+          <Toolbar actions={[]} />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar - File Explorer */}
-          <div className="w-64 bg-gray-800/30 border-r border-gray-700/50 flex flex-col">
-            <FileExplorer />
-          </div>
+          {/* Main Editor */}
+          <main className="flex-1">
+            <CodeEditor height="calc(100vh - 160px)" />
+          </main>
 
-          {/* Main Editor Area */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <main className="flex-1 relative">
-              <CodeEditor height="100%" />
-            </main>
-
-            {/* Status Bar */}
-            <StatusBar showDetailed={true} />
-          </div>
+          {/* Status Bar */}
+          <StatusBar
+            language="javascript"
+            cursorPosition={cursorPosition}
+            selection={selection}
+            userCount={connectedUsers.length + 1}
+            connectionStatus="connected"
+            showDetailed={true}
+          />
         </div>
       </div>
 
-      {/* Toast Notifications */}
       <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
-            background: 'rgba(31, 41, 55, 0.95)',
-            backdropFilter: 'blur(10px)',
+            background: '#1e293b',
             color: '#fff',
-            border: '1px solid rgba(75, 85, 99, 0.3)',
-            borderRadius: '8px',
-            padding: '16px',
+            border: '1px solid #475569'
           },
         }}
       />
