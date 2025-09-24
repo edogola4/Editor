@@ -1,7 +1,7 @@
 import winston, { Logger, format, transports } from "winston";
 import path from "path";
 import { fileURLToPath } from "url";
-import config from "../config/config.js";
+import { config } from "../config/config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -168,19 +168,24 @@ const createLogger = (): Logger => {
 
   // Add file transports in production or if logs directory exists
   if (config.env === "production") {
-    try {
-      // Ensure logs directory exists
-      const fs = await import("fs");
-      const logsDir = path.join(__dirname, "../../logs");
+    // Use IIFE for async operations
+    (async () => {
+      try {
+        // Ensure logs directory exists
+        const fs = await import("fs");
+        const logsDir = path.join(__dirname, "../../logs");
+        const { existsSync, mkdirSync } = fs;
 
-      if (!fs.existsSync(logsDir)) {
-        fs.mkdirSync(logsDir, { recursive: true });
+        if (!existsSync(logsDir)) {
+          mkdirSync(logsDir, { recursive: true });
+        }
+
+        const fileTransports = createFileTransports();
+        fileTransports.forEach(transport => logger.add(transport));
+      } catch (error) {
+        logger.warn("Failed to create file transports", { error: error.message });
       }
-
-      logger.add(...createFileTransports());
-    } catch (error) {
-      logger.warn("Failed to create file transports", { error: error.message });
-    }
+    })();
   }
 
   return logger;

@@ -11,10 +11,15 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { authenticate } from "./middleware/auth.js";
-import config from "./config/config.js";
+import { rateLimiter } from "./middleware/rateLimit.js";
+import { config } from "./config/config.js";
 import { logger, httpLogger } from "./utils/logger.js";
 import { sequelize } from "./config/database.js";
 import { redisService } from "./services/redis.js";
+import passport from "passport";
+import session from "express-session";
+import { sessionConfig, initializeRedis } from "./config/session.js";
+import "./config/passport.js"; // Initialize passport strategies
 
 // Initialize swagger documentation
 const __filename = fileURLToPath(import.meta.url);
@@ -41,13 +46,30 @@ export class App {
   /**
    * Initialize all middleware
    */
-  private initializeMiddleware(): void {
+  private async initializeMiddleware(): Promise<void> {
+    // Initialize Redis in production
+    if (process.env.NODE_ENV === 'production') {
+      await initializeRedis();
+    }
+
     // Request logging
     this.app.use(httpLogger);
 
     // Security middleware
     this.app.use(
       helmet({
+      },
+    }));
+
+    // Session middleware
+    this.app.use(session(sessionConfig));
+    
+    // Initialize Passport and restore authentication state from session
+    this.app.use(passport.initialize());
+    this.app.use(passport.session());
+
+    // Rate limiting
+    this.app.use(rateLimiter);
         contentSecurityPolicy: {
           directives: {
             defaultSrc: ["'self'"],
