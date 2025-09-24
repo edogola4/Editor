@@ -1,36 +1,8 @@
-import Redis from "ioredis";
-import { logger } from "./utils/logger.js";
-import config from "./config/config.js";
+import IORedis from "ioredis";
+import { logger } from "../utils/logger.js";
+import { config } from "../config/config.js";
 
-/**
- * Redis connection configuration interface
- */
-export interface RedisConfig {
-  host: string;
-  port: number;
-  password?: string;
-  db?: number;
-  retryDelayOnFailover: number;
-  maxRetriesPerRequest: number;
-  lazyConnect: boolean;
-  reconnectOnError: (error: Error) => boolean;
-}
-
-/**
- * Extended Redis client interface for type safety
- */
-export interface RedisClient extends Redis {
-  // Add custom methods if needed
-  setex(key: string, seconds: number, value: string): Promise<string>;
-  expire(key: string, seconds: number): Promise<number>;
-  ttl(key: string): Promise<number>;
-  del(...keys: string[]): Promise<number>;
-  exists(...keys: string[]): Promise<number>;
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<string>;
-  mget(...keys: string[]): Promise<Array<string | null>>;
-  mset(...keyValues: string[]): Promise<string>;
-}
+type RedisClient = IORedis.Redis;
 
 /**
  * Redis service class for managing Redis connections and operations
@@ -48,12 +20,15 @@ export class RedisService {
    * Create Redis client with configuration
    */
   private createClient(): RedisClient {
-    const redisConfig: RedisConfig = {
+    const redisConfig: IORedis.RedisOptions = {
       host: config.redis.host,
       port: config.redis.port,
-      password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB || "0", 10),
-      retryDelayOnFailover: 100,
+      password: config.redis.password,
+      db: config.redis.db,
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
       maxRetriesPerRequest: 3,
       lazyConnect: true,
       reconnectOnError: (error: Error) => {
@@ -62,12 +37,58 @@ export class RedisService {
       },
     };
 
-    return new Redis(redisConfig) as RedisClient;
+    return new IORedis(redisConfig);
   }
 
   /**
    * Initialize Redis event handlers
    */
+  private initializeEventHandlers(): void {
+    this.client.on("connect", () => {
+      logger.info("Redis client connecting...");
+    });
+
+    this.client.on("ready", () => {
+      logger.info("Redis client ready and connected");
+      this.isConnected = true;
+    });
+
+    this.client.on("error", (error: Error) => {
+      logger.error("Redis client error", {
+        error: error.message,
+        stack: error.stack,
+      });
+      this.isConnected = false;
+    });
+
+    this.client.on("close", () => {
+      logger.warn("Redis client connection closed");
+      this.isConnected = false;
+    });
+
+    this.client.on("reconnecting", (delay: number) => {
+      logger.info(`Redis client reconnecting in ${delay}ms`);
+    });
+  }
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+      reconnectOnError: (error: Error) => {
+        logger.warn("Redis reconnect on error", { error: error.message });
+        return error.message.includes("READONLY");
+      },
+    };
+
+    return new IORedis(redisConfig) as RedisClient;
+  }
+
+  /**
+   * Initialize Redis event handlers
+   */
+{{ ... }}
   private initializeEventHandlers(): void {
     this.client.on("connect", () => {
       logger.info("Redis client connecting...");
