@@ -1,13 +1,19 @@
 import { Model, DataTypes, Sequelize, Optional } from "sequelize";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 // Define the attributes of the User model
 interface UserAttributes {
   id: string;
   username: string;
   email: string;
-  password: string;
+  password: string | null;
   role: "user" | "admin";
+  githubId?: string;
+  avatarUrl?: string;
+  isVerified: boolean;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -62,11 +68,32 @@ export default function User(sequelize: Sequelize): UserModelStatic {
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // Nullable for OAuth users
       },
       role: {
         type: DataTypes.ENUM("user", "admin"),
         defaultValue: "user",
+      },
+      githubId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+      },
+      avatarUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      passwordResetToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      passwordResetExpires: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -99,10 +126,30 @@ export default function User(sequelize: Sequelize): UserModelStatic {
 
   // Add instance method to check password
   const userPrototype = User.prototype as UserInstance;
+  
+  // Instance methods
   userPrototype.comparePassword = async function (
     candidatePassword: string,
   ): Promise<boolean> {
+    if (!this.password) return false; // For OAuth users without password
     return bcrypt.compare(candidatePassword, this.password);
+  };
+
+  userPrototype.createPasswordResetToken = function (): string {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    this.passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    return resetToken;
+  };
+
+  userPrototype.markAsVerified = async function (): Promise<void> {
+    this.isVerified = true;
+    this.passwordResetToken = null;
+    this.passwordResetExpires = null;
+    await this.save();
   };
 
   return User;

@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import config from "../config/config.js";
+import { config } from "../config/config.js";
 import User, { UserAttributes, UserInstance, UserModelStatic } from "./User.js";
 
 // Initialize Sequelize with configuration
@@ -43,5 +43,6 @@ const db = {
   testConnection,
 } as const;
 
-export { UserModel as User, UserAttributes, UserInstance };
+export { UserModel as User };
+export type { UserAttributes, UserInstance };
 export default db;
