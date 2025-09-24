@@ -2,36 +2,42 @@
 
 <div align="center">
   <h1>🚀 Real-time Collaborative Code Editor</h1>
-  <p><strong>Professional VS Code-like collaborative coding experience</strong></p>
+  <p><strong>Professional VS Code-like collaborative coding experience with real-time collaboration</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-  ![React](https://img.shields.io/badge/React-19+-61dafb.svg)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
-  ![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg)
-  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4+-010101.svg)
-  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53+-007acc.svg)
-  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)
+  ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+  ![React](https://img.shields.io/badge/React-19-61dafb.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6.svg)
+  ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7.2-010101.svg)
+  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.50.0-007acc.svg)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
+  ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
+  ![ESM](https://img.shields.io/badge/ES_Modules-100%25-FFCA28.svg)
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/yourusername/collaborative-code-editor/pulls)
 </div>
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **Real-time Collaboration**: Multi-user editing with live synchronization
-- **Professional Code Editor**: Monaco Editor with VS Code's powerful features
-- **Live Cursor Sharing**: See other users' cursors and positions in real-time
+- **Real-time Collaboration**: Multi-user editing with operational transformation
+- **VS Code Experience**: Full Monaco Editor integration with IntelliSense
+- **Live Cursor Sharing**: See other users' cursors and selections in real-time
 - **User Presence**: Visual indicators showing connected users and their activity
-- **Multi-language Support**: 15+ programming languages with syntax highlighting
+- **Multi-language Support**: 50+ programming languages with syntax highlighting
+- **GitHub Integration**: Sign in with GitHub and import repositories
+- **Session Management**: Save and load collaborative sessions
 
 ### 🛠 **Editor Features**
 - **Monaco Editor**: Full VS Code editing experience
-- **IntelliSense**: Code completion, hover information, and error detection
-- **Syntax Highlighting**: Beautiful syntax highlighting for all supported languages
-- **Bracket Matching**: Automatic bracket pair colorization
-- **Word Wrap**: Configurable text wrapping
+- **IntelliSense**: Smart code completion and hover information
+- **Multi-cursor Support**: Multiple cursors for efficient editing
+- **Themes**: Built-in light and dark themes with VS Code compatibility
+- **Keybindings**: VS Code keybindings out of the box
 - **Minimap**: Code overview for easy navigation
-- **Multiple Themes**: Dark theme optimized for coding
+- **Bracket Pair Colorization**: Visual matching of brackets
+- **Word Wrap**: Configurable text wrapping
 
 ### 🎨 **User Interface**
 - **Modern Design**: Clean, professional interface inspired by VS Code
@@ -41,11 +47,13 @@
 - **Customizable UI**: Tailwind CSS with custom theme colors
 
 ### 🔧 **Technical Features**
-- **TypeScript**: Full type safety throughout the application
-- **Zustand + Immer**: Lightweight state management with immutable updates
-- **Socket.IO**: Real-time bidirectional communication
-- **Component Architecture**: Modular, reusable React components
-- **Hot Reload**: Fast development with Vite's HMR
+- **TypeScript First**: Full type safety across the entire stack
+- **Modern State Management**: Zustand + Immer for predictable state
+- **Real-time Sync**: Operational Transformation with Socket.IO
+- **Monorepo Architecture**: Shared code between client and server
+- **ES Modules**: Native ESM support throughout the application
+- **Optimized Builds**: Vite for fast development and production builds
+- **Containerized**: Docker support for easy deployment
 
 ## 🛠 Tech Stack
 
@@ -60,13 +68,15 @@
 - **Immer 10+** - Immutable state updates
 
 ### **Backend**
-- **Node.js 18+** - JavaScript runtime
-- **Express.js** - Web application framework
-- **TypeScript** - Type-safe backend development
-- **Socket.IO 4+** - Real-time WebSocket communication
-- **PostgreSQL** - Relational database
-- **Redis** - Caching and pub/sub messaging
-- **JWT** - Authentication and authorization
+- **Node.js 22+** - Latest LTS with ESM support
+- **Express.js 5+** - Modern web framework with async/await
+- **TypeScript 5.0+** - Type-safe backend with strict mode
+- **Socket.IO 4.7.2** - Real-time WebSocket communication
+- **PostgreSQL 16+** - Advanced relational database
+- **Redis 7+** - Caching, pub/sub, and rate limiting
+- **JWT** - Stateless authentication
+- **Sequelize 7+** - Type-safe ORM with migrations
+- **Winston** - Structured logging
 
 ### **Development & Deployment**
 - **Docker** - Containerization
@@ -78,26 +88,84 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js 18+** (preferably 22+)
-- **PostgreSQL 15+**
-- **npm 9+** or **yarn 1.22+**
+- **Node.js 22+** (LTS recommended)
+- **PostgreSQL 16+** (with PostGIS extension)
+- **Redis 7+** (for caching and pub/sub)
+- **npm 10+** or **pnpm 8+** (recommended)
 - **Git**
 
 ### Installation & Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/yourusername/collaborative-code-editor.git
    cd collaborative-code-editor
    ```
 
 2. **Set up environment variables**
    ```bash
-   # Create .env file in server directory
+   # Copy and configure environment files
+   cp .env.example .env
    cp server/.env.example server/.env
-
-   # Create .env.local file in client directory
    cp client/.env.example client/.env.local
+   
+   # Install dependencies
+   pnpm install
+   cd server && pnpm install
+   cd ../client && pnpm install
+   cd ..
+   ```
+
+3. **Database setup**
+   ```bash
+   # Start PostgreSQL and Redis (requires Docker)
+   docker-compose up -d postgres redis
+   
+   # Run database migrations
+   cd server
+   pnpm db:migrate
+   ```
+
+4. **Start development servers**
+   ```bash
+   # In separate terminal windows:
+   pnpm dev:server  # Start backend server
+   pnpm dev:client  # Start frontend dev server
+   ```
+
+5. **Access the application**
+   - Frontend: http://localhost:5173
+   - API Server: http://localhost:5000
+   - Database: localhost:5432 (postgres/collaborative_editor)
+   - Redis: localhost:6379
+
+### Development Scripts
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development servers
+pnpm dev           # Start both client and server
+pnpm dev:client    # Start frontend only
+pnpm dev:server    # Start backend only
+
+# Build for production
+pnpm build
+pnpm build:client
+pnpm build:server
+
+# Run tests
+pnpm test
+pnpm test:client
+pnpm test:server
+
+# Run linter
+pnpm lint
+
+# Run type checking
+pnpm typecheck
+```
    ```
 
 3. **Install dependencies**
