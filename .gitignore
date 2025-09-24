@@ -5,25 +5,25 @@ node_modules/
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Build output
 /dist
 /build
 /.next
 /out
+/coverage
 
 # Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Editor directories and files
-.idea
-.vscode
+.idea/
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
@@ -33,21 +33,51 @@ yarn-error.log*
 *~
 
 # Logs
-logs
+logs/
 *.log
 
 # Testing
-/coverage
+coverage/
+.nyc_output/
 
 # Cache directories
 .cache/
 .parcel-cache/
 .nyc_output/
+.eslintcache
 
 # OS generated files
 .DS_Store
 .DS_Store?
 ._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local development
+*.local
+
+# IDE specific files
+.idea/
+*.iml
+
+# Temp files
+*.tmp
+*.temp
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Local development server
+.serverless/
+
+# Misc
+.vercel/
+.netlify
+.cache/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
