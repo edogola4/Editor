@@ -1,12 +1,61 @@
-import { useEditorStore } from '../store/editorStore'
-import { GitBranch, Users, Zap, Globe } from 'lucide-react'
+import React from 'react';
+import {
+  GitBranch,
+  Globe,
+  Users,
+  MousePointer,
+  Wifi,
+  WifiOff,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  FileText,
+  Hash,
+  Zap
+} from 'lucide-react';
+import type { StatusBarProps, StatusBarItem, UserPresence, Position } from '../types/index';
+import { useEditorStore } from '../store/editorStore';
 
-interface StatusBarProps {
-  showDetailed?: boolean
+interface StatusBarButtonProps {
+  item: StatusBarItem;
+  onClick?: () => void;
 }
 
-export const StatusBar = ({ showDetailed = false }: StatusBarProps) => {
-  const { language, cursorPositions, connectedUsers, documentId } = useEditorStore()
+const StatusBarButton: React.FC<StatusBarButtonProps> = ({ item, onClick }) => {
+  const { icon: Icon, label, value, className = '', variant = 'default' } = item;
+
+  const variantClasses = {
+    default: 'text-slate-400 hover:text-slate-300',
+    success: 'text-emerald-400 hover:text-emerald-300',
+    warning: 'text-amber-400 hover:text-amber-300',
+    error: 'text-red-400 hover:text-red-300',
+    info: 'text-blue-400 hover:text-blue-300'
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center space-x-2 px-3 py-1.5 rounded-md transition-all duration-200 hover:bg-slate-700/30 ${variantClasses[variant]} ${className}`}
+      title={label}
+      aria-label={label}
+    >
+      {Icon && <Icon className="w-3 h-3" />}
+      <span className="text-xs font-medium">{label}</span>
+      {value && <span className="text-xs">{value}</span>}
+    </button>
+  );
+};
+
+export const StatusBar: React.FC<StatusBarProps> = ({
+  language,
+  cursorPosition,
+  selection,
+  userCount,
+  connectionStatus,
+  showDetailed = false,
+  items = []
+}) => {
+  const { connectedUsers } = useEditorStore();
 
   const getLanguageDisplayName = (lang: string) => {
     const languageMap: Record<string, string> = {
@@ -26,126 +75,281 @@ export const StatusBar = ({ showDetailed = false }: StatusBarProps) => {
       yaml: 'YAML',
       markdown: 'Markdown',
       sql: 'SQL'
+    };
+    return languageMap[lang] || lang.charAt(0).toUpperCase() + lang.slice(1);
+  };
+
+  const getConnectionIcon = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return <Wifi className="w-3 h-3 text-emerald-400" />;
+      case 'connecting':
+        return <Clock className="w-3 h-3 text-amber-400 animate-pulse" />;
+      case 'error':
+        return <WifiOff className="w-3 h-3 text-red-400" />;
+      default:
+        return <WifiOff className="w-3 h-3 text-slate-400" />;
     }
-    return languageMap[lang] || lang.charAt(0).toUpperCase() + lang.slice(1)
-  }
+  };
+
+  const getConnectionText = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'Connected';
+      case 'connecting':
+        return 'Connecting...';
+      case 'error':
+        return 'Connection Error';
+      default:
+        return 'Disconnected';
+    }
+  };
+
+  const getConnectionVariant = (): 'success' | 'warning' | 'error' | 'default' => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'success';
+      case 'connecting':
+        return 'warning';
+      case 'error':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const defaultItems: StatusBarItem[] = [
+    {
+      id: 'cursor',
+      label: `Ln ${cursorPosition.line}, Col ${cursorPosition.column}`,
+      icon: MousePointer,
+      variant: 'info',
+      priority: 10
+    },
+    {
+      id: 'selection',
+      label: selection ? `${selection.end.line - selection.start.line + 1} selected` : '',
+      icon: FileText,
+      variant: 'info',
+      priority: 9
+    },
+    {
+      id: 'language',
+      label: getLanguageDisplayName(language),
+      icon: FileText,
+      variant: 'default',
+      priority: 8
+    },
+    {
+      id: 'encoding',
+      label: 'UTF-8',
+      icon: Globe,
+      variant: 'default',
+      priority: 7
+    },
+    {
+      id: 'git',
+      label: 'main',
+      icon: GitBranch,
+      variant: 'success',
+      priority: 6
+    },
+    {
+      id: 'connection',
+      label: getConnectionText(),
+      icon: getConnectionIcon,
+      variant: getConnectionVariant(),
+      priority: 5
+    },
+    {
+      id: 'users',
+      label: `${userCount} users`,
+      value: userCount,
+      icon: Users,
+      variant: 'info',
+      priority: 4
+    }
+  ];
+
+  const allItems = [...items, ...defaultItems]
+    .filter(item => item.label || item.value)
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
   if (!showDetailed) {
     // Compact status bar
     return (
-      <div className="bg-gray-800/50 backdrop-blur-sm border-t border-gray-700/50 px-4 py-2 flex items-center justify-between text-sm">
+      <div className="bg-slate-800/50 border-t border-slate-700/30 px-4 py-2 flex items-center justify-between text-sm backdrop-blur-sm">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Zap size={14} className="text-green-400" />
-            <span className="text-gray-300">Live</span>
+            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-sm shadow-emerald-400/30"></div>
+            <span className="text-emerald-400 font-medium">Ready</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <Globe size={14} className="text-blue-400" />
-            <span className="text-gray-300">{getLanguageDisplayName(language)}</span>
+
+          <span className="text-slate-400">•</span>
+
+          <div className="flex items-center space-x-1">
+            <FileText className="w-3 h-3 text-blue-400" />
+            <span className="text-blue-400">{getLanguageDisplayName(language)}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <GitBranch size={14} className="text-gray-400" />
-            <span className="text-gray-400">main</span>
+
+          <span className="text-slate-400">•</span>
+
+          <div className="flex items-center space-x-1">
+            <MousePointer className="w-3 h-3 text-slate-400" />
+            <span className="text-slate-400">{cursorPosition.line}:{cursorPosition.column}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
-          {Object.keys(cursorPositions).length > 0 && (
-            <>
-              <div className="flex items-center space-x-2">
-                <Users size={14} className="text-purple-400" />
-                <span className="text-gray-300">{Object.keys(cursorPositions).length} active</span>
-              </div>
-              <div className="w-px h-4 bg-gray-600"></div>
-            </>
-          )}
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-green-400">Connected</span>
+          <div className="flex items-center space-x-1">
+            <Users className="w-3 h-3 text-emerald-400" />
+            <span className="text-emerald-400">{userCount} online</span>
+          </div>
+
+          <span className="text-slate-400">•</span>
+
+          <div className="flex items-center space-x-1">
+            {getConnectionIcon()}
+            <span className={`text-sm font-medium ${
+              connectionStatus === 'connected' ? 'text-emerald-400' :
+              connectionStatus === 'connecting' ? 'text-amber-400' :
+              'text-red-400'
+            }`}>
+              {getConnectionText()}
+            </span>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Detailed status bar
   return (
-    <div className="bg-gray-800/30 backdrop-blur-sm border-t border-gray-700/30 px-6 py-3">
+    <div className="bg-slate-800/50 border-t border-slate-700/30 px-4 py-3 backdrop-blur-sm">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-8">
-          {/* Connection Status */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-sm"></div>
-              <span className="text-white text-sm font-medium">Live Session</span>
-            </div>
-            <div className="text-xs text-gray-400 bg-gray-700/50 px-2 py-1 rounded">
-              {documentId ? documentId.slice(0, 12) + '...' : 'No Session'}
-            </div>
+        {/* Left Section */}
+        <div className="flex items-center space-x-3">
+          {/* Status indicator */}
+          <div className="flex items-center space-x-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-sm shadow-emerald-400/30"></div>
+            <span className="text-sm text-emerald-400 font-medium">Ready</span>
           </div>
 
-          {/* Language Info */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Globe size={16} className="text-blue-400" />
-              <span className="text-gray-400 text-sm">Language:</span>
-              <span className="text-white text-sm font-medium">
-                {getLanguageDisplayName(language)}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 text-sm">Encoding:</span>
-              <span className="text-white text-sm">UTF-8</span>
-            </div>
-          </div>
+          {/* Language */}
+          <StatusBarButton
+            item={{
+              id: 'language',
+              label: getLanguageDisplayName(language),
+              icon: FileText,
+              variant: 'default'
+            }}
+          />
 
-          {/* Git Info */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <GitBranch size={16} className="text-gray-400" />
-              <span className="text-gray-400 text-sm">Branch:</span>
-              <span className="text-white text-sm font-medium">main</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 text-sm">Status:</span>
-              <span className="text-green-400 text-sm font-medium">Clean</span>
-            </div>
-          </div>
+          {/* Cursor position */}
+          <StatusBarButton
+            item={{
+              id: 'cursor',
+              label: `${cursorPosition.line}:${cursorPosition.column}`,
+              icon: MousePointer,
+              variant: 'info'
+            }}
+          />
+
+          {/* Selection info */}
+          {selection && (
+            <StatusBarButton
+              item={{
+                id: 'selection',
+                label: `${selection.end.line - selection.start.line + 1} lines`,
+                icon: Hash,
+                variant: 'info'
+              }}
+            />
+          )}
+
+          {/* Encoding */}
+          <StatusBarButton
+            item={{
+              id: 'encoding',
+              label: 'UTF-8',
+              icon: Globe,
+              variant: 'default'
+            }}
+          />
         </div>
 
-        {/* Right Side */}
-        <div className="flex items-center space-x-8">
-          {/* Cursor Info */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Users size={16} className="text-purple-400" />
-              <span className="text-gray-400 text-sm">Cursors:</span>
-              <span className="text-white text-sm font-medium">
-                {Object.keys(cursorPositions).length + 1}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 text-sm">Users:</span>
-              <span className="text-white text-sm font-medium">
-                {connectedUsers.length + 1}
-              </span>
-            </div>
-          </div>
+        {/* Right Section */}
+        <div className="flex items-center space-x-3">
+          {/* Git branch */}
+          <StatusBarButton
+            item={{
+              id: 'git',
+              label: 'main',
+              icon: GitBranch,
+              variant: 'success'
+            }}
+          />
 
-          {/* Performance */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-gray-400 text-sm">Memory:</span>
-              <span className="text-white text-sm">24 MB</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 text-sm">Latency:</span>
-              <span className="text-green-400 text-sm font-medium">12ms</span>
-            </div>
+          {/* User count */}
+          <StatusBarButton
+            item={{
+              id: 'users',
+              label: 'Users',
+              value: userCount,
+              icon: Users,
+              variant: 'info'
+            }}
+          />
+
+          {/* Connection status */}
+          <StatusBarButton
+            item={{
+              id: 'connection',
+              label: getConnectionText(),
+              icon: getConnectionIcon,
+              variant: getConnectionVariant()
+            }}
+          />
+
+          {/* Performance indicator */}
+          <div className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
+            <Zap className="w-3 h-3 text-blue-400" />
+            <span className="text-xs text-blue-400 font-medium">Live</span>
           </div>
         </div>
       </div>
+
+      {/* User avatars for active collaborators */}
+      {connectedUsers.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-700/30">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400">Active collaborators:</span>
+            <div className="flex items-center -space-x-2">
+              {connectedUsers.slice(0, 5).map((user, index) => (
+                <div
+                  key={user.id}
+                  className="w-6 h-6 rounded-full border-2 border-slate-700 flex items-center justify-center text-white text-xs font-medium shadow-lg relative"
+                  style={{
+                    backgroundColor: user.color,
+                    zIndex: 10 - index
+                  }}
+                  title={`${user.name} (${user.connectionStatus})`}
+                >
+                  {user.name.charAt(0).toUpperCase()}
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-slate-700 ${
+                    user.connectionStatus === 'online' ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`}></div>
+                </div>
+              ))}
+              {connectedUsers.length > 5 && (
+                <div className="w-6 h-6 bg-slate-600 rounded-full border-2 border-slate-700 flex items-center justify-center text-white text-xs font-medium shadow-lg">
+                  +{connectedUsers.length - 5}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
