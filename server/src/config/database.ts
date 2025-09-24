@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import config from "./config.js";
+import { config } from "./config.js";
 
 // Initialize Sequelize with configuration from environment variables
 const sequelize = new Sequelize(
