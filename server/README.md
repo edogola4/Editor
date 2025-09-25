@@ -1,53 +1,82 @@
 # Collaborative Code Editor - Backend
 
+<div align="center">
+  <h2>🚀 Real-time Collaborative Code Editor - Backend</h2>
+  <p>High-performance backend service for real-time collaborative code editing</p>
+
+  ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
+  ![Express](https://img.shields.io/badge/Express-4.18+-000000.svg)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7.2-010101.svg)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
+  
+  [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+</div>
+
 This is the backend service for the Collaborative Code Editor application, built with Node.js, Express, TypeScript, PostgreSQL, and Socket.IO for real-time collaboration.
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **RESTful API** for user management, authentication, and room management
-- **Real-time Collaboration** using WebSockets with Socket.IO
-- **JWT Authentication** with secure password hashing
-- **Database Integration** with PostgreSQL and Sequelize ORM
-- **API Documentation** with Swagger/OpenAPI
-- **Comprehensive Testing** with Jest and Supertest
-- **Code Quality** with ESLint and Prettier
-- **Security** with Helmet, CORS, and rate limiting
-- **Logging** with Winston and daily rotation
+- **RESTful API** - User management, authentication, and room management
+- **Real-time Collaboration** - WebSockets with Socket.IO for live editing
+- **JWT Authentication** - Secure stateless authentication with refresh tokens
+- **Database Integration** - PostgreSQL with Sequelize ORM
+- **API Documentation** - Comprehensive OpenAPI/Swagger documentation
+- **Comprehensive Testing** - Unit, integration, and E2E tests with Jest
+- **Code Quality** - ESLint, Prettier, and TypeScript for robust code
+- **Security** - Helmet, CORS, rate limiting, and request validation
+- **Logging** - Structured logging with Winston and daily rotation
+- **Containerization** - Docker support for easy deployment
 
 ### 🛠 **Technical Features**
-- **TypeScript**: Full type safety throughout the application
-- **Express.js**: Production-ready web framework
-- **Socket.IO**: Real-time bidirectional communication
-- **Sequelize ORM**: Database abstraction with migrations
-- **bcrypt**: Secure password hashing
-- **JWT**: Stateless authentication
-- **Winston**: Structured logging
-- **Compression**: Response compression
-- **Rate Limiting**: API protection
-- **CORS**: Cross-origin resource sharing
-- **Error Handling**: Custom error middleware
+- **TypeScript 5.3+** - Full type safety throughout the application
+- **Express.js 4.18+** - Fast, unopinionated web framework
+- **Socket.IO 4.7+** - Real-time bidirectional communication
+- **Sequelize 7+** - Modern TypeScript-first ORM with migrations
+- **PostgreSQL 16+** - Powerful open-source relational database
+- **Redis 7+** - In-memory data store for caching and pub/sub
+- **JWT** - Secure stateless authentication
+- **bcryptjs** - Secure password hashing
+- **Winston 3+** - Structured logging with daily rotation
+- **Zod** - TypeScript-first schema validation
+- **CORS** - Secure cross-origin resource sharing
+- **Helmet** - Security headers
+- **Rate Limiting** - Protection against brute force attacks
+- **Compression** - Response compression for better performance
+- **Request Validation** - Input validation middleware
 
 ## 🛠 Tech Stack
 
 ### **Backend**
 - **Node.js 22+** - JavaScript runtime
-- **Express.js 4+** - Web application framework
-- **TypeScript 5+** - Type-safe backend development
-- **Socket.IO 4+** - Real-time WebSocket communication
-- **PostgreSQL 14+** - Relational database
-- **Sequelize 6+** - ORM with migrations
+- **Express.js 4.18+** - Web application framework
+- **TypeScript 5.3+** - Type-safe backend development
+- **Socket.IO 4.7+** - Real-time WebSocket communication
+- **PostgreSQL 16+** - Relational database
+- **Redis 7+** - In-memory data structure store
+- **Sequelize 7+** - Modern TypeScript ORM
 - **JWT** - Authentication and authorization
 - **bcryptjs** - Password hashing
 - **Winston 3+** - Logging with daily rotation
 - **node-pg-migrate** - Database migrations
+- **Zod** - TypeScript-first schema validation
+- **CORS** - Cross-Origin Resource Sharing
+- **Helmet** - Security headers
+- **Express Rate Limit** - Basic rate-limiting middleware
+- **Compression** - Response compression
+- **Dotenv** - Environment variable management
 
 ### **Development & Quality**
 - **Jest 29+** - Testing framework
-- **Supertest** - API testing utilities
+- **Supertest** - HTTP assertions
 - **ESLint 8+** - Code linting
 - **Prettier 3+** - Code formatting
 - **TypeScript ESLint** - TypeScript-specific linting
+- **Husky** - Git hooks
+- **Lint-staged** - Run linters on git staged files
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container application management
 - **Nodemon** - Development server with hot reload
 
 ## 🚀 Quick Start
