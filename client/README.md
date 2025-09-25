@@ -1,52 +1,78 @@
 # Collaborative Code Editor - Frontend
 
-This is the frontend client for the Collaborative Code Editor application, built with React, TypeScript, Vite, and Monaco Editor for real-time collaborative coding.
+<div align="center">
+  <h2>🚀 Real-time Collaborative Code Editor - Frontend</h2>
+  <p>Professional VS Code-like collaborative coding experience with real-time collaboration</p>
+
+  ![React](https://img.shields.io/badge/React-19-61dafb.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
+  ![Vite](https://img.shields.io/badge/Vite-5+-646CFF.svg)
+  ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0+-06B6D4.svg)
+  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.50.0-007acc.svg)
+  
+  [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+</div>
+
+This is the frontend client for the Collaborative Code Editor application, built with React 19, TypeScript 5.3, Vite 5, and Monaco Editor for real-time collaborative coding.
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **Real-time Collaboration**: Multi-user editing with live synchronization
+- **Real-time Collaboration**: Multi-user editing with operational transformation
 - **Professional Code Editor**: Monaco Editor with VS Code's powerful features
 - **Live Cursor Sharing**: See other users' cursors and positions in real-time
 - **User Presence**: Visual indicators showing connected users and their activity
 - **Authentication System**: JWT-based login and registration
+- **File Management**: Upload, create, and organize files and folders
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **Dark/Light Mode**: Toggle between themes for comfortable coding
 
 ### 🎨 **Editor Features**
 - **Monaco Editor**: Full VS Code editing experience
-- **IntelliSense**: Code completion, hover information, and error detection
-- **Syntax Highlighting**: Beautiful syntax highlighting for 15+ languages
-- **Bracket Matching**: Automatic bracket pair colorization
-- **Word Wrap**: Configurable text wrapping
+- **IntelliSense**: Smart code completion and hover information
+- **Multi-cursor Support**: Multiple cursors for efficient editing
+- **Themes**: Built-in light and dark themes with VS Code compatibility
+- **Keybindings**: VS Code keybindings out of the box
 - **Minimap**: Code overview for easy navigation
-- **Multiple Themes**: Dark theme optimized for coding
-- **Language Support**: JavaScript, TypeScript, Python, Java, C++, and more
+- **Bracket Pair Colorization**: Visual matching of brackets
+- **Word Wrap**: Configurable text wrapping
+- **Auto-Formatting**: Automatic code formatting on save
+- **Language Support**: 50+ programming languages with syntax highlighting
 
 ### 🛠 **Technical Features**
-- **React 19+**: Modern React with latest features
-- **TypeScript 5.8+**: Full type safety and developer experience
+- **React 19+**: Modern React with concurrent features
+- **TypeScript 5.3+**: Full type safety and developer experience
 - **Vite 5+**: Lightning-fast build tool and dev server
 - **Zustand + Immer**: Lightweight state management with immutable updates
 - **Socket.IO Client**: Real-time communication with backend
 - **Tailwind CSS 4+**: Utility-first CSS framework with custom theme
+- **React Query**: Server state management and data fetching
+- **React Hook Form**: Form handling with validation
 - **Axios**: HTTP client for API communication
 - **React Hot Toast**: Beautiful notifications
+- **React Icons**: Comprehensive icon library
+- **React Router DOM 7+**: Client-side routing with nested routes
+- **Monaco Editor**: VS Code's editor component for the web
 
 ## 🛠 Tech Stack
 
 ### **Frontend**
 - **React 19+** - Modern React with concurrent features
-- **TypeScript 5.8+** - Full type safety and excellent DX
-- **Vite 5+** - Lightning-fast build tool and dev server
+- **TypeScript 5.3+** - Type-safe development
+- **Vite 5+** - Next generation frontend tooling
 - **Tailwind CSS 4+** - Utility-first CSS framework
-- **Monaco Editor 0.53+** - VS Code's editor component
-- **Socket.IO Client 4+** - Real-time communication
+- **Monaco Editor 0.50+** - VS Code's editor component
+- **Socket.IO Client 4.7+** - Real-time communication
 - **Zustand 5+** - Lightweight state management
 - **Immer 10+** - Immutable state updates
-- **Axios 1+** - HTTP client for API requests
-- **React Hot Toast 2+** - Toast notifications
-- **React Icons 5+** - Icon library
+- **React Query 5+** - Server state management
+- **React Hook Form 7+** - Form handling
+- **Axios 1.6+** - HTTP client
+- **React Hot Toast 2.4+** - Toast notifications
+- **React Icons 5.0+** - Icon library
 - **React Router DOM 7+** - Client-side routing
+- **ESLint 8.56+** - Code linting
+- **Prettier 3.2+** - Code formatting
 
 ### **Development & Quality**
 - **ESLint 8+** - Code linting and formatting
