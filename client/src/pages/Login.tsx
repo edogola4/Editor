@@ -1,20 +1,8 @@
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import LoginForm from '../components/auth/LoginForm';
 
 const Login = () => {
-  const { isAuthenticated, isLoading } = useAuthStore();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // If user is already authenticated, redirect to the dashboard or the page they were trying to access
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, location.state, navigate]);
+  const { isLoading } = useAuthStore();
 
   // Show loading state while checking authentication
   if (isLoading) {
