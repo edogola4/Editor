@@ -52,32 +52,38 @@ This is the backend service for the Collaborative Code Editor application, built
 - **Node.js 22+** - JavaScript runtime
 - **Express.js 4.18+** - Web application framework
 - **TypeScript 5.3+** - Type-safe backend development
-- **Socket.IO 4.7+** - Real-time WebSocket communication
+- **Socket.IO 4.7+ with Redis Adapter** - Scalable WebSocket communication
 - **PostgreSQL 16+** - Relational database
-- **Redis 7+** - In-memory data structure store
-- **Sequelize 7+** - Modern TypeScript ORM
-- **JWT** - Authentication and authorization
-- **bcryptjs** - Password hashing
-- **Winston 3+** - Logging with daily rotation
-- **node-pg-migrate** - Database migrations
+- **Redis 7+** - In-memory data structure store and pub/sub
+- **Sequelize 7+** - Modern TypeScript ORM with migrations
+- **JWT** - Stateless authentication with refresh tokens
+- **bcryptjs** - Secure password hashing
+- **Winston 3+** - Logging with daily rotation and structured format
+- **node-pg-migrate** - Database migrations with version control
 - **Zod** - TypeScript-first schema validation
-- **CORS** - Cross-Origin Resource Sharing
+- **CORS** - Secure Cross-Origin Resource Sharing
 - **Helmet** - Security headers
-- **Express Rate Limit** - Basic rate-limiting middleware
-- **Compression** - Response compression
+- **Express Rate Limit with Redis** - Distributed rate limiting
+- **Compression** - Response compression for performance
 - **Dotenv** - Environment variable management
+- **Redis Commands** - For distributed locking and pub/sub
+- **Socket.IO Middleware** - For authentication and validation
 
 ### **Development & Quality**
-- **Jest 29+** - Testing framework
-- **Supertest** - HTTP assertions
-- **ESLint 8+** - Code linting
-- **Prettier 3+** - Code formatting
-- **TypeScript ESLint** - TypeScript-specific linting
-- **Husky** - Git hooks
+- **Jest 29+** - Testing framework with code coverage
+- **Supertest** - HTTP assertions for API testing
+- **ESLint 8+** - Code linting with TypeScript support
+- **Prettier 3+** - Opinionated code formatting
+- **TypeScript ESLint** - TypeScript-specific linting rules
+- **Husky** - Git hooks for pre-commit and pre-push
 - **Lint-staged** - Run linters on git staged files
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container application management
+- **Docker** - Containerization for consistent environments
+- **Docker Compose** - Multi-container orchestration
 - **Nodemon** - Development server with hot reload
+- **Debug Module** - Namespaced debugging
+- **ESLint Import Sorter** - Consistent import ordering
+- **Jest Watch** - Interactive test watching
+- **Test Containers** - Integration testing with real services
 
 ## 🚀 Quick Start
 

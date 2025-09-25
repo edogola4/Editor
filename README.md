@@ -30,6 +30,9 @@
 - **GitHub Integration**: Sign in with GitHub and import repositories
 - **Session Management**: Save and load collaborative sessions
 - **File Management**: Upload, create, and organize files and folders
+- **Redis-based Pub/Sub**: Scalable real-time messaging with Redis adapter
+- **Rate Limiting**: Protect your server from abuse with configurable rate limits
+- **Comprehensive Monitoring**: Built-in monitoring for system health and performance
 
 ### 🛠 **Editor Features**
 - **Monaco Editor**: Full VS Code editing experience
