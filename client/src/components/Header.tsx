@@ -1,12 +1,19 @@
-import React from 'react';
-import { Share2, Settings, Sun, Moon, Users, Zap, Command, MoreVertical } from 'lucide-react';
-// Try importing HeaderProps with explicit path
+import React, { useState, useEffect } from 'react';
+import { Share2, Settings, Sun, Moon, Users, Zap, Command, MoreVertical, Maximize2, Minimize2, GitBranch, Search } from 'lucide-react';
+import { cn } from '../lib/utils';
 import type { HeaderProps } from '../types/index';
 import type { ToolbarAction } from '../types/index';
+import { Button } from './ui/Button';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/Tooltip';
+import { useTheme } from '../hooks/use-theme';
 
 interface HeaderAction extends ToolbarAction {
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   badge?: string | number;
+  shortcut?: string;
+  tooltip?: string;
+  isActive?: boolean;
 }
 
 const HeaderActionButton: React.FC<HeaderAction> = ({
@@ -16,51 +23,127 @@ const HeaderActionButton: React.FC<HeaderAction> = ({
   disabled = false,
   variant = 'ghost',
   badge,
-  tooltip
+  tooltip,
+  shortcut,
+  isActive = false,
+  className
 }) => {
-  const baseClasses = "relative p-2 rounded-lg transition-all duration-300 flex items-center justify-center group hover:scale-105";
-
-  const variants = {
-    primary: "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-500 hover:to-purple-500 shadow-lg hover:shadow-xl hover:shadow-blue-500/25",
-    secondary: "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white border border-slate-600/30",
-    ghost: "text-slate-400 hover:text-white hover:bg-slate-700/30"
-  };
-
   return (
-    <button
-      className={`${baseClasses} ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-      onClick={onClick}
-      disabled={disabled}
-      title={tooltip || label}
-      aria-label={label}
-    >
-      <Icon className="w-4 h-4" />
-      {badge && (
-        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">
-          {badge}
-        </span>
-      )}
-      {/* Enhanced hover tooltip */}
-      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900/95 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none backdrop-blur-sm border border-slate-700/50 shadow-lg">
-        {tooltip || label}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-900/95"></div>
-      </div>
-    </button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant={variant}
+            size="icon"
+            onClick={onClick}
+            disabled={disabled}
+            className={cn(
+              'relative group transition-all duration-200',
+              isActive && 'bg-accent text-accent-foreground',
+              className
+            )}
+            aria-label={label}
+          >
+            <Icon className="h-4 w-4" />
+            {badge !== undefined && (
+              <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium rounded-full h-4 w-4 flex items-center justify-center">
+                {badge}
+              </span>
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="flex items-center gap-2">
+          <span>{tooltip || label}</span>
+          {shortcut && (
+            <kbd className="bg-muted text-muted-foreground px-1.5 py-0.5 text-xs rounded border border-border font-mono">
+              {shortcut}
+            </kbd>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
+const UserAvatar = ({ user, className }: { user: { id: string; username: string; avatar?: string }, className?: string }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className={cn('relative', className)}>
+        <Avatar className="h-8 w-8 border-2 border-background">
+          <AvatarImage src={user.avatar} alt={user.username} />
+          <AvatarFallback className="text-xs">
+            {user.username.slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background bg-green-500"></div>
+      </div>
+    </TooltipTrigger>
+    <TooltipContent side="bottom">
+      <p>{user.username}</p>
+    </TooltipContent>
+  </Tooltip>
+);
+
 export const Header: React.FC<HeaderProps> = ({
   documentId,
-  users,
+  users = [],
   onShare,
   onSettings,
   onThemeToggle,
-  onCommandPalette
+  onCommandPalette,
+  className,
+  ...props
 }) => {
+  const { theme, setTheme } = useTheme();
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const activeUsers = users.filter(user => user.connectionStatus === 'online');
-  const isDarkTheme = true; // This would come from theme context
+  const isDarkTheme = theme === 'dark';
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(console.error);
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(console.error);
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = isDarkTheme ? 'light' : 'dark';
+    setTheme(newTheme);
+    if (onThemeToggle) onThemeToggle();
+  };
 
   const actions: HeaderAction[] = [
+    {
+      id: 'branch',
+      label: 'Branch',
+      icon: GitBranch,
+      onClick: () => {},
+      variant: 'ghost',
+      tooltip: 'View branches (Ctrl+Shift+B)'
+    },
+    {
+      id: 'search',
+      label: 'Search',
+      icon: Search,
+      onClick: () => {},
+      variant: 'ghost',
+      shortcut: 'Ctrl+F',
+      tooltip: 'Search in files (Ctrl+F)'
+    },
     {
       id: 'command',
       label: 'Command Palette',
@@ -72,12 +155,29 @@ export const Header: React.FC<HeaderProps> = ({
     },
     {
       id: 'share',
-      label: 'Share Session',
+      label: 'Share',
       icon: Share2,
       onClick: onShare || (() => {}),
       variant: 'primary',
       badge: activeUsers.length,
-      tooltip: `Share session with ${activeUsers.length + 1} users`
+      tooltip: `Share with ${activeUsers.length} other ${activeUsers.length === 1 ? 'user' : 'users'}`,
+      className: 'hidden sm:flex'
+    },
+    {
+      id: 'theme',
+      label: 'Toggle Theme',
+      icon: isDarkTheme ? Sun : Moon,
+      onClick: toggleTheme,
+      variant: 'ghost',
+      tooltip: `Switch to ${isDarkTheme ? 'light' : 'dark'} theme`
+    },
+    {
+      id: 'fullscreen',
+      label: 'Toggle Fullscreen',
+      icon: isFullscreen ? Minimize2 : Maximize2,
+      onClick: toggleFullscreen,
+      variant: 'ghost',
+      tooltip: isFullscreen ? 'Exit fullscreen (F11)' : 'Enter fullscreen (F11)'
     },
     {
       id: 'settings',
@@ -85,19 +185,11 @@ export const Header: React.FC<HeaderProps> = ({
       icon: Settings,
       onClick: onSettings || (() => {}),
       variant: 'ghost',
-      tooltip: 'Editor settings and preferences'
-    },
-    {
-      id: 'theme',
-      label: 'Toggle Theme',
-      icon: isDarkTheme ? Sun : Moon,
-      onClick: onThemeToggle || (() => {}),
-      variant: 'ghost',
-      tooltip: `Switch to ${isDarkTheme ? 'light' : 'dark'} theme`
+      tooltip: 'Settings (Ctrl\,)'
     },
     {
       id: 'more',
-      label: 'More Options',
+      label: 'More options',
       icon: MoreVertical,
       onClick: () => {},
       variant: 'ghost',
@@ -143,45 +235,22 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Section - Actions and User Presence */}
-        <div className="flex items-center space-x-4">
-          {/* User Avatars */}
-          <div className="flex items-center -space-x-2">
-            {/* Current user */}
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-slate-800 flex items-center justify-center text-white text-xs font-medium shadow-lg relative hover:scale-110 transition-transform duration-200 cursor-pointer">
-              <span>You</span>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border border-slate-800 animate-pulse"></div>
-            </div>
-
-            {/* Other users */}
-            {activeUsers.slice(0, 4).map((user, index) => (
-              <div
-                key={user.id}
-                className="w-7 h-7 rounded-full border-2 border-slate-800 flex items-center justify-center text-white text-xs font-medium shadow-lg animate-scale-in relative hover:scale-110 transition-transform duration-200 cursor-pointer"
-                style={{
-                  backgroundColor: user.color,
-                  animationDelay: `${index * 100}ms`,
-                  zIndex: 10 - index
-                }}
-                title={`${user.name} (${user.connectionStatus})`}
-              >
-                {user.name.charAt(0).toUpperCase()}
-                <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-slate-800 ${
-                  user.connectionStatus === 'online' ? 'bg-emerald-400' :
-                  user.connectionStatus === 'away' ? 'bg-amber-400' : 'bg-slate-400'
-                }`}></div>
-              </div>
+        <div className="flex items-center space-x-1">
+          <div className="flex items-center -space-x-1 mr-2">
+            {activeUsers.slice(0, 3).map((user) => (
+              <UserAvatar key={user.id} user={user} />
             ))}
-
-            {activeUsers.length > 4 && (
-              <div className="w-7 h-7 bg-slate-600 rounded-full border-2 border-slate-800 flex items-center justify-center text-white text-xs font-medium shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer">
-                +{activeUsers.length - 4}
+            {activeUsers.length > 3 && (
+              <div className="h-7 w-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-medium">
+                +{activeUsers.length - 3}
               </div>
             )}
           </div>
-
-          {/* Action Buttons */}
+          
+          <div className="h-6 w-px bg-border mx-1" />
+          
           <div className="flex items-center space-x-1">
-            {actions.map(action => (
+            {actions.map((action) => (
               <HeaderActionButton key={action.id} {...action} />
             ))}
           </div>

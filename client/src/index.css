@@ -2,27 +2,154 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --radius: 0.5rem;
+  }
+}
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
 
 :root {
-  --editor-bg: #1e1e1e;
-  --editor-fg: #d4d4d4;
-  --editor-selection: #264f78;
-  --editor-line-highlight: #2a2d2e;
-  --border-color: #3e3e3e;
+  --editor-bg: #0a0a0a;
+  --editor-fg: #f8fafc;
+  --editor-selection: #1e40af;
+  --editor-line-highlight: #1e293b;
+  --border-color: #1e293b;
+  --sidebar-bg: #0f172a;
+  --sidebar-width: 280px;
+  --header-height: 60px;
+  --transition-speed: 0.2s;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--editor-line-highlight);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Custom focus styles */
+.focus-ring {
+  @apply ring-2 ring-offset-2 ring-offset-background ring-primary/50 outline-none;
+}
+
+/* Custom selection */
+::selection {
+  @apply bg-primary/20 text-foreground;
+}
+
+/* Custom code block styles */
+pre {
+  @apply p-4 rounded-lg bg-muted overflow-x-auto text-sm;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+code {
+  @apply text-sm font-mono bg-muted/50 px-1.5 py-0.5 rounded;
+}
+
+/* Custom button styles */
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 justify-center;
+}
+
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border;
+}
+
+.btn-ghost {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Custom input styles */
+.input {
+  @apply w-full px-3 py-2 bg-background border border-input rounded-md shadow-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all duration-200;
+}
+
+.input:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Custom card styles */
+.card {
+  @apply bg-card border border-border rounded-xl p-6 shadow-sm transition-all duration-200 hover:shadow-md;
+}
+
+/* Custom tooltip */
+.tooltip {
+  @apply absolute z-50 px-3 py-1.5 text-sm font-medium rounded-md bg-foreground text-background shadow-md opacity-0 invisible transition-all duration-200 transform -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0;
+}
+
+.tooltip-arrow {
+  @apply absolute w-2 h-2 bg-foreground transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2;
 }
 
 a {
