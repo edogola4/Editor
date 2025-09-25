@@ -7,22 +7,18 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   status?: 'online' | 'away' | 'busy' | 'offline';
   showStatus?: boolean;
-  fallback?: string;
 }
 
-const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
-  ({
-    className,
-    src,
-    name,
-    size = 'md',
-    status,
-    showStatus = true,
-    fallback,
-    ...props
-  }, ref) => {
+const Avatar = ({
+  className,
+  src,
+  name,
+  size = 'md',
+  status,
+  showStatus = true
+}: AvatarProps) => {
     const [imgError, setImgError] = React.useState(false);
-    const showFallback = !src || imgError;
+    const shouldShowFallback = !src || imgError;
 
     const sizeClasses = {
       xs: 'h-6 w-6 text-xs',
@@ -89,14 +85,15 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             rounded-full border-2 border-slate-800 flex items-center justify-center text-white font-medium shadow-lg relative overflow-hidden transition-transform duration-200 hover:scale-110 cursor-pointer
           `}
         >
-          {src ? (
+          {shouldShowFallback ? (
+            <span className="font-semibold">{getInitials(name || 'User')}</span>
+          ) : (
             <img
               src={src}
               alt={name || 'Avatar'}
               className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
             />
-          ) : (
-            <span className="font-semibold">{getInitials(name || 'User')}</span>
           )}
 
           {/* Status indicator */}
@@ -122,7 +119,6 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
       </div>
     );
   }
-);
 
 Avatar.displayName = 'Avatar';
 
