@@ -4,9 +4,9 @@
   <h1>🚀 Real-time Collaborative Code Editor</h1>
   <p><strong>Professional VS Code-like collaborative coding experience with real-time collaboration</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
   ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7.2-010101.svg)
   ![Monaco Editor](https://img.shields.io/badge/Monaco-0.50.0-007acc.svg)
@@ -15,7 +15,8 @@
   ![ESM](https://img.shields.io/badge/ES_Modules-100%25-FFCA28.svg)
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/yourusername/collaborative-code-editor/pulls)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/edogola4/Editor/pulls)
+  [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 </div>
 
 ## ✨ Features
@@ -28,6 +29,7 @@
 - **Multi-language Support**: 50+ programming languages with syntax highlighting
 - **GitHub Integration**: Sign in with GitHub and import repositories
 - **Session Management**: Save and load collaborative sessions
+- **File Management**: Upload, create, and organize files and folders
 
 ### 🛠 **Editor Features**
 - **Monaco Editor**: Full VS Code editing experience
@@ -38,6 +40,7 @@
 - **Minimap**: Code overview for easy navigation
 - **Bracket Pair Colorization**: Visual matching of brackets
 - **Word Wrap**: Configurable text wrapping
+- **Auto-Formatting**: Automatic code formatting on save
 
 ### 🎨 **User Interface**
 - **Modern Design**: Clean, professional interface inspired by VS Code
@@ -45,9 +48,15 @@
 - **User Avatars**: Color-coded user identification system
 - **Status Indicators**: Real-time connection and activity status
 - **Customizable UI**: Tailwind CSS with custom theme colors
+- **Dark/Light Mode**: Toggle between themes for comfortable coding
 
 ### 🔧 **Technical Features**
 - **TypeScript First**: Full type safety across the entire stack
+- **Modular Architecture**: Clean separation of concerns
+- **WebSockets**: Real-time bidirectional communication
+- **JWT Authentication**: Secure stateless authentication
+- **Database Migrations**: Version-controlled database schema changes
+- **Containerized**: Easy deployment with Docker
 - **Modern State Management**: Zustand + Immer for predictable state
 - **Real-time Sync**: Operational Transformation with Socket.IO
 - **Monorepo Architecture**: Shared code between client and server
