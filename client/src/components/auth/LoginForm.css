@@ -1,0 +1,976 @@
+/* LoginForm.css - Enhanced Professional Login Component */
+
+:root {
+  /* Primary Brand Color - Deep Sage Green */
+  --login-primary: #4a5d4a;
+  --login-primary-light: #6b7d6b;
+  --login-primary-dark: #2d3a2d;
+
+  /* Form Accent Color - Warm Antique Gold */
+  --login-accent: #c8a882;
+  --login-accent-light: #e0c5a0;
+  --login-accent-dark: #a68a5f;
+
+  /* Background Colors - Sophisticated Gradient System */
+  --login-background: #f8f6f3;
+  --login-background-alt: #f4f2ef;
+  --login-background-pattern: radial-gradient(circle at 20% 80%, rgba(200, 168, 130, 0.08) 0%, transparent 50%),
+                              radial-gradient(circle at 80% 20%, rgba(74, 93, 74, 0.08) 0%, transparent 50%);
+
+  /* Container Colors - Enhanced Depth */
+  --login-container: #fefcf9;
+  --login-container-shadow: 0 25px 70px rgba(74, 93, 74, 0.12),
+                           0 15px 35px rgba(74, 93, 74, 0.08),
+                           0 5px 15px rgba(74, 93, 74, 0.04);
+
+  /* Text Colors - Improved Hierarchy */
+  --login-text-primary: #2d3a2d;
+  --login-text-secondary: #5c6b5c;
+  --login-text-muted: #8b9a8b;
+  --login-text-placeholder: #a5b4a5;
+
+  /* Status Colors - Refined Feedback System */
+  --login-error: #c85450;
+  --login-error-light: #f4e7e6;
+  --login-error-border: #e68d8a;
+  --login-success: #7ba428;
+  --login-success-light: #f0f6e8;
+  --login-warning: #d4860c;
+  --login-warning-light: #fdf5e6;
+
+  /* Interactive Elements - Enhanced States */
+  --login-tertiary: #a68a5f;
+  --login-tertiary-light: #c5a882;
+  --login-focus: var(--login-accent);
+  --login-hover: var(--login-primary-light);
+  --login-disabled: #b8c4b8;
+  --login-border: rgba(74, 93, 74, 0.12);
+  --login-border-light: rgba(74, 93, 74, 0.08);
+
+  /* Animation Properties */
+  --login-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --login-transition-fast: all 0.15s ease-out;
+  --login-transition-slow: all 0.5s ease;
+}
+
+/* Enhanced Container with Pattern Background */
+.loginFormContainer {
+  background: var(--login-background);
+  background-image: var(--login-background-pattern);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  position: relative;
+}
+
+/* Animated Background Elements */
+.loginFormContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(200, 168, 130, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 75% 75%, rgba(74, 93, 74, 0.05) 0%, transparent 40%);
+  animation: backgroundFloat 20s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes backgroundFloat {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-10px, -10px) rotate(1deg); }
+}
+
+/* Enhanced Card Design */
+.loginFormCard {
+  background: var(--login-container);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: var(--login-container-shadow);
+  border: 1px solid var(--login-border-light);
+  max-width: 440px;
+  width: 100%;
+  position: relative;
+  backdrop-filter: blur(20px);
+  transform: translateY(0);
+  transition: var(--login-transition);
+}
+
+.loginFormCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 80px rgba(74, 93, 74, 0.15),
+              0 20px 40px rgba(74, 93, 74, 0.10),
+              0 8px 20px rgba(74, 93, 74, 0.05);
+}
+
+/* Enhanced Header Section */
+.loginFormHeader {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.loginFormTitle {
+  color: var(--login-primary);
+  font-size: 2.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 36px;
+  letter-spacing: -0.8px;
+  position: relative;
+  line-height: 1.2;
+}
+
+.loginFormSubtitle {
+  color: var(--login-text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+}
+
+.loginFormTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--login-accent) 0%, var(--login-accent-light) 100%);
+  border-radius: 3px;
+  animation: titleUnderline 2s ease-out;
+}
+
+@keyframes titleUnderline {
+  0% { width: 0; opacity: 0; }
+  100% { width: 80px; opacity: 1; }
+}
+
+/* Enhanced Error States */
+.loginFormError {
+  background: var(--login-error-light);
+  color: var(--login-error);
+  padding: 16px 20px;
+  border-radius: 14px;
+  margin-bottom: 28px;
+  border: 1px solid var(--login-error-border);
+  border-left: 4px solid var(--login-error);
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: relative;
+  animation: errorSlideIn 0.3s ease-out;
+}
+
+.loginFormError::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: var(--login-error);
+  border-radius: 2px;
+}
+
+@keyframes errorSlideIn {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Enhanced Form Group */
+.loginFormGroup {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+/* Improved Labels */
+.loginFormLabel {
+  color: var(--login-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  letter-spacing: 0.3px;
+  transition: var(--login-transition-fast);
+}
+/* Enhanced Input Fields with Icons */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Enhanced Input Fields */
+.loginFormInput {
+  width: 100%;
+  border: 2px solid var(--login-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  font-size: 1rem;
+  background: rgba(254, 252, 249, 0.9);
+  color: var(--login-text-primary);
+  transition: var(--login-transition);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.loginFormInput:focus {
+  border-color: var(--login-accent);
+  box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+  background: white;
+  transform: translateY(-2px);
+}
+
+.loginFormInput:focus + .loginFormLabel {
+  color: var(--login-accent);
+}
+
+.loginFormInput::placeholder {
+  color: var(--login-text-placeholder);
+  font-weight: 400;
+}
+
+.loginFormInput:invalid {
+  border-color: var(--login-error-border);
+}
+
+.loginFormInput:valid {
+  border-color: var(--login-success);
+}
+
+.loginFormInput.error {
+  border-color: var(--login-error-border);
+  background: var(--login-error-light);
+}
+
+.inputIcon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--login-text-muted);
+  transition: var(--login-transition-fast);
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inputIcon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.5;
+}
+
+.loginFormInput:focus ~ .inputIcon {
+  color: var(--login-accent);
+}
+
+.loginFormInput:focus ~ .inputIcon svg {
+  color: var(--login-accent);
+}
+
+/* Field Error Messages */
+.fieldError {
+  color: var(--login-error);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 6px;
+  display: block;
+  animation: fieldErrorSlideIn 0.2s ease-out;
+}
+
+@keyframes fieldErrorSlideIn {
+  0% { opacity: 0; transform: translateY(-5px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Enhanced Button Styles */
+.loginFormActions {
+  margin: 32px 0 24px 0;
+}
+
+.loginFormSubmitBtn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--login-accent) 0%, var(--login-accent-dark) 100%);
+  color: white;
+  border: none;
+  padding: 18px 24px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--login-transition);
+  position: relative;
+  overflow: hidden;
+  margin: 24px 0 16px 0;
+  letter-spacing: 0.5px;
+}
+
+.loginFormSubmitBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s;
+}
+
+.loginFormSubmitBtn:hover::before {
+  left: 100%;
+}
+
+.loginFormSubmitBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(200, 168, 130, 0.4);
+  background: linear-gradient(135deg, var(--login-accent-light) 0%, var(--login-accent) 100%);
+}
+
+.loginFormSubmitBtn:active {
+  transform: translateY(-1px);
+  transition: var(--login-transition-fast);
+}
+
+.loginFormSubmitBtn:disabled {
+  background: var(--login-disabled);
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* Enhanced Loading Animation */
+.loginFormLoading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Enhanced GitHub Button */
+.loginFormSocial {
+  margin: 24px 0;
+}
+
+.loginFormGitHubBtn {
+  width: 100%;
+  background: var(--login-primary);
+  color: white;
+  border: none;
+  padding: 18px 24px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--login-transition);
+  position: relative;
+  overflow: hidden;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  letter-spacing: 0.3px;
+}
+
+.loginFormGitHubBtn:hover {
+  background: var(--login-primary-light);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(74, 93, 74, 0.3);
+}
+
+.loginFormGitHubBtn:disabled {
+  background: var(--login-disabled);
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+.githubIcon {
+  width: 20px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='currentColor' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z'/%3E%3C/svg%3E") no-repeat center;
+  background-size: contain;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Enhanced Divider */
+.loginFormDivider {
+  display: flex;
+  align-items: center;
+  margin: 28px 0;
+  color: var(--login-text-muted);
+  font-size: 0.9rem;
+}
+
+.loginFormDivider::before,
+.loginFormDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--login-border);
+  margin: 0 16px;
+}
+
+/* Enhanced Toggle Button */
+.loginFormFooter {
+  margin-top: 24px;
+}
+
+.loginFormToggleBtn {
+  background: none;
+  border: none;
+  color: var(--login-accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--login-transition);
+  padding: 12px 16px;
+  text-decoration: none;
+  border-radius: 10px;
+  position: relative;
+  margin-top: 16px;
+  width: 100%;
+  text-align: center;
+}
+
+.loginFormToggleBtn:hover {
+  color: var(--login-accent-dark);
+  background: rgba(200, 168, 130, 0.12);
+  transform: scale(1.02);
+}
+
+.loginFormToggleBtn:active {
+  transform: scale(0.98);
+}
+
+/* Trust Indicators */
+.loginFormTrust {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--login-border-light);
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.trustIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--login-text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.trustIndicator svg {
+  color: var(--login-success);
+  flex-shrink: 0;
+}
+
+/* Enhanced Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --login-background: #1a1f1a;
+    --login-background-alt: #1e2320;
+    --login-container: #242a24;
+    --login-text-primary: #e8f0e8;
+    --login-text-secondary: #b8c4b8;
+    --login-text-muted: #8b9a8b;
+    --login-text-placeholder: #6b7d6b;
+    --login-border: rgba(232, 240, 232, 0.15);
+    --login-border-light: rgba(232, 240, 232, 0.08);
+    --login-container-shadow: 0 25px 70px rgba(0, 0, 0, 0.3),
+                             0 15px 35px rgba(0, 0, 0, 0.2),
+                             0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .loginFormInput {
+    background: rgba(36, 42, 36, 0.9);
+  }
+
+  .loginFormInput:focus {
+    background: rgba(36, 42, 36, 1);
+  }
+
+  .loginFormInput.error {
+    background: rgba(200, 84, 80, 0.1);
+  }
+}
+
+/* Responsive Design Enhancements */
+@media (max-width: 768px) {
+  .loginFormContainer {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .loginFormCard {
+    padding: 32px 24px;
+    border-radius: 20px;
+    margin: 0 auto;
+  }
+
+  .loginFormTitle {
+    font-size: 1.9rem;
+    margin-bottom: 28px;
+  }
+
+  .loginFormSubtitle {
+    font-size: 0.9rem;
+  }
+
+  .loginFormInput {
+    padding: 14px 16px 14px 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .loginFormSubmitBtn,
+  .loginFormGitHubBtn {
+    padding: 16px 20px;
+  }
+
+  .trustIndicator {
+    font-size: 0.75rem;
+  }
+
+  .loginFormTrust {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loginFormCard {
+    padding: 24px 20px;
+  }
+
+  .loginFormTitle {
+    font-size: 1.75rem;
+  }
+
+  .loginFormSubtitle {
+    font-size: 0.85rem;
+  }
+
+  .loginFormTrust {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.loginFormInput:focus-visible,
+.loginFormSubmitBtn:focus-visible,
+.loginFormGitHubBtn:focus-visible,
+.loginFormToggleBtn:focus-visible {
+  outline: 3px solid var(--login-accent);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --login-border: #000;
+    --login-text-primary: #000;
+    --login-background: #fff;
+  }
+}
+
+/* Print styles */
+@media print {
+  .loginFormContainer {
+    background: white;
+    color: black;
+  }
+
+  .loginFormCard {
+    box-shadow: none;
+    border: 2px solid black;
+  }
+}
+
+.loginFormError::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background: var(--login-error);
+  border-radius: 2px;
+}
+
+@keyframes errorSlideIn {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Enhanced Form Group */
+.loginFormGroup {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+/* Improved Labels */
+.loginFormLabel {
+  color: var(--login-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  letter-spacing: 0.3px;
+  transition: var(--login-transition-fast);
+}
+
+/* Enhanced Input Fields */
+.loginFormInput {
+  width: 100%;
+  border: 2px solid var(--login-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  font-size: 1rem;
+  background: rgba(254, 252, 249, 0.9);
+  color: var(--login-text-primary);
+  transition: var(--login-transition);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.loginFormInput:focus {
+  border-color: var(--login-accent);
+  box-shadow: 0 0 0 4px rgba(200, 168, 130, 0.15);
+  background: white;
+  transform: translateY(-2px);
+}
+
+.loginFormInput:focus + .loginFormLabel {
+  color: var(--login-accent);
+}
+
+.loginFormInput::placeholder {
+  color: var(--login-text-placeholder);
+  font-weight: 400;
+}
+
+.loginFormInput:invalid {
+  border-color: var(--login-error-border);
+}
+
+.loginFormInput:valid {
+  border-color: var(--login-success);
+}
+
+/* Enhanced Button Styles */
+.loginFormSubmitBtn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--login-accent) 0%, var(--login-accent-dark) 100%);
+  color: white;
+  border: none;
+  padding: 18px 24px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--login-transition);
+  position: relative;
+  overflow: hidden;
+  margin: 24px 0 16px 0;
+  letter-spacing: 0.5px;
+}
+
+.loginFormSubmitBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s;
+}
+
+.loginFormSubmitBtn:hover::before {
+  left: 100%;
+}
+
+.loginFormSubmitBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(200, 168, 130, 0.4);
+  background: linear-gradient(135deg, var(--login-accent-light) 0%, var(--login-accent) 100%);
+}
+
+.loginFormSubmitBtn:active {
+  transform: translateY(-1px);
+  transition: var(--login-transition-fast);
+}
+
+.loginFormSubmitBtn:disabled {
+  background: var(--login-disabled);
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* Enhanced GitHub Button */
+.loginFormGitHubBtn {
+  width: 100%;
+  background: var(--login-primary);
+  color: white;
+  border: none;
+  padding: 18px 24px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--login-transition);
+  position: relative;
+  overflow: hidden;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  letter-spacing: 0.3px;
+}
+
+.loginFormGitHubBtn:hover {
+  background: var(--login-primary-light);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(74, 93, 74, 0.3);
+}
+
+.loginFormGitHubBtn::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='currentColor' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z'/%3E%3C/svg%3E") no-repeat center;
+  background-size: contain;
+}
+
+/* Enhanced Toggle Button */
+.loginFormToggleBtn {
+  background: none;
+  border: none;
+  color: var(--login-accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--login-transition);
+  padding: 12px 16px;
+  text-decoration: none;
+  border-radius: 10px;
+  position: relative;
+  margin-top: 16px;
+}
+
+.loginFormToggleBtn:hover {
+  color: var(--login-accent-dark);
+  background: rgba(200, 168, 130, 0.12);
+  transform: scale(1.05);
+}
+
+.loginFormToggleBtn:active {
+  transform: scale(0.98);
+}
+
+/* Enhanced Loading Animation */
+.loginFormLoading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Divider Enhancement */
+.loginFormDivider {
+  display: flex;
+  align-items: center;
+  margin: 28px 0;
+  color: var(--login-text-muted);
+  font-size: 0.9rem;
+}
+
+.loginFormDivider::before,
+.loginFormDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--login-border);
+  margin: 0 16px;
+}
+
+/* Success States */
+.loginFormSuccess {
+  background: var(--login-success-light);
+  color: var(--login-success);
+  padding: 16px 20px;
+  border-radius: 14px;
+  margin-bottom: 28px;
+  border: 1px solid var(--login-success);
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: successSlideIn 0.3s ease-out;
+}
+
+.loginFormSuccess::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 12px;
+  border: solid var(--login-success);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@keyframes successSlideIn {
+  0% { transform: translateY(-20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Enhanced Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --login-background: #1a1f1a;
+    --login-background-alt: #1e2320;
+    --login-container: #242a24;
+    --login-text-primary: #e8f0e8;
+    --login-text-secondary: #b8c4b8;
+    --login-text-muted: #8b9a8b;
+    --login-text-placeholder: #6b7d6b;
+    --login-border: rgba(232, 240, 232, 0.15);
+    --login-border-light: rgba(232, 240, 232, 0.08);
+    --login-container-shadow: 0 25px 70px rgba(0, 0, 0, 0.3),
+                             0 15px 35px rgba(0, 0, 0, 0.2),
+                             0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Responsive Design Enhancements */
+@media (max-width: 768px) {
+  .loginFormContainer {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .loginFormCard {
+    padding: 32px 24px;
+    border-radius: 20px;
+    margin: 0 auto;
+  }
+
+  .loginFormTitle {
+    font-size: 1.9rem;
+    margin-bottom: 28px;
+  }
+
+  .loginFormInput {
+    padding: 14px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .loginFormSubmitBtn,
+  .loginFormGitHubBtn {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loginFormCard {
+    padding: 24px 20px;
+  }
+
+  .loginFormTitle {
+    font-size: 1.75rem;
+  }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.loginFormInput:focus-visible,
+.loginFormSubmitBtn:focus-visible,
+.loginFormGitHubBtn:focus-visible,
+.loginFormToggleBtn:focus-visible {
+  outline: 3px solid var(--login-accent);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --login-border: #000;
+    --login-text-primary: #000;
+    --login-background: #fff;
+  }
+}
+
+/* Print styles */
+@media print {
+  .loginFormContainer {
+    background: white;
+    color: black;
+  }
+
+  .loginFormCard {
+    box-shadow: none;
+    border: 2px solid black;
+  }
+}

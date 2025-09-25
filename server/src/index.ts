@@ -81,8 +81,30 @@ app.get("/api/health", (req, res) => {
 // Authentication routes
 app.post("/api/auth/register", async (req, res, next) => {
   try {
-    // TODO: Implement user registration
-    res.json({ message: "Registration endpoint - to be implemented" });
+    const { username, email, password } = req.body;
+
+    // Mock user creation for development
+    const mockUser = {
+      id: 'user_' + Date.now(),
+      username: username || email.split('@')[0],
+      email,
+      role: 'user',
+      isVerified: true,
+      avatarUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const mockTokens = {
+      accessToken: 'mock_access_token_' + Date.now(),
+      refreshToken: 'mock_refresh_token_' + Date.now(),
+    };
+
+    res.json({
+      message: 'User registered successfully',
+      user: mockUser,
+      ...mockTokens
+    });
   } catch (error) {
     next(error);
   }
@@ -90,8 +112,30 @@ app.post("/api/auth/register", async (req, res, next) => {
 
 app.post("/api/auth/login", async (req, res, next) => {
   try {
-    // TODO: Implement user login
-    res.json({ message: "Login endpoint - to be implemented" });
+    const { email, password } = req.body;
+
+    // Mock authentication for development
+    const mockUser = {
+      id: 'user_' + Date.now(),
+      username: email.split('@')[0],
+      email,
+      role: 'user',
+      isVerified: true,
+      avatarUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const mockTokens = {
+      accessToken: 'mock_access_token_' + Date.now(),
+      refreshToken: 'mock_refresh_token_' + Date.now(),
+    };
+
+    res.json({
+      message: 'Login successful',
+      user: mockUser,
+      ...mockTokens
+    });
   } catch (error) {
     next(error);
   }
@@ -103,6 +147,106 @@ app.get("/api/auth/profile", authenticate, async (req, res, next) => {
     res.json({
       message: "Protected route",
       user: req.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get current user
+app.get("/api/auth/me", authenticate, async (req, res, next) => {
+  try {
+    // Return mock user data for development
+    const mockUser = {
+      id: 'user_mock',
+      username: 'testuser',
+      email: 'test@example.com',
+      role: 'user',
+      isVerified: true,
+      avatarUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    res.json(mockUser);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Logout
+app.post("/api/auth/logout", async (req, res, next) => {
+  try {
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Refresh token
+app.post("/api/auth/refresh-token", async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: 'Refresh token required' });
+    }
+
+    // Mock token refresh for development
+    const newTokens = {
+      accessToken: 'mock_access_token_' + Date.now(),
+      refreshToken: 'mock_refresh_token_' + Date.now(),
+    };
+
+    res.json(newTokens);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GitHub OAuth routes
+app.get("/api/auth/github", (req, res) => {
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  const redirectUri = process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/api/auth/github/callback';
+
+  if (!clientId) {
+    return res.status(500).json({ message: 'GitHub OAuth not configured' });
+  }
+
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
+
+  res.redirect(githubAuthUrl);
+});
+
+app.get("/api/auth/github/callback", async (req, res, next) => {
+  try {
+    const { code } = req.query;
+
+    if (!code) {
+      return res.status(400).json({ message: 'Authorization code required' });
+    }
+
+    // Mock GitHub OAuth callback for development
+    const mockUser = {
+      id: 'github_user_' + Date.now(),
+      username: 'githubuser',
+      email: 'github@example.com',
+      role: 'user',
+      isVerified: true,
+      avatarUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const mockTokens = {
+      accessToken: 'mock_github_access_token_' + Date.now(),
+      refreshToken: 'mock_github_refresh_token_' + Date.now(),
+    };
+
+    res.json({
+      message: 'GitHub authentication successful',
+      user: mockUser,
+      ...mockTokens
     });
   } catch (error) {
     next(error);
@@ -261,21 +405,16 @@ const PORT = process.env.PORT || 5000;
 // Initialize database and start server
 async function startServer() {
   try {
-    // Test database connection
-    const connected = await testConnection();
-    if (!connected) {
-      throw new Error("Database connection failed");
-    }
-
-    // Run migrations using node-pg-migrate
+    // Test database connection (skip in development if not available)
     try {
-      execSync("npm run db:migrate", {
-        stdio: "inherit",
-        cwd: process.cwd(),
-      });
+      const connected = await testConnection();
+      if (!connected) {
+        console.warn("⚠️ Database connection failed - running in mock mode");
+      } else {
+        console.log("✅ Database connected successfully");
+      }
     } catch (error) {
-      console.error("Migration failed:", error);
-      throw error;
+      console.warn("⚠️ Database connection failed - running in mock mode:", error.message);
     }
 
     server.listen(PORT, () => {
@@ -283,6 +422,7 @@ async function startServer() {
       console.log(`📱 Frontend URL: http://localhost:5173`);
       console.log(`🔌 WebSocket URL: ws://localhost:${PORT}`);
       console.log(`📋 API Documentation: http://localhost:${PORT}/`);
+      console.log(`🔐 Authentication: Mock mode enabled for development`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

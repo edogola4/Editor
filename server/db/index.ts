@@ -4,59 +4,88 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import { Sequelize } from "sequelize";
 
 // Load environment variables
 dotenv.config();
 
-// Get __dirname equivalent for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Create Sequelize instance
+const sequelize = new Sequelize({
+  dialect: 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'collaborative_editor',
+  username: process.env.DB_USER || 'editor_user',
+  password: process.env.DB_PASSWORD || 'editor_pass123',
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+});
 
-// Database configuration
-const dbConfig: PoolConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT || "5432", 10),
-  database: process.env.DB_NAME || "collaborative_editor",
-  user: process.env.DB_USER || "editor_user",
-  password: process.env.DB_PASSWORD || "editor_pass123",
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+// Create PostgreSQL connection pool
+const poolConfig: PoolConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'collaborative_editor',
+  user: process.env.DB_USER || 'editor_user',
+  password: process.env.DB_PASSWORD || 'editor_pass123',
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 };
 
-// Create a new pool of connections
-const pool = new Pool(dbConfig);
+const pool = new Pool(poolConfig);
 
-// Test the database connection
-const testConnection = async () => {
+// Test database connection
+const testConnection = async (): Promise<boolean> => {
   try {
-    const client = await pool.connect();
-    console.log("Successfully connected to PostgreSQL database");
-    client.release();
+    await sequelize.authenticate();
+    console.log('Database connection established successfully');
     return true;
   } catch (error) {
-    console.error("Error connecting to PostgreSQL database:", error);
-    return false;
+    console.error('Database connection failed:', error.message);
+
+    // In development, we'll allow the server to run without database
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Running in development mode without database');
+      return false;
+    }
+
+    throw error;
   }
 };
 
 // Run database migrations
-const runMigrations = async () => {
-  const client = await pool.connect();
+const runMigrations = async (): Promise<void> => {
   try {
-    // Create migrations table if it doesn't exist
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS migrations (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        run_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-      )
-    `);
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const migrationsDir = path.join(__dirname, '../migrations');
 
-    // Get all migration files
-    const migrationsDir = path.join(__dirname, "migrations");
+    if (!fs.existsSync(migrationsDir)) {
+      console.log('No migrations directory found');
+      return;
+    }
+
     const migrationFiles = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))
       .sort();
+
+    const client = await pool.connect();
+
+    // Create migrations table if it doesn't exist
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS migrations (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     // Run each migration that hasn't been run yet
     for (const file of migrationFiles) {
@@ -83,8 +112,6 @@ const runMigrations = async () => {
   } catch (error) {
     console.error("Error running migrations:", error);
     throw error;
-  } finally {
-    client.release();
   }
 };
 
@@ -93,6 +120,4 @@ export { pool, testConnection, runMigrations };
 export default {
   query: (text: string, params?: any[]) => pool.query(text, params),
   getClient: () => pool.connect(),
-  testConnection,
-  runMigrations,
 };
