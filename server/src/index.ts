@@ -75,13 +75,17 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Server is running" });
+  return res.json({ status: "ok", message: "Server is running" });
 });
 
 // Authentication routes
 app.post("/api/auth/register", async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
     // Mock user creation for development
     const mockUser = {
@@ -100,19 +104,24 @@ app.post("/api/auth/register", async (req, res, next) => {
       refreshToken: 'mock_refresh_token_' + Date.now(),
     };
 
-    res.json({
+    return res.json({
       message: 'User registered successfully',
       user: mockUser,
       ...mockTokens
     });
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 app.post("/api/auth/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
     // Mock authentication for development
     const mockUser = {
@@ -131,31 +140,41 @@ app.post("/api/auth/login", async (req, res, next) => {
       refreshToken: 'mock_refresh_token_' + Date.now(),
     };
 
-    res.json({
+    return res.json({
       message: 'Login successful',
       user: mockUser,
       ...mockTokens
     });
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // Protected route example
 app.get("/api/auth/profile", authenticate, async (req, res, next) => {
   try {
-    res.json({
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
+    return res.json({
       message: "Protected route",
       user: req.user,
     });
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // Get current user
 app.get("/api/auth/me", authenticate, async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
     // Return mock user data for development
     const mockUser = {
       id: 'user_mock',
@@ -168,9 +187,10 @@ app.get("/api/auth/me", authenticate, async (req, res, next) => {
       updatedAt: new Date().toISOString(),
     };
 
-    res.json(mockUser);
+    return res.json(mockUser);
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -180,6 +200,7 @@ app.post("/api/auth/logout", async (req, res, next) => {
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -198,9 +219,10 @@ app.post("/api/auth/refresh-token", async (req, res, next) => {
       refreshToken: 'mock_refresh_token_' + Date.now(),
     };
 
-    res.json(newTokens);
+    return res.json(newTokens);
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -243,13 +265,14 @@ app.get("/api/auth/github/callback", async (req, res, next) => {
       refreshToken: 'mock_github_refresh_token_' + Date.now(),
     };
 
-    res.json({
+    return res.json({
       message: 'GitHub authentication successful',
       user: mockUser,
       ...mockTokens
     });
   } catch (error) {
     next(error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
