@@ -1,0 +1,389 @@
+/* Dashboard Layout */
+.dashboardContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+/* Welcome Header */
+.welcomeHeader {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.welcomeTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.welcomeSubtitle {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Quick Actions Grid */
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 640px) {
+  .quickActions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .quickActions {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.actionCard {
+  background-color: white;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  height: 100%;
+}
+
+.actionCard:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.actionCardContent {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.iconContainer {
+  height: 3rem;
+  width: 3rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.actionTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+  text-align: center;
+}
+
+.actionDescription {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Section Headers */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.viewAllLink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.viewAllLink:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
+
+/* Projects Grid */
+.projectsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 640px) {
+  .projectsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .projectsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.projectCard {
+  background-color: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.projectCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.projectCardContent {
+  padding: 1.25rem;
+}
+
+.projectHeader {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.projectIcon {
+  flex-shrink: 0;
+  background-color: #4f46e5;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  margin-right: 1rem;
+}
+
+.projectTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.projectDescription {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.metaItem svg {
+  margin-right: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.dotSeparator {
+  margin: 0 0.5rem;
+  color: #d1d5db;
+}
+
+.avatarGroup {
+  display: flex;
+  margin-left: 0.5rem;
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: #e0e7ff;
+  color: #4f46e5;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  margin-left: -0.5rem;
+}
+
+/* Activity Feed */
+.activityList {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.activityItem {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  transition: background-color 0.2s ease;
+}
+
+.activityItem:hover {
+  background-color: #f9fafb;
+}
+
+.activityAvatar {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background-color: #e0e7ff;
+  color: #4f46e5;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityText {
+  font-size: 0.875rem;
+  color: #111827;
+  margin: 0;
+}
+
+.activityTime {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.activityFooter {
+  background-color: #f9fafb;
+  padding: 0.75rem 1.5rem;
+  text-align: right;
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.loadingSpinner {
+  width: 4rem;
+  height: 4rem;
+  border: 4px solid #4f46e5;
+  border-top-color: transparent;
+  border-radius: 9999px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.loadingText {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #4b5563;
+  text-align: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767px) {
+  .dashboardContainer {
+    padding: 1rem 0.75rem;
+  }
+  
+  .projectCardContent {
+    padding: 1rem;
+  }
+  
+  .activityItem {
+    padding: 0.75rem 1rem;
+  }
+  
+  .activityFooter {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .welcomeTitle,
+  .actionTitle,
+  .sectionTitle,
+  .projectTitle,
+  .activityText {
+    color: #f3f4f6;
+  }
+  
+  .welcomeSubtitle,
+  .actionDescription,
+  .projectDescription,
+  .metaItem,
+  .activityTime {
+    color: #9ca3af;
+  }
+  
+  .actionCard,
+  .projectCard,
+  .activityList {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+  
+  .actionCard:hover,
+  .projectCard:hover {
+    border-color: #7c3aed;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+  
+  .projectMeta {
+    border-top-color: #374151;
+  }
+  
+  .activityItem:hover,
+  .activityFooter {
+    background-color: #1f2937;
+  }
+  
+  .loadingContainer {
+    background-color: #111827;
+  }
+  
+  .loadingText {
+    color: #d1d5db;
+  }
+}
