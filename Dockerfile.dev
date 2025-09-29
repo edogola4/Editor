@@ -2,19 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY server/package.json ./server/package.json
+# Copy server package files
+COPY server/package*.json ./server/
 
-# Install dependencies
-RUN cd server && npm install
+# Install server dependencies
+WORKDIR /app/server
 RUN npm install
 
-# Copy source code
-COPY . .
-
-# Set working directory to server
-WORKDIR /app/server
+# Copy server source code
+COPY server/ ./
 
 # Expose the application port
 EXPOSE 5000
