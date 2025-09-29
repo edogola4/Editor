@@ -7,13 +7,21 @@ import {
   FiGitBranch, 
   FiGitPullRequest, 
   FiStar, 
-  FiClock
+  FiClock,
+  FiPlus,
+  FiSearch,
+  FiChevronRight,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiGitCommit,
+  FiUserPlus,
+  FiZap
 } from 'react-icons/fi';
-import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { motion, AnimatePresence } from 'framer-motion';
+import DashboardLayout from '../components/dashboard/layout/DashboardLayout';
 import styles from './Dashboard.module.css';
 
 // Type definitions
-
 interface Project {
   id: number;
   name: string;
@@ -23,34 +31,48 @@ interface Project {
   stars: number;
   forks: number;
   collaborators: string[];
+  isPrivate: boolean;
+  openIssues?: number;
+  pullRequests?: number;
 }
 
 interface Activity {
   id: number;
   user: string;
-  action: string;
+  action: 'commit' | 'pull_request' | 'issue' | 'star' | 'fork' | 'comment';
   target: string;
   time: string;
   avatar: string;
+  repo?: string;
+  status?: 'success' | 'pending' | 'failed';
 }
 
 const Dashboard = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
   const { user } = useAuthStore();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
   const navigate = useNavigate();
 
-  // Sample data
+  // Sample data with enhanced structure
   const recentProjects: Project[] = [
     {
       id: 1,
       name: 'ecommerce-platform',
-      description: 'A modern e-commerce platform with real-time inventory',
+      description: 'A modern e-commerce platform with real-time inventory management and payment processing',
       language: 'TypeScript',
       lastUpdated: '2 hours ago',
-      stars: 42,
-      forks: 12,
-      collaborators: ['JD', 'AS', 'MP']
+      stars: 128,
+      forks: 42,
+      collaborators: ['JD', 'AS', 'MP'],
+      isPrivate: false,
+      openIssues: 5,
+      pullRequests: 2
     },
     {
       id: 2,
@@ -109,10 +131,6 @@ const Dashboard = () => {
     
     return () => clearTimeout(timer);
   }, []);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
 
   if (isLoading) {
     return (
