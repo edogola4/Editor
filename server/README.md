@@ -5,10 +5,11 @@
   <p>High-performance backend service for real-time collaborative code editing</p>
 
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
-  ![Express](https://img.shields.io/badge/Express-4.18+-000000.svg)
-  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7.2-010101.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
+  ![Express](https://img.shields.io/badge/Express-5+-000000.svg)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
+  ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
   
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 </div>
