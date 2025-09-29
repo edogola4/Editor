@@ -234,14 +234,47 @@ export class App {
     });
   }
 
+
+
   /**
    * Initialize application routes
    */
-  private initializeRoutes(): void {
-    // API routes will be mounted here
-    // Example: this.app.use('/api/auth', authRoutes);
-    // Example: this.app.use('/api/rooms', roomRoutes);
-  }
+  private async initializeRoutes(): Promise<void> {
+    // Import route modules
+    const authRoutes = (await import('./routes/auth.routes.js')).default;
+    const userRoutes = (await import('./routes/user.routes.js')).default;
+
+    // Mount API routes
+    this.app.use('/api/auth', authRoutes);
+    this.app.use('/api/users', userRoutes);
+
+    // API Documentation endpoint
+    this.app.get('/api/docs', (req: Request, res: Response) => {
+      res.json({
+        title: 'Collaborative Code Editor API',
+        version: '1.0.0',
+        description: 'Real-time collaborative code editing platform API',
+        endpoints: {
+          auth: {
+            register: 'POST /api/auth/register',
+            login: 'POST /api/auth/login',
+            logout: 'POST /api/auth/logout',
+            refresh: 'POST /api/auth/refresh-token',
+            github: 'GET /api/auth/github',
+            githubCallback: 'GET /api/auth/github/callback'
+          },
+          users: {
+            profile: 'GET /api/users/profile',
+            updateProfile: 'PUT /api/users/profile',
+            deleteAccount: 'DELETE /api/users/profile',
+            updateSettings: 'PUT /api/users/settings',
+            getUser: 'GET /api/users/:id'
+          },
+          health: 'GET /health',
+          root: 'GET /'
+        }
+      });
+    });
 
   /**
    * Initialize error handling middleware

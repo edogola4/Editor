@@ -14,7 +14,7 @@ moduleAlias.addAliases({
 
 import express from "express";
 import http from "http";
-import { Server as SocketIOServer } from "socket.io";
+import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -31,18 +31,9 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.IO setup
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: [
-      process.env.CORS_ORIGIN || "http://localhost:3000",
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-    ],
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+// Initialize Socket.IO with our custom setup
+const socketService = setupSocketIO(server);
+const io = socketService.getIO();
 
 // Middleware
 app.use(helmet());
@@ -110,8 +101,7 @@ app.post("/api/auth/register", async (req, res, next) => {
       ...mockTokens
     });
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
@@ -146,8 +136,7 @@ app.post("/api/auth/login", async (req, res, next) => {
       ...mockTokens
     });
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
@@ -163,8 +152,7 @@ app.get("/api/auth/profile", authenticate, async (req, res, next) => {
       user: req.user,
     });
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
@@ -189,18 +177,16 @@ app.get("/api/auth/me", authenticate, async (req, res, next) => {
 
     return res.json(mockUser);
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
 // Logout
 app.post("/api/auth/logout", async (req, res, next) => {
   try {
-    res.json({ message: 'Logged out successfully' });
+    return res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
@@ -221,23 +207,27 @@ app.post("/api/auth/refresh-token", async (req, res, next) => {
 
     return res.json(newTokens);
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
 // GitHub OAuth routes
 app.get("/api/auth/github", (req, res) => {
-  const clientId = process.env.GITHUB_CLIENT_ID;
-  const redirectUri = process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/api/auth/github/callback';
+  try {
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    const redirectUri = process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/api/auth/github/callback';
 
-  if (!clientId) {
-    return res.status(500).json({ message: 'GitHub OAuth not configured' });
+    if (!clientId) {
+      return res.status(500).json({ message: 'GitHub OAuth not configured' });
+    }
+
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
+
+    return res.redirect(githubAuthUrl);
+  } catch (error) {
+    console.error('GitHub OAuth error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
-
-  res.redirect(githubAuthUrl);
 });
 
 app.get("/api/auth/github/callback", async (req, res, next) => {
@@ -271,8 +261,7 @@ app.get("/api/auth/github/callback", async (req, res, next) => {
       ...mockTokens
     });
   } catch (error) {
-    next(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return next(error);
   }
 });
 
@@ -305,7 +294,6 @@ io.on("connection", (socket) => {
     }) : [];
 
     console.log(`👥 Users in document ${documentId}:`, userIds);
-
     // Notify other users in the document
     socket.to(`document:${documentId}`).emit('user-joined', {
       userId,
@@ -324,7 +312,7 @@ function fibonacci(n) {
 
 console.log(fibonacci(10)); // Output: 55`,
       language: 'javascript',
-      users: userIds.filter(id => id !== userId) // Exclude current user
+      users: userIds.filter((id: string) => id !== userId) // Exclude current user
     });
 
     console.log(`📤 Sent document state to user ${userId}`);
@@ -446,11 +434,31 @@ async function startServer() {
       console.log(`🔌 WebSocket URL: ws://localhost:${PORT}`);
       console.log(`📋 API Documentation: http://localhost:${PORT}/`);
       console.log(`🔐 Authentication: Mock mode enabled for development`);
+      console.log(`🔄 Real-time collaboration enabled with Socket.IO`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
   }
 }
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  await cleanupSocketIO();
+  server.close(() => {
+    console.log('Process terminated');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received. Shutting down gracefully...');
+  await cleanupSocketIO();
+  server.close(() => {
+    console.log('Process terminated');
+    process.exit(0);
+  });
+});
 
 startServer();

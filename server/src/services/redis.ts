@@ -153,18 +153,17 @@ export class RedisService {
       logger.info("Redis client disconnected");
     } catch (error) {
       logger.error("Error disconnecting from Redis", { error: error.message });
-    }
   }
 
   /**
    * Test Redis connection
    */
-  public async testConnection(): Promise<boolean> {
+  public async ping(): Promise<boolean> {
     try {
       await this.client.ping();
       return true;
     } catch (error) {
-      logger.error("Redis connection test failed", { error: error.message });
+      logger.debug('Redis ping failed', { error: error.message });
       return false;
     }
   }
