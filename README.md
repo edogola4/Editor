@@ -4,12 +4,12 @@
   <h1>🚀 Real-time Collaborative Code Editor</h1>
   <p><strong>Professional VS Code-like collaborative coding experience with real-time collaboration</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
-  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7.2-010101.svg)
-  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.50.0-007acc.svg)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
+  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53.0-007acc.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
   ![ESM](https://img.shields.io/badge/ES_Modules-100%25-FFCA28.svg)
@@ -33,6 +33,8 @@
 - **Redis-based Pub/Sub**: Scalable real-time messaging with Redis adapter
 - **Rate Limiting**: Protect your server from abuse with configurable rate limits
 - **Comprehensive Monitoring**: Built-in monitoring for system health and performance
+- **Operational Transformation**: Custom OT algorithm implementation for conflict resolution
+- **TypeScript First**: Full type safety across the entire stack with latest TS features
 
 ### 🛠 **Editor Features**
 - **Monaco Editor**: Full VS Code editing experience
@@ -54,18 +56,19 @@
 - **Dark/Light Mode**: Toggle between themes for comfortable coding
 
 ### 🔧 **Technical Features**
-- **TypeScript First**: Full type safety across the entire stack
-- **Modular Architecture**: Clean separation of concerns
-- **WebSockets**: Real-time bidirectional communication
-- **JWT Authentication**: Secure stateless authentication
-- **Database Migrations**: Version-controlled database schema changes
-- **Containerized**: Easy deployment with Docker
-- **Modern State Management**: Zustand + Immer for predictable state
-- **Real-time Sync**: Operational Transformation with Socket.IO
-- **Monorepo Architecture**: Shared code between client and server
+- **TypeScript First**: Full type safety across the entire stack with TS 5.8+
+- **Modular Architecture**: Clean separation of concerns with service layers
+- **WebSockets**: Real-time bidirectional communication with Socket.IO 4.8+
+- **JWT Authentication**: Secure stateless authentication with refresh tokens
+- **Database Migrations**: Version-controlled database schema changes with Sequelize
+- **Containerized**: Easy deployment with Docker and Docker Compose
+- **Modern State Management**: Zustand + Immer for predictable state updates
+- **Real-time Sync**: Custom Operational Transformation algorithm with Socket.IO
+- **Monorepo Architecture**: Shared code between client and server with proper separation
 - **ES Modules**: Native ESM support throughout the application
 - **Optimized Builds**: Vite for fast development and production builds
-- **Containerized**: Docker support for easy deployment
+- **Comprehensive Testing**: Unit, integration, and E2E tests with Vitest and Jest
+- **Code Quality**: ESLint, Prettier, and TypeScript strict mode enabled
 
 ## 🛠 Tech Stack
 
@@ -75,20 +78,32 @@
 - **Vite 5+** - Lightning-fast build tool and dev server
 - **Tailwind CSS 4+** - Utility-first CSS framework with custom theme
 - **Monaco Editor 0.53+** - VS Code's editor component
-- **Socket.IO Client 4+** - Real-time communication
+- **Socket.IO Client 4.8+** - Real-time communication
 - **Zustand 5+** - Lightweight state management
 - **Immer 10+** - Immutable state updates
+- **React Query 5+** - Server state management
+- **React Hook Form 7+** - Form handling
+- **Axios 1.7+** - HTTP client
+- **React Hot Toast 2.4+** - Toast notifications
+- **React Icons 5.0+** - Icon library
+- **React Router DOM 7+** - Client-side routing
 
 ### **Backend**
 - **Node.js 22+** - Latest LTS with ESM support
 - **Express.js 5+** - Modern web framework with async/await
-- **TypeScript 5.0+** - Type-safe backend with strict mode
-- **Socket.IO 4.7.2** - Real-time WebSocket communication
+- **TypeScript 5.8+** - Type-safe backend with strict mode
+- **Socket.IO 4.8.1** - Real-time WebSocket communication
 - **PostgreSQL 16+** - Advanced relational database
 - **Redis 7+** - Caching, pub/sub, and rate limiting
 - **JWT** - Stateless authentication
 - **Sequelize 7+** - Type-safe ORM with migrations
-- **Winston** - Structured logging
+- **Winston 3.11+** - Structured logging
+- **bcryptjs 2.4+** - Password hashing
+- **Zod 3.22+** - TypeScript-first schema validation
+- **CORS 2.8+** - Cross-origin resource sharing
+- **Helmet 7.1+** - Security headers
+- **Express Rate Limit 7.1+** - Rate limiting middleware
+- **Compression 1.7+** - Response compression
 
 ### **Development & Deployment**
 - **Docker** - Containerization
