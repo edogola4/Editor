@@ -5,15 +5,16 @@
   <p>Professional VS Code-like collaborative coding experience with real-time collaboration</p>
 
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178c6.svg)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Vite](https://img.shields.io/badge/Vite-5+-646CFF.svg)
   ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0+-06B6D4.svg)
-  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.50.0-007acc.svg)
+  ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53.0-007acc.svg)
+  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
   
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 </div>
 
-This is the frontend client for the Collaborative Code Editor application, built with React 19, TypeScript 5.3, Vite 5, and Monaco Editor for real-time collaborative coding.
+This is the frontend client for the Collaborative Code Editor application, built with React 19, TypeScript 5.8, Vite 5, and Monaco Editor for real-time collaborative coding.
 
 ## ✨ Features
 
@@ -41,45 +42,52 @@ This is the frontend client for the Collaborative Code Editor application, built
 
 ### 🛠 **Technical Features**
 - **React 19+**: Modern React with concurrent features
-- **TypeScript 5.3+**: Full type safety and developer experience
+- **TypeScript 5.8+**: Full type safety and developer experience
 - **Vite 5+**: Lightning-fast build tool and dev server
 - **Zustand + Immer**: Lightweight state management with immutable updates
-- **Socket.IO Client**: Real-time communication with backend
+- **Socket.IO Client 4.8+**: Real-time communication with backend
 - **Tailwind CSS 4+**: Utility-first CSS framework with custom theme
-- **React Query**: Server state management and data fetching
-- **React Hook Form**: Form handling with validation
-- **Axios**: HTTP client for API communication
-- **React Hot Toast**: Beautiful notifications
-- **React Icons**: Comprehensive icon library
+- **React Query 5+**: Server state management and data fetching
+- **React Hook Form 7+**: Form handling with validation
+- **Axios 1.7+**: HTTP client for API communication
+- **React Hot Toast 2.4+**: Beautiful notifications
+- **React Icons 5.0+**: Comprehensive icon library
 - **React Router DOM 7+**: Client-side routing with nested routes
-- **Monaco Editor**: VS Code's editor component for the web
+- **Monaco Editor 0.53+**: VS Code's editor component for the web
+- **Vitest 3.2+**: Modern testing framework
+- **Testing Library**: React component testing utilities
 
 ## 🛠 Tech Stack
 
 ### **Frontend**
 - **React 19+** - Modern React with concurrent features
-- **TypeScript 5.3+** - Type-safe development
+- **TypeScript 5.8+** - Type-safe development
 - **Vite 5+** - Next generation frontend tooling
 - **Tailwind CSS 4+** - Utility-first CSS framework
-- **Monaco Editor 0.50+** - VS Code's editor component
-- **Socket.IO Client 4.7+** - Real-time communication
+- **Monaco Editor 0.53+** - VS Code's editor component
+- **Socket.IO Client 4.8+** - Real-time communication
 - **Zustand 5+** - Lightweight state management
 - **Immer 10+** - Immutable state updates
 - **React Query 5+** - Server state management
 - **React Hook Form 7+** - Form handling
-- **Axios 1.6+** - HTTP client
+- **Axios 1.7+** - HTTP client
 - **React Hot Toast 2.4+** - Toast notifications
 - **React Icons 5.0+** - Icon library
 - **React Router DOM 7+** - Client-side routing
 - **ESLint 8.56+** - Code linting
 - **Prettier 3.2+** - Code formatting
+- **Vitest 3.2+** - Testing framework
+- **Testing Library 14+** - React component testing
 
 ### **Development & Quality**
-- **ESLint 8+** - Code linting and formatting
-- **Prettier 3+** - Code formatting
-- **TypeScript ESLint** - TypeScript-specific linting
-- **Vitest 3+** - Testing framework
-- **Testing Library** - React component testing
+- **ESLint 8.56+** - Code linting with TypeScript support
+- **Prettier 3.2+** - Opinionated code formatting
+- **TypeScript ESLint 7+** - TypeScript-specific linting rules
+- **Vitest 3.2+** - Modern testing framework
+- **@testing-library/react** - React component testing utilities
+- **@testing-library/jest-dom** - Custom Jest matchers
+- **@testing-library/user-event** - User interaction testing
+- **jsdom** - DOM environment for testing
 
 ## 🚀 Quick Start
 
