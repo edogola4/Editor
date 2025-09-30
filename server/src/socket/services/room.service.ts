@@ -1,5 +1,5 @@
-import { CustomSocket, Room, User, CursorPosition, SelectionRange } from '../types/events';
-import { randomColor } from '../../utils/color';
+import { CustomSocket, Room, User, CursorPosition, SelectionRange } from '../types/events.js';
+import { randomColor } from '../../utils/color.js';
 
 interface UserPresence {
   user: User;
@@ -125,7 +125,7 @@ export class RoomService {
     if (!room) return [];
 
     return Array.from(room.members)
-      .map(userId => this.userPresence.get(userId)?.user)
+      .map((userId: string) => this.userPresence.get(userId)?.user)
       .filter((user): user is User => user !== undefined);
   }
 
@@ -167,14 +167,16 @@ export class RoomService {
     if (!socket) return;
 
     // Broadcast to all users in the room except the sender
-    socket.to(roomId).emit('presence:update', 
-      this.getRoomMembers(roomId).map(user => ({
+    const members = this.getRoomMembers(roomId).map(user => {
+      const presence = this.userPresence.get(user.id);
+      return {
         ...user,
-        cursorPosition: this.userPresence.get(user.id)?.cursorPosition,
-        selection: this.userPresence.get(user.id)?.selection,
-        isTyping: this.userPresence.get(user.id)?.isTyping || false
-      }))
-    );
+        cursorPosition: presence?.cursorPosition,
+        selection: presence?.selection ?? undefined,
+        isTyping: presence?.isTyping || false
+      };
+    });
+    socket.to(roomId).emit('presence:update', members);
   }
 
   getUserPresence(userId: string): UserPresence | undefined {
@@ -186,7 +188,7 @@ export class RoomService {
     if (!room) return [];
 
     return Array.from(room.members)
-      .map(userId => this.userPresence.get(userId))
+      .map((userId: string) => this.userPresence.get(userId))
       .filter((presence): presence is UserPresence => presence !== undefined);
   }
 
@@ -206,10 +208,10 @@ export class RoomService {
       // Initialize presence if it doesn't exist
       this.userPresence.set(userId, {
         user: {
+          ...socket.data.user,
           id: userId,
           username: socket.data.user?.username || `user-${userId.slice(0, 6)}`,
-          color: randomColor(),
-          ...socket.data.user
+          color: socket.data.user?.color || randomColor()
         },
         lastSeen: new Date(),
         isTyping: false
