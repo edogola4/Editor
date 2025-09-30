@@ -1,6 +1,9 @@
 import { Sequelize } from "sequelize";
 import { config } from "../config/config.js";
 import User, { UserAttributes, UserInstance, UserModelStatic } from "./User.js";
+import Room, { RoomAttributes, RoomInstance } from "./Room.js";
+import Document, { DocumentAttributes, DocumentInstance } from "./Document.js";
+import DocumentVersion, { DocumentVersionAttributes, DocumentVersionInstance } from "./DocumentVersion.js";
 
 // Initialize Sequelize with configuration
 const sequelize = new Sequelize(
@@ -21,9 +24,24 @@ const sequelize = new Sequelize(
 
 // Initialize models
 const UserModel = User(sequelize);
+const RoomModel = Room(sequelize);
+const DocumentModel = Document(sequelize);
+const DocumentVersionModel = DocumentVersion(sequelize);
 
-// Set up associations (if any)
-// Example: UserModel.associate(sequelize.models);
+// Set up associations
+const models = {
+  User: UserModel,
+  Room: RoomModel,
+  Document: DocumentModel,
+  DocumentVersion: DocumentVersionModel,
+};
+
+// Call associate methods if they exist
+Object.values(models).forEach((model: any) => {
+  if (model.associate) {
+    model.associate(models);
+  }
+});
 
 // Test the database connection
 const testConnection = async () => {
@@ -40,9 +58,26 @@ const db = {
   sequelize,
   Sequelize,
   User: UserModel,
+  Room: RoomModel,
+  Document: DocumentModel,
+  DocumentVersion: DocumentVersionModel,
   testConnection,
 } as const;
 
-export { UserModel as User };
-export type { UserAttributes, UserInstance };
+export { 
+  UserModel as User, 
+  RoomModel as Room,
+  DocumentModel as Document, 
+  DocumentVersionModel as DocumentVersion 
+};
+export type { 
+  UserAttributes, 
+  UserInstance, 
+  RoomAttributes, 
+  RoomInstance,
+  DocumentAttributes, 
+  DocumentInstance, 
+  DocumentVersionAttributes, 
+  DocumentVersionInstance 
+};
 export default db;
