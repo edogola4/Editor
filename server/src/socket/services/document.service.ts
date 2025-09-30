@@ -1,4 +1,6 @@
-import { DocumentOperation } from '../types/events';
+import { DocumentOperation } from '../types/events.js';
+import { OT } from '../../ot/ot-core.js';
+import { documentPersistenceService } from '../../services/documentPersistence.service.js';
 
 type DocumentState = {
   content: string;
@@ -10,14 +12,27 @@ export class DocumentService {
   private documents: Map<string, DocumentState> = new Map();
   private operationHistory: Map<string, DocumentOperation[]> = new Map();
   private clientVersions: Map<string, number> = new Map(); // clientId -> version
+  private ot = new OT();
 
-  createDocument(docId: string, initialContent: string = ''): void {
+  async createDocument(docId: string, initialContent: string = '', ownerId?: string): Promise<void> {
     this.documents.set(docId, {
       content: initialContent,
       version: 0,
       operations: [],
     });
     this.operationHistory.set(docId, []);
+
+    // Load from database if exists
+    if (ownerId) {
+      const savedDoc = await documentPersistenceService.loadDocument(docId);
+      if (savedDoc) {
+        this.documents.set(docId, {
+          content: savedDoc.content,
+          version: savedDoc.version,
+          operations: [],
+        });
+      }
+    }
   }
 
   applyOperation(docId: string, operation: DocumentOperation): { success: boolean; error?: string } {
@@ -106,25 +121,9 @@ export class DocumentService {
   }
 
   private transformOperation(op1: DocumentOperation, op2: DocumentOperation): DocumentOperation {
-    // This is a simplified version - you'll need to implement the full OT transformation rules
-    // based on your specific requirements
-    
-    // If operations are in different positions, they don't affect each other
-    if (op1.position + (op1.length || 0) <= op2.position) {
-      return op1;
-    }
-    
-    if (op2.position + (op2.length || 0) <= op1.position) {
-      return {
-        ...op1,
-        position: op1.position + (op2.type === 'insert' ? op2.text?.length || 0 : 0) -
-                            (op2.type === 'delete' ? op2.length || 0 : 0),
-      };
-    }
-    
-    // Handle overlapping operations (simplified)
-    // In a real implementation, you'd need more sophisticated conflict resolution
-    return op1; // For now, just return the original operation
+    // Use the OT algorithm for proper transformation
+    const [transformed] = this.ot.transform(op1, op2);
+    return transformed as DocumentOperation;
   }
 
   getDocumentState(docId: string, clientId: string): { content: string; version: number } | null {
@@ -145,6 +144,67 @@ export class DocumentService {
     
     return document.operations.slice(fromVersion);
   }
+
+  getDocument(docId: string): DocumentState | null {
+    return this.documents.get(docId) || null;
+  }
+
+  // Cleanup old operations to prevent memory leaks
+  cleanup(docId: string): void {
+    const document = this.documents.get(docId);
+    if (document && document.operations.length > 1000) {
+      // Keep only last 1000 operations
+      document.operations = document.operations.slice(-1000);
+    }
+  }
+
+  // Periodic cleanup for all documents
+  startPeriodicCleanup(): void {
+    setInterval(() => {
+      for (const [docId] of this.documents) {
+        this.cleanup(docId);
+      }
+    }, 60000); // Every minute
+  }
+
+  // Auto-save documents periodically
+  startAutoSave(): void {
+    setInterval(async () => {
+      for (const [docId, document] of this.documents) {
+        // Only save if document has been modified (version > 0)
+        if (document.version > 0) {
+          try {
+            // Get owner from first operation or use default
+            const ownerId = document.operations[0]?.userId || 'system';
+            await documentPersistenceService.autoSave(
+              docId,
+              document.content,
+              document.version,
+              ownerId
+            );
+          } catch (error) {
+            console.error(`Error auto-saving document ${docId}:`, error);
+          }
+        }
+      }
+    }, 30000); // Every 30 seconds
+  }
+
+  // Delete a document
+  deleteDocument(docId: string): boolean {
+    const deleted = this.documents.delete(docId);
+    this.operationHistory.delete(docId);
+    return deleted;
+  }
+
+  // Get all document IDs
+  getAllDocumentIds(): string[] {
+    return Array.from(this.documents.keys());
+  }
 }
 
 export const documentService = new DocumentService();
+
+// Start periodic cleanup and auto-save
+documentService.startPeriodicCleanup();
+documentService.startAutoSave();
