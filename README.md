@@ -135,7 +135,7 @@
    cp .env.example .env
    cp server/.env.example server/.env
    cp client/.env.example client/.env.local
-   
+
    # Install dependencies
    pnpm install
    cd server && pnpm install
@@ -147,7 +147,7 @@
    ```bash
    # Start PostgreSQL and Redis (requires Docker)
    docker-compose up -d postgres redis
-   
+
    # Run database migrations
    cd server
    pnpm db:migrate
@@ -193,89 +193,67 @@ pnpm lint
 # Run type checking
 pnpm typecheck
 ```
-   ```
 
-3. **Install dependencies**
+## 🔑 API Authentication
+
+### Login & Token Management
+
+1. **Login to get JWT tokens:**
    ```bash
-   # Install server dependencies
-   cd server
-   npm install
-
-   # Install client dependencies
-   cd ../client
-   npm install
-
-   # Return to root
-   cd ..
+   curl -X POST http://localhost:5000/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email": "user1@example.com", "password": "User123!@#"}'
    ```
 
-4. **Set up the database**
+2. **Use the access token for authenticated requests:**
    ```bash
-   # Run database migrations
-   cd server
-   npm run db:migrate
-
-   # Seed the database (optional)
-   npm run db:seed
+   curl http://localhost:5000/api/users \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
    ```
 
-5. **Start the servers**
-   ```bash
-   # Start backend server (Terminal 1)
-   cd server
-   npm run dev
-   # Backend runs on http://localhost:5000
+3. **When token expires (after 15 minutes), login again for a fresh token**
 
-   # Start frontend server (Terminal 2)
-   cd ../client
-   npm run dev
-   # Frontend runs on http://localhost:5173
-   ```
-
-6. **Access the application**
-   - **Frontend**: http://localhost:5173
-   - **Backend API**: http://localhost:5000
-   - **API Documentation**: http://localhost:5000/
-
-## 🔑 Demo Credentials
+### Demo Credentials
 
 For testing the application, use these demo credentials:
 
 ```javascript
-Username: admin
-Password: admin123
+Email: user1@example.com
+Password: User123!@#
+Role: admin (after promotion)
 ```
 
 Or register a new account directly in the application.
 
-## 📱 Usage
+## 📚 API Endpoints
 
-### Basic Usage
-1. Open the application in your browser at `http://localhost:5173`
-2. The application will automatically create a shared collaboration session
-3. Start typing code in the Monaco Editor
-4. Use the language selector to change programming languages
-5. Experience real-time collaboration features
+### Public Endpoints
+- `GET /` - API documentation and info
+- `GET /api` - API v1 root endpoint
+- `GET /api/health` - Server health check
+- `GET /api/rooms` - List public rooms
+- `GET /api/rooms/:id` - Get specific room (public rooms only)
 
-### Collaborative Features
-1. **Open Multiple Tabs**: Each tab represents a different user session
-2. **Live Synchronization**: All code changes appear instantly across tabs
-3. **Cursor Tracking**: See other users' cursors moving in real-time
-4. **User Presence**: Visual indicators show connected users and their activity
-5. **Typing Indicators**: See when other users are actively typing
-6. **Language Sync**: Programming language changes sync across all users
+### Authentication Required
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/refresh-token` - Refresh access token
 
-### Supported Languages
-- **JavaScript & TypeScript** - Full IntelliSense and error checking
-- **Python** - Syntax highlighting and basic completion
-- **Java** - Class and method completion
-- **C++ & C#** - Syntax highlighting and basic support
-- **Go & Rust** - Modern language support
-- **PHP & Ruby** - Web development languages
-- **HTML & CSS** - Frontend development
-- **JSON & YAML** - Configuration files
-- **Markdown** - Documentation and notes
-- **And more...**
+### Admin Only (JWT + Admin Role Required)
+- `GET /api/users` - List all users (admin only)
+- `GET /api/users/:id` - Get specific user (admin only)
+
+### User Profile (JWT Required)
+- `GET /api/users/profile` - Get current user profile
+- `PUT /api/users/profile` - Update user profile
+- `DELETE /api/users/profile` - Delete user account
+
+### Development Routes (Dev Only)
+- `GET /api/dev/users` - List all users (no auth required)
+- `POST /api/dev/promote-to-admin` - Promote user to admin (auth required)
+- `POST /api/dev/promote-user-to-admin` - Promote user by email (no auth required)
+- `POST /api/dev/reset-database` - Reset database (dev only)
 
 ## 🧪 Testing Real-time Collaboration
 
@@ -296,92 +274,6 @@ Or register a new account directly in the application.
 - **Browser Console**: Press F12 → Console for WebSocket logs
 - **Server Logs**: Check terminal for connection events
 - **Test Script**: Run `./collaboration-test.sh` for comprehensive testing
-
-## 🏗 Architecture
-
-### **Frontend (Client)**
-- **React 19+** - Modern React with concurrent features
-- **TypeScript 5.8+** - Full type safety and excellent DX
-- **Vite 5+** - Lightning-fast build tool and dev server
-- **Tailwind CSS 4+** - Utility-first CSS framework
-- **Monaco Editor 0.53+** - VS Code's editor component
-- **Socket.IO Client 4+** - Real-time WebSocket communication
-- **Zustand 5+** - Lightweight state management with Immer
-
-### **Backend (Server)**
-- **Node.js 18+** - Modern JavaScript runtime
-- **Express.js 4+** - Web application framework
-- **Socket.IO 4+** - Real-time bidirectional communication
-- **PostgreSQL 15+** - Robust relational database
-- **Sequelize 6+** - Promise-based ORM
-- **JWT Authentication** - Secure token-based auth
-- **Winston** - Logging and monitoring
-
-### **Real-time Communication**
-- **WebSocket Protocol** - Bidirectional real-time communication
-- **Document Rooms** - Isolated collaboration spaces
-- **Event Broadcasting** - Efficient message distribution
-- **User Management** - Connection tracking and presence
-- **State Synchronization** - Consistent document state across users
-
-## 🔧 Development Commands
-
-### Backend Development
-```bash
-cd server
-
-# Start development server
-npm run dev
-
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Generate test coverage
-npm run test:coverage
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Database operations
-npm run db:migrate    # Run migrations
-npm run db:seed       # Seed database
-npm run db:reset      # Reset database
-```
-
-### Frontend Development
-```bash
-cd client
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Generate test coverage
-npm run test:coverage
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-```
 
 ## 📂 Project Structure
 
@@ -413,19 +305,27 @@ collaborative-code-editor/
 │   │   ├── models/              # Database models
 │   │   │   ├── User.ts          # User model
 │   │   │   ├── Room.ts          # Room model
-│   │   │   ├── Session.ts       # Session model
+│   │   │   ├── Document.ts      # Document model
 │   │   │   └── index.ts         # Model associations
 │   │   ├── services/            # Business logic services
 │   │   │   └── redis.ts         # Redis service for caching
 │   │   ├── utils/               # Utility functions
 │   │   │   ├── errors.ts        # Custom error classes
 │   │   │   └── logger.ts        # Winston logger configuration
+│   │   ├── routes/              # API route handlers
+│   │   │   ├── auth.routes.ts  # Authentication routes
+│   │   │   ├── user.routes.ts  # User management routes
+│   │   │   ├── room.routes.ts  # Room management routes
+│   │   │   └── dev.routes.ts   # Development-only routes
+│   │   ├── controllers/        # Request handlers
+│   │   │   ├── auth.controller.ts  # Auth logic
+│   │   │   ├── user.controller.ts  # User logic
+│   │   │   └── room.controller.ts  # Room logic
 │   │   ├── app.ts               # Express application setup
 │   │   ├── index.ts             # Server entry point
 │   │   └── __tests__/           # Test files
 │   ├── db/                      # Database files
 │   │   ├── config.json          # Sequelize configuration
-│   │   ├── migrate-config.json  # Migration configuration
 │   │   ├── migrations/          # Database migrations
 │   │   └── seeders/             # Database seeders
 │   ├── scripts/                 # Utility scripts
@@ -455,9 +355,9 @@ DB_NAME=collaborative_editor
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=24h
+# JWT Configuration (Auto-generated on first run)
+JWT_SECRET=your-super-secret-jwt-key-...
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-...
 
 # Server Configuration
 PORT=5000
