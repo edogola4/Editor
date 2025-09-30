@@ -15,7 +15,7 @@
     "lint:fix": "eslint . --fix",
     "db:migrate": "node -r dotenv/config ./node_modules/.bin/node-pg-migrate up --config-file ./db/migrate-config.json",
     "db:rollback": "node -r dotenv/config ./node_modules/.bin/node-pg-migrate down --config-file ./db/migrate-config.json",
-    "db:seed": "NODE_OPTIONS='--loader ts-node/esm' NODE_ENV=development node --no-warnings=ExperimentalWarning scripts/run-seed.js",
+    "db:seed": "tsx scripts/seed.ts",
     "db:seed:undo": "NODE_OPTIONS='--loader ts-node/esm' NODE_ENV=development node --no-warnings=ExperimentalWarning scripts/run-seed-undo.js",
     "test:db": "NODE_OPTIONS='--loader ts-node/esm' tsx scripts/test-db.ts"
   },
