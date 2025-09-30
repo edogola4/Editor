@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { CustomSocket } from '../types/events';
+import { CustomSocket } from '../types/events.js';
 import { Socket } from 'socket.io';
+import { randomColor } from '../../utils/color.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -23,6 +24,7 @@ export const authenticateSocket = (socket: CustomSocket, next: (err?: Error) => 
         email: decoded.email,
       },
       lastActivity: Date.now(),
+      color: randomColor(),
     };
 
     next();
