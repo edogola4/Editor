@@ -25,32 +25,68 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-// Authentication middleware - Mock implementation for development
+// Authentication middleware - JWT token verification
 export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    // For development, we'll mock the authentication
-    // In production, this would verify JWT tokens and check database
+    // Get token from Authorization header or cookies
+    let token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token && req.cookies?.accessToken) {
+      token = req.cookies.accessToken;
+    }
 
-    // Mock user object
-    req.user = {
-      id: 'user_mock',
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'user',
-      isVerified: true,
-      avatarUrl: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      password: 'hashed_password',
-      // Add any other required properties
-    } as any;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+    }
 
+    // Verify token
+    const decoded = jwt.verify(token, config.jwt.secret) as {
+      id: string;
+      email: string;
+      role: string;
+      type: string;
+    };
+
+    // Check if it's an access token
+    if (decoded.type !== 'access') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token type',
+      });
+    }
+
+    // Get user from database
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Attach user to request
+    req.user = user;
     next();
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired',
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token',
+      });
+    }
     next(error);
   }
 };
