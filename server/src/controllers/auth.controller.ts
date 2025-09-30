@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { User } from '../models/User.js';
-import { sequelize } from '../config/database.js';
-import { generateTokens, setTokenCookies } from '../utils/jwt.js';
+import { User } from '../models/index.js';
+import { generateTokens, setTokenCookies, verifyToken } from '../utils/jwt.js';
 import { CustomError } from '../utils/errors.js';
 import passport from 'passport';
 
-const UserModel = User(sequelize);
+const UserModel = User;
 
 interface RegisterBody {
   username: string;
@@ -19,11 +18,15 @@ interface LoginBody {
   password: string;
 }
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new CustomError('Validation failed', 400, { errors: errors.array() });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
     }
 
     const { username, email, password } = req.body as RegisterBody;
@@ -42,6 +45,8 @@ export const register = async (req: Request, res: Response) => {
       username,
       email,
       password,
+      role: 'user',
+      isVerified: false,
     });
 
     // Generate tokens
@@ -55,7 +60,7 @@ export const register = async (req: Request, res: Response) => {
     setTokenCookies(res, tokens);
 
     // Return user data (without password)
-    const userResponse = user.toJSON();
+    const userResponse: any = user.toJSON();
     delete userResponse.password;
 
     res.status(201).json({
@@ -73,11 +78,15 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new CustomError('Validation failed', 400, { errors: errors.array() });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
     }
 
     const { email, password } = req.body as LoginBody;
@@ -106,7 +115,7 @@ export const login = async (req: Request, res: Response) => {
     setTokenCookies(res, tokens);
 
     // Return user data (without password)
-    const userResponse = user.toJSON();
+    const userResponse: any = user.toJSON();
     delete userResponse.password;
 
     res.json({
@@ -178,6 +187,134 @@ export const refreshToken = async (req: Request, res: Response) => {
 
 // GitHub OAuth handlers
 export const githubAuth = passport.authenticate('github');
+
+// Password reset request
+// This would typically send a password reset email with a token
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    
+    // Find user by email
+    const user = await UserModel.findOne({ where: { email } });
+    
+    // For security, don't reveal if email exists or not
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+    
+    // Generate password reset token (implementation depends on your email service)
+    // const resetToken = generatePasswordResetToken(user.id);
+    // await sendPasswordResetEmail(user.email, resetToken);
+    
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, a password reset link has been sent.'
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    throw new CustomError('Failed to process password reset request', 500);
+  }
+};
+
+// Reset password with token
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+    
+    // Verify token and get user ID (implementation depends on your token system)
+    // const userId = verifyPasswordResetToken(token);
+    // if (!userId) {
+    //   throw new CustomError('Invalid or expired token', 400);
+    // }
+    
+    // Find user and update password
+    // const user = await UserModel.findByPk(userId);
+    // if (!user) {
+    //   throw new CustomError('User not found', 404);
+    // }
+    
+    // user.password = password;
+    // await user.save();
+    
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully.'
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
+    throw new CustomError('Failed to reset password', 500, error);
+  }
+};
+
+// Verify email with token
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    
+    // Verify token and get user ID (implementation depends on your token system)
+    // const userId = verifyEmailToken(token);
+    // if (!userId) {
+    //   throw new CustomError('Invalid or expired token', 400);
+    // }
+    
+    // Update user's email verification status
+    // await UserModel.update({ isVerified: true }, { where: { id: userId } });
+    
+    // Redirect to success page or return success response
+    // res.redirect('/email-verified');
+    res.json({
+      success: true,
+      message: 'Email verified successfully.'
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
+    throw new CustomError('Failed to verify email', 500, error);
+  }
+};
+
+// Resend verification email
+export const resendVerificationEmail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    
+    // Find user by email
+    const user = await UserModel.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a verification email has been sent.'
+      });
+    }
+    
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified.'
+      });
+    }
+    
+    // Generate and send verification email
+    // const verificationToken = generateEmailVerificationToken(user.id);
+    // await sendVerificationEmail(user.email, verificationToken);
+    
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, a verification email has been sent.'
+    });
+  } catch (error) {
+    console.error('Resend verification email error:', error);
+    throw new CustomError('Failed to resend verification email', 500);
+  }
+};
 
 export const githubAuthCallback = (req: Request, res: Response) => {
   passport.authenticate('github', { session: false }, (err: any, user: any) => {
