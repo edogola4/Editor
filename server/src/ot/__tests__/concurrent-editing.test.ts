@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { OT } from '../ot-core';
+import { OT } from '../ot-core.js';
 
 describe('Concurrent Editing', () => {
   const ot = new OT();
