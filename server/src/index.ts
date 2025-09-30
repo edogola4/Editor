@@ -24,6 +24,14 @@ import { testConnection } from "../db/index.js";
 import { execSync } from "child_process";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { authenticate, authorize } from "./middleware/auth.js";
+import { Room, User, DocumentOperation } from "./socket/types/events.js";
+
+// Import routes
+import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import documentRoutes from "./routes/document.routes.js";
+import roomRoutes from "./routes/room.routes.js";
+import devRoutes from "./routes/dev.routes.js";
 
 // Load environment variables
 dotenv.config();
@@ -52,218 +60,90 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// API Documentation
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
     message: "Collaborative Code Editor Backend API",
     version: "1.0.0",
+    documentation: "https://github.com/yourusername/collaborative-code-editor/blob/main/API_DOCUMENTATION.md",
     endpoints: {
-      health: "/api/health",
-      // Add more endpoints as they are implemented
+      auth: "/api/auth",
+      users: "/api/users",
+      documents: "/api/documents",
+      rooms: "/api/rooms",
+      health: "/api/health"
     },
   });
 });
 
-app.get("/api/health", (req, res) => {
-  return res.json({ status: "ok", message: "Server is running" });
+// API v1 routes
+const apiRouter = express.Router();
+
+// API root endpoint
+apiRouter.get('/', (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Collaborative Code Editor API v1",
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      users: "/api/users",
+      documents: "/api/documents",
+      rooms: "/api/rooms",
+      health: "/api/health",
+      dev: process.env.NODE_ENV !== 'production' ? "/api/dev" : undefined
+    },
+  });
 });
 
-// Authentication routes
-app.post("/api/auth/register", async (req, res, next) => {
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/documents', documentRoutes);
+apiRouter.use('/rooms', roomRoutes);
+
+// Development routes (only enabled in development)
+if (process.env.NODE_ENV !== 'production') {
+  apiRouter.use('/dev', devRoutes);
+}
+
+// Add API versioning
+app.use('/api', apiRouter);
+
+app.get("/api/health", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Mock user creation for development
-    const mockUser = {
-      id: 'user_' + Date.now(),
-      username: username || email.split('@')[0],
-      email,
-      role: 'user',
-      isVerified: true,
-      avatarUrl: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const mockTokens = {
-      accessToken: 'mock_access_token_' + Date.now(),
-      refreshToken: 'mock_refresh_token_' + Date.now(),
-    };
-
-    return res.json({
-      message: 'User registered successfully',
-      user: mockUser,
-      ...mockTokens
-    });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-app.post("/api/auth/login", async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Mock authentication for development
-    const mockUser = {
-      id: 'user_' + Date.now(),
-      username: email.split('@')[0],
-      email,
-      role: 'user',
-      isVerified: true,
-      avatarUrl: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const mockTokens = {
-      accessToken: 'mock_access_token_' + Date.now(),
-      refreshToken: 'mock_refresh_token_' + Date.now(),
-    };
-
-    return res.json({
-      message: 'Login successful',
-      user: mockUser,
-      ...mockTokens
-    });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// Protected route example
-app.get("/api/auth/profile", authenticate, async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // Check database connection
+    await testConnection();
     
-    return res.json({
-      message: "Protected route",
-      user: req.user,
-    });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// Get current user
-app.get("/api/auth/me", authenticate, async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // Get system stats
+    const stats = {
+      status: "ok",
+      message: "Server is running",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      },
+      connections: io.sockets.sockets.size,
+      documents: socketService ? 'active' : 'inactive',
+    };
     
-    // Return mock user data for development
-    const mockUser = {
-      id: 'user_mock',
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'user',
-      isVerified: true,
-      avatarUrl: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    return res.json(mockUser);
+    return res.json(stats);
   } catch (error) {
-    return next(error);
-  }
-});
-
-// Logout
-app.post("/api/auth/logout", async (req, res, next) => {
-  try {
-    return res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// Refresh token
-app.post("/api/auth/refresh-token", async (req, res, next) => {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({ message: 'Refresh token required' });
-    }
-
-    // Mock token refresh for development
-    const newTokens = {
-      accessToken: 'mock_access_token_' + Date.now(),
-      refreshToken: 'mock_refresh_token_' + Date.now(),
-    };
-
-    return res.json(newTokens);
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// GitHub OAuth routes
-app.get("/api/auth/github", (req, res) => {
-  try {
-    const clientId = process.env.GITHUB_CLIENT_ID;
-    const redirectUri = process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/api/auth/github/callback';
-
-    if (!clientId) {
-      return res.status(500).json({ message: 'GitHub OAuth not configured' });
-    }
-
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
-
-    return res.redirect(githubAuthUrl);
-  } catch (error) {
-    console.error('GitHub OAuth error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get("/api/auth/github/callback", async (req, res, next) => {
-  try {
-    const { code } = req.query;
-
-    if (!code) {
-      return res.status(400).json({ message: 'Authorization code required' });
-    }
-
-    // Mock GitHub OAuth callback for development
-    const mockUser = {
-      id: 'github_user_' + Date.now(),
-      username: 'githubuser',
-      email: 'github@example.com',
-      role: 'user',
-      isVerified: true,
-      avatarUrl: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const mockTokens = {
-      accessToken: 'mock_github_access_token_' + Date.now(),
-      refreshToken: 'mock_github_refresh_token_' + Date.now(),
-    };
-
-    return res.json({
-      message: 'GitHub authentication successful',
-      user: mockUser,
-      ...mockTokens
+    return res.status(503).json({
+      status: "error",
+      message: "Service unavailable",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
-  } catch (error) {
-    return next(error);
   }
 });
+
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/documents", documentRoutes);
+app.use("/api/rooms", roomRoutes);
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {
@@ -279,30 +159,53 @@ io.on("connection", (socket) => {
   console.log("🏠 User joined personal room: user:" + userId);
 
   // Handle document operations
-  socket.on("document:join", (data) => {
-    const { documentId } = data;
-    console.log(`📄 User ${userId} attempting to join document: ${documentId}`);
+  socket.on("room:join", (payload, callback) => {
+    const { roomId } = payload;
+    console.log(`📄 User ${userId} attempting to join document: ${roomId}`);
 
-    socket.join(`document:${documentId}`);
-    console.log(`✅ User ${userId} successfully joined document ${documentId}`);
+    socket.join(`document:${roomId}`);
+    console.log(`✅ User ${userId} successfully joined document ${roomId}`);
 
-    // Get current users in the document room
-    const room = io.sockets.adapter.rooms.get(`document:${documentId}`);
-    const userIds = room ? Array.from(room).map(id => {
-      // Extract user ID from socket ID or use the stored one
-      return id.startsWith('user_') ? id : userId;
-    }) : [];
+    // Create a mock room object
+    const mockRoom: Room = {
+      id: roomId,
+      name: `Room ${roomId}`,
+      owner: userId,
+      members: new Set([userId]),
+      maxMembers: 10,
+      createdAt: new Date()
+    };
 
-    console.log(`👥 Users in document ${documentId}:`, userIds);
+    // Create mock user object
+    const user: User = {
+      id: userId,
+      username: `user_${userId.slice(0, 6)}`,
+      color: `#${Math.floor(Math.random()*16777215).toString(16)}`
+    };
+
+    // Call the callback with success response
+    if (callback) {
+      callback({ 
+        success: true,
+        user: user
+      });
+    }
+
     // Notify other users in the document
-    socket.to(`document:${documentId}`).emit('user-joined', {
-      userId,
-      timestamp: new Date().toISOString()
+    socket.to(`document:${roomId}`).emit('room:joined', {
+      room: {
+        id: mockRoom.id,
+        name: mockRoom.name,
+        owner: mockRoom.owner,
+        maxMembers: mockRoom.maxMembers,
+        createdAt: mockRoom.createdAt
+      },
+      members: [user]
     });
 
     // Send current document state to the new user
     socket.emit('document:state', {
-      code: `// Welcome to Collaborative Code Editor!
+      content: `// Welcome to Collaborative Code Editor!
 // Start typing your code here...
 
 function fibonacci(n) {
@@ -311,86 +214,89 @@ function fibonacci(n) {
 }
 
 console.log(fibonacci(10)); // Output: 55`,
-      language: 'javascript',
-      users: userIds.filter((id: string) => id !== userId) // Exclude current user
+      version: 1
     });
 
     console.log(`📤 Sent document state to user ${userId}`);
   });
 
-  socket.on("document:leave", (data) => {
-    const { documentId } = data;
-    socket.leave(`document:${documentId}`);
-    console.log(`🚪 User ${userId} left document ${documentId}`);
+  socket.on("room:leave", (payload) => {
+    const { roomId } = payload;
+    socket.leave(`document:${roomId}`);
+    console.log(`🚪 User ${userId} left document ${roomId}`);
 
     // Notify other users
-    socket.to(`document:${documentId}`).emit('user-left', {
+    socket.to(`document:${roomId}`).emit('room:left', {
       userId,
-      timestamp: new Date().toISOString()
+      roomId: `document:${roomId}`
     });
   });
 
   // Handle code changes
-  socket.on("code-change", (data) => {
-    const { code, documentId = 'default' } = data;
+  socket.on("document:operation", (operation, callback) => {
+    const { text, position, type, version } = operation;
+    const roomId = socket.data.roomId || 'default';
 
-    console.log(`📝 Code change from ${userId} in document ${documentId}: ${code.length} characters`);
+    console.log(`📝 ${type} operation from ${userId} in document ${roomId} at position ${position}`);
+
+    // Create the full operation with required fields
+    const fullOperation: DocumentOperation = {
+      ...operation,
+      clientId: socket.id,
+      timestamp: Date.now(),
+      userId
+    };
 
     // Broadcast to all users in the same document except sender
-    socket.to(`document:${documentId}`).emit('code-change', {
-      code,
-      userId,
-      timestamp: new Date().toISOString()
-    });
+    socket.to(`document:${roomId}`).emit('document:operation', fullOperation);
+
+    // Acknowledge the operation
+    if (callback) {
+      callback({ success: true });
+    }
   });
 
-  // Handle language changes
-  socket.on("language-change", (data) => {
-    const { language, documentId = 'default' } = data;
+  // Handle document sync
+  socket.on("document:sync", (payload) => {
+    const { version } = payload;
+    const roomId = socket.data.roomId || 'default';
 
-    console.log(`🌐 Language change from ${userId} in document ${documentId}: ${language}`);
+    console.log(`🔄 Document sync requested by ${userId} for version ${version} in room ${roomId}`);
 
-    socket.to(`document:${documentId}`).emit('language-change', {
-      language,
-      userId,
-      timestamp: new Date().toISOString()
-    });
+    // In a real implementation, you would send the current document state
+    // Here we just acknowledge the sync request
+    socket.emit('document:state', { content: '', version });
   });
 
   // Handle cursor position updates
-  socket.on("cursor-update", (data) => {
-    const { position, documentId = 'default' } = data;
+  socket.on("cursor:move", (position) => {
+    const roomId = socket.data.roomId || 'default';
+    
+    console.log(`🎯 Cursor update from ${userId} in room ${roomId}:`, position);
 
-    console.log(`🎯 Cursor update from ${userId} in document ${documentId}:`, position);
+    // Update user's cursor position in the room service
+    if (socket.data.user) {
+      socket.data.user.cursorPosition = position;
+    }
 
-    // Broadcast cursor position to all users in the same document
-    socket.to(`document:${documentId}`).emit('cursor-update', {
+    // Broadcast cursor position to all users in the same room except sender
+    socket.to(`document:${roomId}`).emit('cursor:update', {
       userId,
-      position,
-      timestamp: new Date().toISOString()
+      position
     });
   });
 
   // Handle user typing indicators
-  socket.on("typing:start", (data) => {
-    const { documentId = 'default' } = data;
+  socket.on("user:typing", (payload) => {
+    const { isTyping, roomId } = payload;
+    const targetRoomId = roomId || socket.data.roomId || 'default';
 
-    console.log(`⌨️ Typing started by ${userId} in document ${documentId}`);
+    console.log(`⌨️ User ${userId} ${isTyping ? 'started' : 'stopped'} typing in room ${targetRoomId}`);
 
-    socket.to(`document:${documentId}`).emit('typing:start', {
+    // Broadcast typing status to all users in the same room except sender
+    socket.to(`document:${targetRoomId}`).emit('user:typing', {
       userId,
-      timestamp: new Date().toISOString()
-    });
-  });
-
-  socket.on("typing:stop", (data) => {
-    const { documentId = 'default' } = data;
-
-    console.log(`⌨️ Typing stopped by ${userId} in document ${documentId}`);
-
-    socket.to(`document:${documentId}`).emit('typing:stop', {
-      userId,
-      timestamp: new Date().toISOString()
+      isTyping
     });
   });
 
@@ -400,9 +306,10 @@ console.log(fibonacci(10)); // Output: 55`,
 
     // Notify all documents that this user left
     // In a real implementation, you'd track which documents the user was in
-    io.emit('user-left', {
+    const roomId = socket.data.roomId || 'default';
+    socket.to(`document:${roomId}`).emit('room:left', {
       userId,
-      timestamp: new Date().toISOString()
+      roomId: `document:${roomId}`
     });
   });
 });
