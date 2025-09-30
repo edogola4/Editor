@@ -95,6 +95,8 @@ export class SocketService {
       socket.on('room:leave', (payload) => this.handleLeaveRoom(socket, payload));
       
       // Document events
+      socket.on('document:join', (documentId, callback) => this.handleDocumentJoin(socket, documentId, callback));
+      socket.on('document:leave', (documentId, callback) => this.handleDocumentLeave(socket, documentId, callback));
       socket.on('document:operation', (operation, callback) => 
         this.handleDocumentOperation(socket, operation, callback)
       );
@@ -166,10 +168,13 @@ export class SocketService {
       const user = socket.data.user;
       
       if (!user) {
+        callback({ success: false, message: 'User not authenticated' });
+        return;
       }
       
       // Update user data if provided in the payload
       if (payload.user) {
+        Object.assign(user, payload.user);
       }
 
       // Join the room
@@ -391,6 +396,87 @@ export class SocketService {
         success: false, 
         message: error instanceof Error ? error.message : 'Failed to apply operation' 
       });
+    }
+  }
+
+  private handleDocumentJoin(
+    socket: CustomSocket,
+    documentId: string,
+    callback: (response: { success: boolean; content?: string; version?: number }) => void
+  ): void {
+    const user = socket.data.user;
+    if (!user) {
+      callback({ success: false });
+      return;
+    }
+
+    try {
+      // Create document if it doesn't exist
+      let document = documentService.getDocument(documentId);
+      if (!document) {
+        documentService.createDocument(documentId, '// Welcome to the collaborative editor!\n');
+        document = documentService.getDocument(documentId);
+      }
+
+      // Join the document room
+      socket.join(`document:${documentId}`);
+      socket.data.roomId = documentId;
+
+      console.log(`User ${user.id} joined document: ${documentId}`);
+
+      // Send document state to the user
+      if (document) {
+        callback({
+          success: true,
+          content: document.content,
+          version: document.version
+        });
+
+        // Notify other users in the document
+        socket.to(`document:${documentId}`).emit('room:joined', {
+          room: {
+            id: documentId,
+            name: `Document ${documentId}`,
+            owner: user.id,
+            maxMembers: 100,
+            createdAt: new Date()
+          },
+          members: [user]
+        });
+      } else {
+        callback({ success: false });
+      }
+    } catch (error) {
+      console.error('Error joining document:', error);
+      callback({ success: false });
+    }
+  }
+
+  private handleDocumentLeave(
+    socket: CustomSocket,
+    documentId: string,
+    callback: (response: { success: boolean }) => void
+  ): void {
+    const user = socket.data.user;
+    if (!user) {
+      callback({ success: false });
+      return;
+    }
+
+    try {
+      socket.leave(`document:${documentId}`);
+      
+      // Notify other users
+      socket.to(`document:${documentId}`).emit('room:left', {
+        userId: user.id,
+        roomId: documentId
+      });
+
+      console.log(`User ${user.id} left document: ${documentId}`);
+      callback({ success: true });
+    } catch (error) {
+      console.error('Error leaving document:', error);
+      callback({ success: false });
     }
   }
 
