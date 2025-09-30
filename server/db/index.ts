@@ -115,7 +115,7 @@ const runMigrations = async (): Promise<void> => {
   }
 };
 
-export { pool, testConnection, runMigrations };
+export { pool, sequelize, testConnection, runMigrations };
 
 export default {
   query: (text: string, params?: any[]) => pool.query(text, params),
