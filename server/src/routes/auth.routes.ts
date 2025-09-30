@@ -1,12 +1,32 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import * as authController from '../controllers/auth.controller';
-import { validate } from '../middleware/validation';
-import { authLimiter } from '../middleware/rateLimit';
-import { authenticate } from '../middleware/auth';
+import * as authController from '../controllers/auth.controller.js';
+import { validate } from '../middleware/validation.js';
+import { authLimiter } from '../middleware/rateLimit.js';
+import { authenticate } from '../middleware/auth.js';
 import passport from 'passport';
 
 const router = Router();
+
+// Root endpoint
+router.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Auth API is running',
+    endpoints: [
+      'POST /register',
+      'POST /login',
+      'POST /logout',
+      'POST /refresh-token',
+      'GET /github',
+      'GET /github/callback',
+      'POST /forgot-password',
+      'POST /reset-password/:token',
+      'GET /verify-email/:token',
+      'POST /resend-verification'
+    ]
+  });
+});
 
 // Register route
 router.post(
