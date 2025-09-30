@@ -1,8 +1,10 @@
-import { Router } from 'express';
-import * as userController from '../controllers/user.controller';
-import { validate } from '../middleware/validation';
-import { authenticate } from '../middleware/auth';
-import { apiLimiter } from '../middleware/rateLimit';
+import { Router, Request, Response, NextFunction } from 'express';
+import { body } from 'express-validator';
+import * as userController from '../controllers/user.controller.js';
+import { validate } from '../middleware/validation.js';
+import { authenticate } from '../middleware/auth.js';
+import { apiLimiter } from '../middleware/rateLimit.js';
+import { CustomError } from '../utils/errors.js';
 
 const router = Router();
 
@@ -45,15 +47,19 @@ router.put(
 // Get user by ID (admin only)
 router.get(
   '/:id',
-  (req, res, next) => {
-    // Check if user is admin
-    if (req.user?.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized: Admin access required',
-      });
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Check if user is admin
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          error: 'Unauthorized: Admin access required',
+        });
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    next();
   },
   userController.getUserById,
 );
@@ -61,15 +67,19 @@ router.get(
 // Get all users (admin only)
 router.get(
   '/',
-  (req, res, next) => {
-    // Check if user is admin
-    if (req.user?.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized: Admin access required',
-      });
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Check if user is admin
+      if (req.user?.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          error: 'Unauthorized: Admin access required',
+        });
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    next();
   },
   userController.getAllUsers,
 );
