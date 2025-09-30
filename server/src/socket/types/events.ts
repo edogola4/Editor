@@ -84,6 +84,14 @@ export interface ClientToServerEvents {
   'room:leave': (payload: { roomId: string }) => void;
   
   // Document operations
+  'document:join': (
+    documentId: string,
+    callback: (response: { success: boolean; content?: string; version?: number }) => void
+  ) => void;
+  'document:leave': (
+    documentId: string,
+    callback: (response: { success: boolean }) => void
+  ) => void;
   'document:operation': (
     operation: Omit<DocumentOperation, 'clientId' | 'timestamp'>,
     callback: (response: { success: boolean; error?: string }) => void
