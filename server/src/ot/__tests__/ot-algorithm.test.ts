@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { OT } from '../ot-core';
+import { OT } from '../ot-core.js';
 
 describe('Operational Transform Algorithm', () => {
   let ot: OT;
