@@ -1,9 +1,8 @@
 import { body, ValidationChain } from 'express-validator';
-import { CustomError } from '../utils/errors';
-import { User } from '../models/User';
-import { sequelize } from '../config/database';
+import { CustomError } from '../utils/errors.js';
+import { User } from '../models/index.js';
 
-const UserModel = User(sequelize);
+const UserModel = User;
 
 export const validateRegister = (): ValidationChain[] => [
   body('username')
@@ -117,3 +116,64 @@ export const validateRefreshToken = (): ValidationChain[] => [
     .isString()
     .withMessage('Refresh token must be a string'),
 ];
+
+// Generic validate function that returns the appropriate validation chain
+export const validate = (method: string): ValidationChain[] => {
+  switch (method) {
+    case 'register':
+      return validateRegister();
+    case 'login':
+      return validateLogin();
+    case 'updateProfile':
+      return validateUpdateProfile();
+    case 'refreshToken':
+      return validateRefreshToken();
+    case 'forgotPassword':
+      return [
+        body('email')
+          .isEmail()
+          .withMessage('Please provide a valid email')
+          .normalizeEmail(),
+      ];
+    case 'resetPassword':
+      return [
+        body('password')
+          .isLength({ min: 8 })
+          .withMessage('Password must be at least 8 characters long')
+          .matches(/[0-9]/)
+          .withMessage('Password must contain at least one number')
+          .matches(/[a-z]/)
+          .withMessage('Password must contain at least one lowercase letter')
+          .matches(/[A-Z]/)
+          .withMessage('Password must contain at least one uppercase letter')
+          .matches(/[^a-zA-Z0-9]/)
+          .withMessage('Password must contain at least one special character'),
+        body('confirmPassword').custom((value, { req }) => {
+          if (value !== req.body.password) {
+            throw new Error('Passwords do not match');
+          }
+          return true;
+        }),
+      ];
+    case 'resendVerification':
+      return [
+        body('email')
+          .isEmail()
+          .withMessage('Please provide a valid email')
+          .normalizeEmail(),
+      ];
+    case 'updateSettings':
+      return [
+        body('theme')
+          .optional()
+          .isIn(['light', 'dark', 'system'])
+          .withMessage('Theme must be one of: light, dark, system'),
+        body('notifications')
+          .optional()
+          .isBoolean()
+          .withMessage('Notifications must be a boolean value'),
+      ];
+    default:
+      return [];
+  }
+};
