@@ -1,7 +1,6 @@
 import { DataTypes } from 'sequelize';
 
-export default {
-  up: async (queryInterface, Sequelize) => {
+export const up = async (queryInterface, Sequelize) => {
     // Create users table
     await queryInterface.createTable('users', {
       id: {
@@ -66,9 +65,8 @@ export default {
         field: 'updated_at',
       },
     });
-  },
+};
 
-  down: async (queryInterface, Sequelize) => {
+export const down = async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('users');
-  },
 };

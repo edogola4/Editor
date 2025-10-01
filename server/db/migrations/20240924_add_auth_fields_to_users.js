@@ -1,7 +1,6 @@
-const { DataTypes } = require('sequelize');
+import { DataTypes } from 'sequelize';
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
+export const up = async (queryInterface, Sequelize) => {
     await queryInterface.addColumn('users', 'githubId', {
       type: DataTypes.STRING,
       allowNull: true,
@@ -28,13 +27,12 @@ module.exports = {
       type: DataTypes.DATE,
       allowNull: true,
     });
-  },
+};
 
-  down: async (queryInterface, Sequelize) => {
+export const down = async (queryInterface, Sequelize) => {
     await queryInterface.removeColumn('users', 'githubId');
     await queryInterface.removeColumn('users', 'avatarUrl');
     await queryInterface.removeColumn('users', 'isVerified');
     await queryInterface.removeColumn('users', 'passwordResetToken');
     await queryInterface.removeColumn('users', 'passwordResetExpires');
-  },
 };

@@ -110,7 +110,7 @@ const LoginForm = () => {
     const refreshToken = searchParams.get('refreshToken');
     
     if (error) {
-      setError(decodeURIComponent(error));
+      setErrors(prev => ({ ...prev, form: decodeURIComponent(error) }));
       // Clean up the URL
       const url = new URL(window.location.href);
       url.searchParams.delete('error');
