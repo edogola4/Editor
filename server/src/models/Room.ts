@@ -1,32 +1,16 @@
-import { Model, DataTypes, Sequelize, Optional } from "sequelize";
+import { Model, DataTypes, Sequelize, Optional, Op } from "sequelize";
+import { v4 as uuidv4 } from 'uuid';
+import RoomMember from './RoomMember.js';
+import RoomInvitation from './RoomInvitation.js';
 
-// Define the attributes of the Room model
-export interface RoomAttributes {
-  id: string;
-  name: string;
-  description?: string;
-  isPrivate: boolean;
-  password?: string; // For private rooms
-  maxUsers: number;
-  ownerId: string;
-  settings: RoomSettings;
-  status: "active" | "inactive" | "archived";
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
+// Room statistics interface
+export interface RoomStatistics {
+  totalSessions: number;
+  totalEdits: number;
+  averageSessionDuration: number;
+  activeUsers: number;
+  lastActive: Date;
 }
-
-// Define the attributes required to create a new Room
-export interface RoomCreationAttributes
-  extends Optional<
-    RoomAttributes,
-    | "id"
-    | "createdAt"
-    | "updatedAt"
-    | "isPrivate"
-    | "maxUsers"
-    | "settings"
-    | "status"
-  > {}
 
 // Define room settings interface
 export interface RoomSettings {
@@ -36,13 +20,67 @@ export interface RoomSettings {
   enableVoice: boolean;
   maxIdleTime: number; // minutes
   autoSave: boolean;
-  language: string; // Default programming language
+  language: string;
   theme: string; // Editor theme
   tabSize: number;
   wordWrap: boolean;
   minimap: boolean;
   lineNumbers: boolean;
 }
+
+// Define user roles
+export enum UserRole {
+  OWNER = 'owner',
+  ADMIN = 'admin',
+  EDITOR = 'editor',
+  VIEWER = 'viewer'
+}
+
+// Define invitation status
+export enum InvitationStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired'
+}
+
+// Define the attributes of the Room model
+export interface RoomAttributes {
+  id: string;
+  name: string;
+  description?: string | null;
+  isPrivate: boolean;
+  password?: string | null;
+  maxUsers: number;
+  ownerId: string;
+  settings: RoomSettings;
+  status: 'active' | 'inactive' | 'archived';
+  lastActivityAt: Date;
+  totalSessions: number;
+  totalEdits: number;
+  averageSessionDuration: number;
+  activeUsers: number;
+  lastActive: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
+// Define the attributes required to create a new Room
+export type RoomCreationAttributes = Optional<RoomAttributes, 
+  | 'id' 
+  | 'createdAt' 
+  | 'updatedAt' 
+  | 'lastActivityAt' 
+  | 'totalSessions' 
+  | 'totalEdits' 
+  | 'averageSessionDuration' 
+  | 'activeUsers' 
+  | 'lastActive'
+  | 'deletedAt'
+  | 'description'
+  | 'password'
+>;
 
 // Define the Room instance methods
 export interface RoomInstance
@@ -68,16 +106,34 @@ export type RoomModelStatic = typeof Model & {
   findByPk: (id: string, options?: any) => Promise<RoomInstance | null>;
   findOne: (options: any) => Promise<RoomInstance | null>;
   findAll: (options?: any) => Promise<RoomInstance[]>;
-  // Add other static methods as needed
+  
+  // Room statistics methods
+  getRoomStats: (roomId: string) => Promise<RoomStatistics>;
+  cleanupInactiveRooms: (inactiveDays?: number) => Promise<number>;
+  
+  // Invitation methods
+  createInvitation: (invitationData: Omit<RoomInvitation, 'id' | 'createdAt' | 'status' | 'token'>) => Promise<RoomInvitation>;
+  getInvitation: (token: string) => Promise<RoomInvitation | null>;
+  updateInvitationStatus: (token: string, status: InvitationStatus) => Promise<RoomInvitation | null>;
+  
+  // Member management methods
+  addMember: (roomId: string, userId: string, role?: UserRole) => Promise<void>;
+  removeMember: (roomId: string, userId: string) => Promise<boolean>;
+  updateMemberRole: (roomId: string, userId: string, role: UserRole) => Promise<boolean>;
+  getMembers: (roomId: string) => Promise<RoomMember[]>;
+  
+  // Helper methods
+  hasPermission: (roomId: string, userId: string, requiredRole: UserRole) => Promise<boolean>;
+  isMember: (roomId: string, userId: string) => Promise<boolean>;
 };
 
 /**
  * Initialize Room model
  */
 export default function Room(sequelize: Sequelize): RoomModelStatic {
-  // Define the model
-  const RoomModel = sequelize.define<RoomInstance>(
-    "Room",
+  // Initialize the Room model
+  const RoomModel = sequelize.define<RoomInstance, RoomCreationAttributes>(
+    'Room',
     {
       id: {
         type: DataTypes.UUID,
@@ -88,33 +144,26 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          len: [1, 100],
-          notEmpty: true,
+          len: [3, 100],
         },
       },
       description: {
         type: DataTypes.TEXT,
         allowNull: true,
-        validate: {
-          len: [0, 1000],
-        },
       },
       isPrivate: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false,
         allowNull: false,
+        defaultValue: false,
       },
       password: {
         type: DataTypes.STRING,
         allowNull: true,
-        validate: {
-          len: [6, 255],
-        },
       },
       maxUsers: {
         type: DataTypes.INTEGER,
-        defaultValue: 10,
         allowNull: false,
+        defaultValue: 10,
         validate: {
           min: 1,
           max: 100,
@@ -124,40 +173,63 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "users",
-          key: "id",
+          model: 'users',
+          key: 'id',
         },
       },
       settings: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
+        allowNull: false,
         defaultValue: {
-          allowGuests: false,
+          allowGuests: true,
           requireApproval: false,
           enableChat: true,
           enableVoice: false,
-          maxIdleTime: 30,
+          maxIdleTime: 30, // minutes
           autoSave: true,
-          language: "javascript",
-          theme: "vs-dark",
+          language: 'javascript',
+          theme: 'vs-dark',
           tabSize: 2,
           wordWrap: true,
           minimap: true,
           lineNumbers: true,
         },
-        allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM("active", "inactive", "archived"),
-        defaultValue: "active",
+        type: DataTypes.ENUM('active', 'inactive', 'archived'),
         allowNull: false,
+        defaultValue: 'active',
       },
-      createdAt: {
+      lastActivityAt: {
         type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
-      updatedAt: {
+      // Statistics
+      totalSessions: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      totalEdits: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      averageSessionDuration: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      activeUsers: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      lastActive: {
         type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     },
     {
@@ -166,20 +238,55 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
       indexes: [
         {
           unique: true,
-          fields: ["name", "owner_id"],
+          fields: ["name", "ownerId"],
         },
         {
           fields: ["status"],
         },
         {
-          fields: ["created_at"],
+          fields: ["createdAt"],
         },
         {
-          fields: ["owner_id"],
+          fields: ["ownerId"],
         },
       ],
-    },
+    }
   ) as unknown as RoomModelStatic;
+
+  // Add static methods
+  RoomModel.getRoomStats = async function(roomId: string): Promise<RoomStatistics> {
+    const room = await this.findByPk(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    
+    return {
+      totalSessions: room.get('totalSessions') as number,
+      totalEdits: room.get('totalEdits') as number,
+      averageSessionDuration: room.get('averageSessionDuration') as number,
+      activeUsers: room.get('activeUsers') as number,
+      lastActive: room.get('lastActive') as Date
+    };
+  };
+
+  RoomModel.cleanupInactiveRooms = async function(inactiveDays: number = 30): Promise<number> {
+    const date = new Date();
+    date.setDate(date.getDate() - inactiveDays);
+    
+    const [count] = await this.update(
+      { status: 'inactive' },
+      {
+        where: {
+          lastActivityAt: {
+            [Op.lt]: date
+          },
+          status: 'active'
+        }
+      }
+    );
+    
+    return count;
+  };
 
   // Add instance methods
   const roomPrototype = RoomModel.prototype as RoomInstance;
@@ -291,5 +398,7 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
   return RoomModel;
 }
 
-// Export types
-export { RoomAttributes, RoomInstance, RoomModelStatic, RoomSettings };
+// Export type for model static methods
+type RoomModelStaticType = RoomModelStatic;
+
+export { RoomModelStaticType as RoomModelStatic };
