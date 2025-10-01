@@ -30,7 +30,7 @@ interface AuthState {
 interface AuthActions {
   // Authentication methods
   login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (username: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   loginWithGitHub: () => void;
@@ -135,14 +135,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         },
 
         // Register a new user
-        register: async (username: string, email: string, password: string) => {
+        register: async (username: string, email: string, password: string, confirmPassword: string) => {
           set({ isLoading: true, error: null });
 
           try {
             const response = await fetch(`${API_URL}/auth/register`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username, email, password }),
+              body: JSON.stringify({ username, email, password, confirmPassword }),
             });
 
             const data = await response.json();
