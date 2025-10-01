@@ -110,27 +110,21 @@
 - **Docker Compose** - Multi-container orchestration
 - **Nginx** - Reverse proxy and load balancing
 - **ESLint** - Code linting and formatting
-- **Prettier** - Code formatting
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - **Node.js 22+** (LTS recommended)
-- **PostgreSQL 16+** (with PostGIS extension)
-- **Redis 7+** (for caching and pub/sub)
-- **npm 10+** or **pnpm 8+** (recommended)
+- **PostgreSQL 16+**
+- **Redis 7+**
+- **npm 10+** or **yarn 1.22+**
 - **Git**
 
-### Installation & Setup
+### Database Setup
 
-1. **Clone the repository**
+1. **Initialize the database and create admin user**:
    ```bash
-   git clone https://github.com/yourusername/collaborative-code-editor.git
-   cd collaborative-code-editor
-   ```
-
-2. **Set up environment variables**
-   ```bash
+   # Run database migrations and create admin user
    # Copy and configure environment files
    cp .env.example .env
    cp server/.env.example server/.env

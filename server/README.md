@@ -90,11 +90,73 @@ This is the backend service for the Collaborative Code Editor application, built
 
 ### Prerequisites
 - **Node.js 18+** (preferably 22+)
-- **PostgreSQL 14+**
+- **PostgreSQL 16+**
+- **Redis 7+**
 - **npm 9+** or **yarn 1.22+**
 - **Git**
 
-### Installation & Setup
+### 🛠 Database & Admin Setup
+
+1. **Initialize the database**:
+   ```bash
+   # Install dependencies
+   npm install
+   
+   # Copy and configure environment variables
+   cp .env.example .env
+   # Edit .env with your database credentials
+   
+   # Run database migrations
+   npm run db:migrate
+   
+   # Seed initial data (including admin user)
+   npm run db:seed
+   ```
+
+2. **Default Admin Credentials**:
+   - **Email**: admin@example.com
+   - **Password**: admin123
+
+   > **Security Note**: Change the default admin password immediately after first login.
+
+## 🔧 Database Management
+
+### Admin User Management
+
+#### Create Admin User
+```bash
+node scripts/create-admin.js --email admin@example.com --password your_secure_password
+```
+
+#### Reset Admin Password
+```bash
+node scripts/update-admin-password.js --email admin@example.com --new-password new_secure_password
+```
+
+### Database Operations
+
+#### Run Migrations
+```bash
+npm run db:migrate
+```
+
+#### Rollback Migrations
+```bash
+npm run db:migrate:undo
+```
+
+#### Run Seeds
+```bash
+npm run db:seed
+```
+
+#### Reset Database
+```bash
+# Drops all tables and runs migrations and seeds
+npm run db:reset
+```
+
+### Development Commands
 
 1. **Install dependencies**
    ```bash
