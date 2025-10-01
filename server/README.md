@@ -22,7 +22,11 @@ This is the backend service for the Collaborative Code Editor application, built
 - **RESTful API** - User management, authentication, and room management
 - **Real-time Collaboration** - WebSockets with Socket.IO for live editing
 - **JWT Authentication** - Secure stateless authentication with refresh tokens
+- **Password Security** - Strong password validation with bcrypt hashing
+- **Input Validation** - Comprehensive request validation using express-validator
+- **Rate Limiting** - Protection against brute force and DDoS attacks
 - **Database Integration** - PostgreSQL with Sequelize ORM
+- **Caching Layer** - Redis for session management and pub/sub
 - **API Documentation** - Comprehensive OpenAPI/Swagger documentation
 - **Comprehensive Testing** - Unit, integration, and E2E tests with Jest
 - **Code Quality** - ESLint, Prettier, and TypeScript for robust code
@@ -90,73 +94,11 @@ This is the backend service for the Collaborative Code Editor application, built
 
 ### Prerequisites
 - **Node.js 18+** (preferably 22+)
-- **PostgreSQL 16+**
-- **Redis 7+**
+- **PostgreSQL 14+**
 - **npm 9+** or **yarn 1.22+**
 - **Git**
 
-### 🛠 Database & Admin Setup
-
-1. **Initialize the database**:
-   ```bash
-   # Install dependencies
-   npm install
-   
-   # Copy and configure environment variables
-   cp .env.example .env
-   # Edit .env with your database credentials
-   
-   # Run database migrations
-   npm run db:migrate
-   
-   # Seed initial data (including admin user)
-   npm run db:seed
-   ```
-
-2. **Default Admin Credentials**:
-   - **Email**: admin@example.com
-   - **Password**: admin123
-
-   > **Security Note**: Change the default admin password immediately after first login.
-
-## 🔧 Database Management
-
-### Admin User Management
-
-#### Create Admin User
-```bash
-node scripts/create-admin.js --email admin@example.com --password your_secure_password
-```
-
-#### Reset Admin Password
-```bash
-node scripts/update-admin-password.js --email admin@example.com --new-password new_secure_password
-```
-
-### Database Operations
-
-#### Run Migrations
-```bash
-npm run db:migrate
-```
-
-#### Rollback Migrations
-```bash
-npm run db:migrate:undo
-```
-
-#### Run Seeds
-```bash
-npm run db:seed
-```
-
-#### Reset Database
-```bash
-# Drops all tables and runs migrations and seeds
-npm run db:reset
-```
-
-### Development Commands
+### Installation & Setup
 
 1. **Install dependencies**
    ```bash
@@ -366,16 +308,15 @@ docker-compose -f ../docker-compose.prod.yml up --build -d
 Or using Docker:
 ```bash
 docker-compose -f docker-compose.prod.yml up -d --build
-```
 
 ## 🔒 Security Features
 
-- **Helmet.js**: Security headers
-- **CORS Protection**: Configured origins
-- **Rate Limiting**: API request throttling
-- **Password Hashing**: bcrypt with salt rounds
-- **JWT Authentication**: Secure token-based auth
-- **Input Validation**: Express-validator
+### **Authentication & Authorization**
+- **JWT Authentication** - Stateless tokens with short expiration
+- **Refresh Tokens** - Secure token rotation mechanism
+- **Role-based Access Control** - Fine-grained permission system
+- **Password Policies** - Enforced complexity requirements
+- **Account Lockout** - Protection against brute force attacks
 - **Error Sanitization**: Safe error responses
 
 ## 📊 Monitoring & Logging
