@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You've been invited to join a room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #eaeaea;
+    }
+    .content {
+      padding: 20px 0;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #4CAF50;
+      color: white !important;
+      text-decoration: none;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eaeaea;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+    }
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+    .role-owner {
+      background-color: #f0ad4e;
+      color: white;
+    }
+    .role-editor {
+      background-color: #5bc0de;
+      color: white;
+    }
+    .role-viewer {
+      background-color: #5cb85c;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>You've Been Invited!</h1>
+  </div>
+  
+  <div class="content">
+    <p>Hello,</p>
+    
+    <p><strong><%= inviterName %></strong> has invited you to join the room <strong><%= roomName %></strong> as a 
+      <span class="role-badge role-<%= role.toLowerCase() %>"><%= role %></span>.</p>
+    
+    <p>Click the button below to accept the invitation and join the room. This invitation will expire in <strong><%= expiresInHours %> hours</strong>.</p>
+    
+    <p style="text-align: center;">
+      <a href="<%= acceptUrl %>" class="button">Accept Invitation</a>
+    </p>
+    
+    <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+    <p><a href="<%= acceptUrl %>" style="word-break: break-all;"><%= acceptUrl %></a></p>
+    
+    <p>If you don't want to join this room, you can safely ignore this email.</p>
+  </div>
+  
+  <div class="footer">
+    <p>This is an automated message from <%= appName %>. Please do not reply to this email.</p>
+    <p>&copy; <%= currentYear %> <%= appName %>. All rights reserved.</p>
+  </div>
+</body>
+</html>
