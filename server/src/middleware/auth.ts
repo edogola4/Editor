@@ -24,13 +24,12 @@ interface AuthenticatedRequest extends Request {
     [key: string]: string | undefined;
   };
 }
-
 // Authentication middleware - JWT token verification
 export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): Promise<Response | void> => {
   try {
     // Get token from Authorization header or cookies
     let token = req.headers.authorization?.replace('Bearer ', '');
@@ -46,6 +45,10 @@ export const authenticate = async (
       });
     }
 
+    if (!config.jwt?.secret) {
+      throw new Error('JWT secret is not configured');
+    }
+    
     // Verify token
     const decoded = jwt.verify(token, config.jwt.secret) as {
       id: string;
@@ -62,9 +65,8 @@ export const authenticate = async (
       });
     }
 
-    // Get user from database
+    // Find user in database
     const user = await User.findByPk(decoded.id);
-
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -72,9 +74,9 @@ export const authenticate = async (
       });
     }
 
-    // Attach user to request
+    // Add user to request object
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
@@ -87,7 +89,9 @@ export const authenticate = async (
         message: 'Invalid token',
       });
     }
-    next(error);
+    
+    // For any other errors, pass to the error handler
+    return next(error);
   }
 };
 

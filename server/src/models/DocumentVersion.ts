@@ -71,6 +71,11 @@ export default function DocumentVersion(sequelize: Sequelize): DocumentVersionMo
         },
         onDelete: "CASCADE",
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     },
     {
       tableName: "DocumentVersions",

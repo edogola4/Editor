@@ -18,7 +18,7 @@ interface LoginBody {
   password: string;
 }
 
-export const register = async (req: Request, res: Response): Promise<void> => {
+export const register = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -78,7 +78,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -190,7 +190,7 @@ export const githubAuth = passport.authenticate('github');
 
 // Password reset request
 // This would typically send a password reset email with a token
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+export const forgotPassword = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email } = req.body;
     
@@ -281,7 +281,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 };
 
 // Resend verification email
-export const resendVerificationEmail = async (req: Request, res: Response): Promise<void> => {
+export const resendVerificationEmail = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email } = req.body;
     
@@ -316,7 +316,7 @@ export const resendVerificationEmail = async (req: Request, res: Response): Prom
   }
 };
 
-export const githubAuthCallback = (req: Request, res: Response) => {
+export const githubAuthCallback = (req: Request, res: Response): void => {
   passport.authenticate('github', { session: false }, (err: any, user: any) => {
     if (err || !user) {
       return res.redirect(`/login?error=${encodeURIComponent('GitHub authentication failed')}`);
