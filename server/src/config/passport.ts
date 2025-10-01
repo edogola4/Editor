@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import { User } from '../models/User.js';
+import User from '../models/User.js';
 import { config } from './config.js';
 import { sequelize } from './database.js';
 import { generateTokens } from '../utils/jwt.js';
@@ -46,6 +46,7 @@ passport.use(
             email: profile.emails[0].value,
             githubId: profile.id,
             avatarUrl: profile.photos?.[0]?.value,
+            role: 'user',
             isVerified: true, // GitHub verifies emails
           },
         });

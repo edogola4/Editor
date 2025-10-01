@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
 import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
 // Define User type
 interface User {
@@ -33,155 +33,139 @@ interface AuthActions {
   register: (username: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
-  loginWithGitHub: () => void;
-  handleGitHubCallback: (code: string, state: string) => Promise<void>;
-  
-  // User management
   updateUser: (userData: Partial<User>) => void;
-  
-  // State management
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   initializeAuth: () => Promise<void>;
   fetchCurrentUser: () => Promise<User>;
+  set: (state: Partial<AuthState>) => void;
+  // GitHub OAuth methods
+  handleGitHubCallback: (code: string, state: string) => Promise<void>;
+  handleGitHubMessage: (event: MessageEvent) => void;
 }
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const API_URL = `${BASE_URL}${BASE_URL.endsWith('/api') ? '' : '/api'}`;
+const API_URL = `${BASE_URL}${BASE_URL.endsWith('/api') ? '' : '/api'}` as const;
 
-export const useAuthStore = create<AuthState & AuthActions>()(
+type AuthStore = AuthState & AuthActions;
+
+export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
-      immer((set, get) => ({
+      (set, get) => ({
         user: null,
         tokens: null,
         isAuthenticated: false,
         isLoading: false,
         error: null,
+        
+        // Set state helper
+        set: (state: Partial<AuthState>) => set(state as AuthState),
 
         // Initialize authentication state from storage
         initializeAuth: async () => {
           const { tokens } = get();
           if (!tokens?.accessToken) return;
-
+          
           try {
-            // Verify the token is still valid
+            get().setLoading(true);
             const user = await get().fetchCurrentUser();
-            set({ user, isAuthenticated: true });
+            set({
+              user,
+              isAuthenticated: true,
+              isLoading: false,
+            });
           } catch (error) {
-            // If token is invalid, try to refresh it
-            if (tokens.refreshToken) {
-              const refreshed = await get().refreshAccessToken();
-              if (!refreshed) {
-                await get().logout();
-              }
-            } else {
-              await get().logout();
-            }
+            console.error('Failed to initialize auth:', error);
+            set({
+              user: null,
+              tokens: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
           }
-        },
-
-        // Fetch current user data
-        fetchCurrentUser: async (): Promise<User> => {
-          const { tokens } = get();
-          if (!tokens?.accessToken) throw new Error('Not authenticated');
-
-          const response = await fetch(`${API_URL}/auth/me`, {
-            headers: {
-              'Authorization': `Bearer ${tokens.accessToken}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to fetch user data');
-          }
-
-          return response.json();
         },
 
         // Login with email and password
         login: async (email: string, password: string) => {
           set({ isLoading: true, error: null });
-
           try {
             const response = await fetch(`${API_URL}/auth/login`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
               body: JSON.stringify({ email, password }),
+              credentials: 'include',
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-              throw new Error(data.message || 'Login failed');
+              const error = await response.json();
+              throw new Error(error.message || 'Login failed');
             }
 
-            const { user, accessToken, refreshToken } = data;
-            
+            const data = await response.json();
             set({
-              user,
-              tokens: { accessToken, refreshToken },
+              user: data.user,
+              tokens: {
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken,
+              },
               isAuthenticated: true,
               isLoading: false,
             });
-          } catch (error: any) {
+          } catch (error) {
             set({
-              error: error.message || 'Login failed',
+              error: error instanceof Error ? error.message : 'Login failed',
               isLoading: false,
             });
             throw error;
           }
         },
 
-        // Register a new user
+        // Register new user
         register: async (username: string, email: string, password: string, confirmPassword: string) => {
           set({ isLoading: true, error: null });
-
           try {
             const response = await fetch(`${API_URL}/auth/register`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ username, email, password, confirmPassword }),
+              credentials: 'include',
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-              throw new Error(data.message || 'Registration failed');
+              const error = await response.json();
+              throw new Error(error.message || 'Registration failed');
             }
 
-            // After successful registration, log the user in
-            await get().login(email, password);
-          } catch (error: any) {
+            const data = await response.json();
             set({
-              error: error.message || 'Registration failed',
+              user: data.user,
+              tokens: {
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } catch (error) {
+            set({
+              error: error instanceof Error ? error.message : 'Registration failed',
               isLoading: false,
             });
             throw error;
           }
         },
 
-        // Logout the user
+        // Logout user
         logout: async () => {
-          const { tokens } = get();
-          
           try {
-            // Call the logout endpoint to invalidate the refresh token
-            if (tokens?.refreshToken) {
-              await fetch(`${API_URL}/auth/logout`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${tokens.accessToken}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refreshToken: tokens.refreshToken }),
-              });
-            }
+            await fetch(`${API_URL}/auth/logout`, {
+              method: 'POST',
+              credentials: 'include',
+            });
           } catch (error) {
             console.error('Logout error:', error);
           } finally {
-            // Clear the state and storage
             set({
               user: null,
               tokens: null,
@@ -192,7 +176,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           }
         },
 
-        // Refresh the access token using the refresh token
+        // Refresh access token
         refreshAccessToken: async (): Promise<boolean> => {
           const { tokens } = get();
           if (!tokens?.refreshToken) return false;
@@ -202,19 +186,20 @@ export const useAuthStore = create<AuthState & AuthActions>()(
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+              credentials: 'include',
             });
 
-            if (!response.ok) return false;
+            if (!response.ok) {
+              throw new Error('Failed to refresh token');
+            }
 
-            const { accessToken, refreshToken: newRefreshToken } = await response.json();
-            
+            const data = await response.json();
             set({
               tokens: {
-                accessToken,
-                refreshToken: newRefreshToken || tokens.refreshToken,
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken || tokens.refreshToken,
               },
             });
-
             return true;
           } catch (error) {
             console.error('Failed to refresh token:', error);
@@ -222,41 +207,32 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           }
         },
 
-        // Initiate GitHub OAuth flow
-        loginWithGitHub: () => {
-          window.location.href = `${API_URL}/auth/github`;
-        },
-
-        // Handle GitHub OAuth callback
-        handleGitHubCallback: async (code: string, state: string) => {
-          set({ isLoading: true, error: null });
-
-          try {
-            const response = await fetch(`${API_URL}/auth/github/callback?code=${code}&state=${state}`, {
-              credentials: 'include',
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-              throw new Error(data.message || 'GitHub authentication failed');
-            }
-
-            const { user, accessToken, refreshToken } = data;
-            
-            set({
-              user,
-              tokens: { accessToken, refreshToken },
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } catch (error: any) {
-            set({
-              error: error.message || 'GitHub authentication failed',
-              isLoading: false,
-            });
-            throw error;
+        // Fetch current user
+        fetchCurrentUser: async (): Promise<User> => {
+          const { tokens } = get();
+          if (!tokens?.accessToken) {
+            throw new Error('No access token');
           }
+
+          const response = await fetch(`${API_URL}/users/me`, {
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+            },
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              // Try to refresh token if unauthorized
+              const refreshed = await get().refreshAccessToken();
+              if (refreshed) {
+                return get().fetchCurrentUser();
+              }
+            }
+            throw new Error('Failed to fetch user');
+          }
+
+          return response.json();
         },
 
         // Update user data
@@ -264,30 +240,89 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           const { user } = get();
           if (user) {
             set({
-              user: { ...user, ...userData },
+              user: { ...user, ...userData }
             });
           }
         },
+        
+        setLoading: (isLoading) => set({ isLoading }),
+        setError: (error) => set({ error }),
+        
+        // Handle GitHub OAuth callback
+        handleGitHubCallback: async (code: string, state: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const response = await fetch(`${API_URL}/auth/github/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
+              method: 'GET',
+              credentials: 'include',
+            });
 
-        // Set loading state
-        setLoading: (isLoading: boolean) =>
-          set({ isLoading }),
+            if (!response.ok) {
+              const error = await response.json();
+              throw new Error(error.message || 'GitHub authentication failed');
+            }
 
-        // Set error state
-        setError: (error: string | null) =>
-          set({ error }),
-      })),
+            const data = await response.json();
+            
+            if (data.accessToken && data.refreshToken) {
+              set({
+                tokens: {
+                  accessToken: data.accessToken,
+                  refreshToken: data.refreshToken,
+                },
+                user: data.user,
+                isAuthenticated: true,
+                isLoading: false,
+              });
+            } else {
+              const user = await get().fetchCurrentUser();
+              set({
+                user,
+                isAuthenticated: true,
+                isLoading: false,
+              });
+            }
+          } catch (error) {
+            console.error('GitHub OAuth error:', error);
+            set({ 
+              error: error instanceof Error ? error.message : 'Failed to authenticate with GitHub',
+              isLoading: false 
+            });
+            throw error;
+          }
+        },
+        
+        // Handle GitHub OAuth message from popup
+        handleGitHubMessage: (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          
+          const { type, payload } = event.data;
+          
+          if (type === 'OAUTH_SUCCESS') {
+            const { accessToken, refreshToken, user } = payload;
+            set({
+              tokens: { accessToken, refreshToken },
+              user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          } else if (type === 'OAUTH_ERROR') {
+            set({ 
+              error: payload.error || 'GitHub authentication failed',
+              isLoading: false 
+            });
+          }
+        },
+      }),
       {
         name: 'auth-storage',
-        partialize: (state) => ({
-          tokens: state.tokens,
+        partialize: (state: AuthState) => ({
           user: state.user,
+          tokens: state.tokens,
+          isAuthenticated: state.isAuthenticated,
         }),
       }
-    ),
-    { name: 'AuthStore' }
+    )
   )
 );
-
-// Export the store's hook
-export default useAuthStore;

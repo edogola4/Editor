@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { User } from '../models/index.js';
+import { sequelize } from '../config/database.js';
+import User from '../models/User.js';
 import { CustomError } from '../utils/errors.js';
 
-const UserModel = User;
+// Initialize User model with Sequelize
+const UserModel = User(sequelize);
 
 interface UpdateProfileBody {
   username?: string;

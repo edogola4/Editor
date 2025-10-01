@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 // Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import GitHubCallback from './pages/GitHubCallback';
+import OAuthCallback from './pages/OAuthCallback';
 import Editor from './App';
 import { useAuthStore } from './store/authStore';
 
@@ -52,7 +52,7 @@ const AppRouter = () => {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/auth/github/callback" element={<GitHubCallback />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
         
         {/* Protected routes */}
         <Route

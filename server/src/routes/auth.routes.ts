@@ -61,12 +61,20 @@ router.post(
 );
 
 // GitHub OAuth routes
-router.get('/github', authLimiter, authController.githubAuth);
+router.get(
+  '/github',
+  authLimiter,
+  passport.authenticate('github', { scope: ['user:email'] })
+);
 
 router.get(
   '/github/callback',
   authLimiter,
-  authController.githubAuthCallback,
+  passport.authenticate('github', { 
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=github_auth_failed`
+  }),
+  authController.githubAuthCallback
 );
 
 // Password reset routes

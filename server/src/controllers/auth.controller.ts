@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { User } from '../models/index.js';
+import { sequelize } from '../config/database.js';
+import User from '../models/User.js';
 import { generateTokens, setTokenCookies, verifyToken } from '../utils/jwt.js';
 import { CustomError } from '../utils/errors.js';
 import passport from 'passport';
 
-const UserModel = User;
+// Initialize User model with Sequelize
+const UserModel = User(sequelize);
 
 interface RegisterBody {
   username: string;
@@ -317,24 +319,74 @@ export const resendVerificationEmail = async (req: Request, res: Response): Prom
 };
 
 export const githubAuthCallback = (req: Request, res: Response): void => {
-  passport.authenticate('github', { session: false }, (err: any, user: any) => {
+  passport.authenticate('github', { session: false, failureRedirect: '/login' }, (err: any, user: any, info: any) => {
     if (err || !user) {
-      return res.redirect(`/login?error=${encodeURIComponent('GitHub authentication failed')}`);
+      const errorMessage = err?.message || info?.message || 'GitHub authentication failed';
+      console.error('GitHub OAuth error:', errorMessage);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(errorMessage)}`
+      );
     }
 
-    // Generate tokens
-    const tokens = generateTokens({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    try {
+      // Generate tokens
+      const tokens = generateTokens({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
 
-    // Set HTTP-only cookies
-    setTokenCookies(res, tokens);
+      // Set HTTP-only cookies for security
+      setTokenCookies(res, tokens);
 
-    // Redirect to frontend with tokens in URL (for client-side handling)
-    res.redirect(
-      `${process.env.FRONTEND_URL}/oauth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
-    );
+      // Create a simple HTML page that will send the tokens to the parent window
+      // This is a workaround for the OAuth flow since we can't directly set cookies on the frontend
+      const userData = JSON.stringify({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        isVerified: user.isVerified || true,
+        createdAt: user.createdAt || new Date().toISOString(),
+        updatedAt: user.updatedAt || new Date().toISOString()
+      });
+      
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Authenticating...</title>
+            <script>
+              // Send the tokens to the parent window
+              window.opener.postMessage({
+                type: 'OAUTH_SUCCESS',
+                payload: {
+                  accessToken: '${tokens.accessToken}',
+                  refreshToken: '${tokens.refreshToken}',
+                  user: ${userData}
+                }
+              }, '${process.env.FRONTEND_URL}');
+              
+              // Close the popup
+              window.close();
+            </script>
+          </head>
+          <body>
+            <p>Authentication successful! You can close this window.</p>
+            <script>
+              // Fallback in case window.close() doesn't work
+              setTimeout(() => window.close(), 2000);
+            </script>
+          </body>
+        </html>
+      `;
+      
+      res.send(html);
+    } catch (error) {
+      console.error('Error in GitHub OAuth callback:', error);
+      res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=${encodeURIComponent('Failed to complete authentication')}`
+      );
+    }
   })(req, res);
 };

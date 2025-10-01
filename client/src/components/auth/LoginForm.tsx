@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import './LoginForm.css';
 
@@ -17,6 +17,142 @@ const LoginForm = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const { login, register, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
+
+  const [searchParams] = useSearchParams();
+  
+  // Handle GitHub OAuth popup
+  const handleGitHubLogin = () => {
+    // Store the current path to redirect back after login
+    const redirectAfterLogin = window.location.pathname + window.location.search;
+    localStorage.setItem('redirectAfterLogin', redirectAfterLogin);
+    
+    // Generate a random state parameter for CSRF protection
+    const state = Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('oauth_state', state);
+    
+    // Open GitHub OAuth in a popup
+    const width = 600;
+    const height = 700;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    
+    // Build the OAuth URL with state parameter
+    const githubAuthUrl = new URL(`${import.meta.env.VITE_API_URL}/api/auth/github`);
+    githubAuthUrl.searchParams.append('state', state);
+    
+    const popup = window.open(
+      githubAuthUrl.toString(),
+      'github-oauth',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+    
+    if (!popup) {
+      setErrors({
+        ...errors,
+        github: 'Pop-up was blocked. Please allow pop-ups for this site.'
+      });
+      return;
+    }
+    
+    // Poll to check if the popup was closed
+    const checkPopup = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkPopup);
+        // Check if we have a redirect URL in localStorage (set by the callback)
+        const redirectUrl = localStorage.getItem('oauth_redirect');
+        if (redirectUrl) {
+          localStorage.removeItem('oauth_redirect');
+          // Use replace instead of push to prevent the popup from being reopened on back button
+          navigate(redirectUrl, { replace: true });
+        }
+      }
+    }, 100);
+    
+    // Listen for messages from the popup
+    const messageHandler = (event: MessageEvent) => {
+      // Verify the origin of the message
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'OAUTH_SUCCESS') {
+        const { accessToken, refreshToken, user } = event.data.payload;
+        
+        // Update auth store with user data and tokens
+        useAuthStore.getState().set({
+          user,
+          tokens: { accessToken, refreshToken },
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+        
+        // Redirect to dashboard or intended URL
+        const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectTo);
+        
+        // Clean up the event listener
+        window.removeEventListener('message', messageHandler);
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
+    // Check if the popup was blocked
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      useAuthStore.getState().setError('Pop-up was blocked. Please allow pop-ups for this site.');
+    }
+  };
+
+  // Handle OAuth errors that might be passed back via URL (fallback)
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const accessToken = searchParams.get('accessToken');
+    const refreshToken = searchParams.get('refreshToken');
+    
+    if (error) {
+      setError(decodeURIComponent(error));
+      // Clean up the URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      window.history.replaceState({}, document.title, url.toString());
+    } else if (accessToken && refreshToken) {
+      // Fallback for direct URL access (e.g., if popup was blocked)
+      const userId = searchParams.get('userId');
+      const email = searchParams.get('email');
+      const username = searchParams.get('username');
+      
+      if (userId) {
+        // Update auth store with user data and tokens
+        useAuthStore.getState().set({
+          user: {
+            id: userId,
+            email: email || '',
+            username: username || '',
+            role: 'user',
+            isVerified: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          tokens: { accessToken, refreshToken },
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+        
+        // Clean up the URL
+        const url = new URL(window.location.href);
+        ['accessToken', 'refreshToken', 'userId', 'email', 'username'].forEach(
+          param => url.searchParams.delete(param)
+        );
+        window.history.replaceState({}, document.title, url.toString());
+        
+        // Redirect to dashboard or intended URL
+        const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectTo);
+      }
+    }
+  }, [searchParams, navigate]);
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
@@ -208,12 +344,14 @@ const LoginForm = () => {
 
         <div className="loginFormSocial">
           <button
-            onClick={() => console.log('GitHub login not implemented')}
-            disabled={isLoading}
-            type="button"
-            className="githubLoginButton"
-          >
-            <span className="githubIcon">G</span>
+              onClick={handleGitHubLogin}
+              disabled={isLoading}
+              type="button"
+              className="githubLoginButton"
+            >
+            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+            </svg>
             <span>Continue with GitHub</span>
           </button>
         </div>

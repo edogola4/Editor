@@ -1,6 +1,6 @@
 import { body, ValidationChain } from 'express-validator';
 import { CustomError } from '../utils/errors.js';
-import { User } from '../models/index.js';
+import User from '../models/User.js';
 
 const UserModel = User;
 

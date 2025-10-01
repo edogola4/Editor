@@ -58,18 +58,6 @@ export class App {
     // Security middleware
     this.app.use(
       helmet({
-      },
-    }));
-
-    // Session middleware
-    this.app.use(session(sessionConfig));
-    
-    // Initialize Passport and restore authentication state from session
-    this.app.use(passport.initialize());
-    this.app.use(passport.session());
-
-    // Rate limiting
-    this.app.use(rateLimiter);
         contentSecurityPolicy: {
           directives: {
             defaultSrc: ["'self'"],
@@ -79,8 +67,112 @@ export class App {
           },
         },
         crossOriginEmbedderPolicy: false,
-      }),
+      })
     );
+
+    // Trust first proxy (for rate limiting behind reverse proxy)
+    this.app.set("trust proxy", 1);
+
+    // CORS configuration
+    this.app.use(
+      cors({
+        origin: (origin, callback) => {
+          const allowedOrigins = [
+            config.cors.origin,
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8080",
+          ];
+
+          // Allow requests with no origin (mobile apps, curl, etc.)
+          if (!origin) return callback(null, true);
+
+          if (
+            allowedOrigins.indexOf(origin) !== -1 ||
+            process.env.NODE_ENV === "development"
+          ) {
+            callback(null, true);
+          } else {
+            callback(new Error("Not allowed by CORS"));
+          }
+        },
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allowedHeaders: [
+          "Origin",
+          "X-Requested-With",
+          "Content-Type",
+          "Accept",
+          "Authorization",
+          "Cache-Control",
+          "X-File-Name",
+        ],
+      })
+    );
+
+    // Rate limiting
+    this.app.use(
+      "/api/",
+      rateLimit({
+        windowMs: config.rateLimit.windowMs,
+        max: config.rateLimit.max,
+        message: {
+          error: "Too many requests",
+          message: "Too many requests from this IP, please try again later.",
+          retryAfter: Math.ceil(config.rateLimit.windowMs / 1000),
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+        handler: (req, res, next, options) => {
+          logger.warn("Rate limit exceeded", {
+            ip: req.ip,
+            url: req.url,
+            userAgent: req.get("User-Agent"),
+          });
+          res.status(options.statusCode).json(options.message);
+        },
+      })
+    );
+
+    // Compression middleware
+    this.app.use(
+      compression({
+        level: 6,
+        threshold: 1024,
+        filter: (req, res) => {
+          if (req.headers["x-no-compression"]) {
+            return false;
+          }
+          return compression.filter(req, res);
+        },
+      })
+    );
+
+    // Body parsing middleware
+    this.app.use(
+      express.json({
+        limit: "10mb",
+        type: "application/json",
+      })
+    );
+
+    this.app.use(
+      express.urlencoded({
+        extended: true,
+        limit: "10mb",
+      })
+    );
+
+    // Cookie parser
+    this.app.use(cookieParser());
+
+    // Session middleware
+    this.app.use(session(sessionConfig));
+    
+    // Initialize Passport and restore authentication state from session
+    this.app.use(passport.initialize());
+    this.app.use(passport.session());
 
     // Trust first proxy (for rate limiting behind reverse proxy)
     this.app.set("trust proxy", 1);
@@ -240,51 +332,49 @@ export class App {
    * Initialize application routes
    */
   private async initializeRoutes(): Promise<void> {
-    // Import route modules
-    const authRoutes = (await import('./routes/auth.routes.js')).default;
-    const userRoutes = (await import('./routes/user.routes.js')).default;
+    try {
+      // Import route modules
+      const authRoutes = (await import('./routes/auth.routes.js')).default;
+      const userRoutes = (await import('./routes/user.routes.js')).default;
 
-    // Mount API routes
-    this.app.use('/api/auth', authRoutes);
-    this.app.use('/api/users', userRoutes);
+      // Mount API routes
+      this.app.use('/api/auth', authRoutes);
+      this.app.use('/api/users', userRoutes);
 
-    // API Documentation endpoint
-    this.app.get('/api/docs', (req: Request, res: Response) => {
-      res.json({
-        title: 'Collaborative Code Editor API',
-        version: '1.0.0',
-        description: 'Real-time collaborative code editing platform API',
-        endpoints: {
-          auth: {
-            register: 'POST /api/auth/register',
-            login: 'POST /api/auth/login',
-            logout: 'POST /api/auth/logout',
-            refresh: 'POST /api/auth/refresh-token',
-            github: 'GET /api/auth/github',
-            githubCallback: 'GET /api/auth/github/callback'
-          },
-          users: {
-            profile: 'GET /api/users/profile',
-            updateProfile: 'PUT /api/users/profile',
-            deleteAccount: 'DELETE /api/users/profile',
-            updateSettings: 'PUT /api/users/settings',
-            getUser: 'GET /api/users/:id'
-          },
-          health: 'GET /health',
-          root: 'GET /'
-        }
+      // API Documentation endpoint
+      this.app.get('/api/docs', (req: Request, res: Response) => {
+        res.json({
+          title: 'Collaborative Code Editor API',
+          version: '1.0.0',
+          description: 'Real-time collaborative code editing platform API',
+          endpoints: {
+            auth: {
+              register: 'POST /api/auth/register',
+              login: 'POST /api/auth/login',
+              logout: 'POST /api/auth/logout',
+              refresh: 'POST /api/auth/refresh-token',
+              github: 'GET /api/auth/github',
+              githubCallback: 'GET /api/auth/github/callback'
+            },
+            users: {
+              profile: 'GET /api/users/profile',
+              updateProfile: 'PUT /api/users/profile',
+              deleteAccount: 'DELETE /api/users/profile',
+              updateSettings: 'PUT /api/users/settings',
+              getUser: 'GET /api/users/:id'
+            },
+            health: 'GET /health',
+            root: '/'
+          }
+        });
       });
-    });
 
-  /**
-   * Initialize error handling middleware
-   */
-  private initializeErrorHandling(): void {
-    // 404 handler - must be before error handler
-    this.app.use(notFoundHandler);
-
-    // Global error handler - must be last
-    this.app.use(errorHandler);
+      // 404 handler for API routes
+      this.app.use('/api', notFoundHandler);
+    } catch (error) {
+      logger.error('Failed to initialize routes', { error });
+      throw error;
+    }
   }
 
   /**
