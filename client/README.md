@@ -23,7 +23,10 @@ This is the frontend client for the Collaborative Code Editor application, built
 - **Professional Code Editor**: Monaco Editor with VS Code's powerful features
 - **Live Cursor Sharing**: See other users' cursors and positions in real-time
 - **User Presence**: Visual indicators showing connected users and their activity
-- **Authentication System**: JWT-based login and registration
+- **Secure Authentication**: JWT-based login and registration with refresh tokens
+- **Password Security**: Client-side validation with strong password requirements
+- **Email Verification**: Optional email verification flow for new accounts
+- **Password Reset**: Self-service password reset functionality
 - **File Management**: Upload, create, and organize files and folders
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
 - **Dark/Light Mode**: Toggle between themes for comfortable coding
@@ -259,10 +262,14 @@ VITE_ENABLE_ANALYTICS=false
 - **Connection Management**: Automatic reconnection and error handling
 
 ### **Authentication Flow**
-- **JWT-based Auth**: Secure token-based authentication
-- **Protected Routes**: Route-level authentication guards
-- **Session Persistence**: Token storage in localStorage
-- **Auto-logout**: Token expiration handling
+- **JWT-based Auth**: Secure token-based authentication with refresh tokens
+- **Protected Routes**: Route-level authentication guards with role-based access
+- **Session Persistence**: Secure token storage with httpOnly cookies
+- **Auto-logout**: Token expiration handling with refresh token rotation
+- **Form Validation**: Comprehensive client and server-side validation
+- **Error Handling**: User-friendly error messages for auth failures
+- **Rate Limiting**: Protection against brute force attacks
+- **CSRF Protection**: Built-in CSRF protection for all forms
 
 ### **Component Architecture**
 - **Atomic Design**: Reusable components with clear interfaces
