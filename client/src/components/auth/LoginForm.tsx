@@ -3,39 +3,72 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import './LoginForm.css';
 
+interface FormErrors {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const { login, register, isLoading, error, loginWithGitHub } = useAuthStore();
+  const [errors, setErrors] = useState<FormErrors>({});
+  const { login, register, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+    setErrors({});
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
   };
 
-  const validatePassword = (password: string) => {
-    return password.length >= 8;
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    } else if (!/[0-9]/.test(password)) {
+      newErrors.password = 'Password must contain at least one number';
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = 'Password must contain at least one lowercase letter';
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[^a-zA-Z0-9]/.test(password)) {
+      newErrors.password = 'Password must contain at least one special character';
+    }
+
+    // Confirm password validation (only for registration)
+    if (!isLogin) {
+      if (!confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password';
+      } else if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Reset previous errors
-    setEmailError('');
-    setPasswordError('');
-
-    // Validate inputs
-    if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setPasswordError('Password must be at least 8 characters long');
+    
+    if (!validateForm()) {
       return;
     }
 
@@ -43,75 +76,75 @@ const LoginForm = () => {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(email.split('@')[0], email, password);
+        // Generate a username from email (first part before @)
+        const username = email.split('@')[0];
+        // Include confirmPassword in the registration request
+        await register(username, email, password, confirmPassword);
       }
       navigate('/dashboard');
     } catch (error) {
       console.error('Authentication error:', error);
+      // The error will be handled by the auth store and displayed in the UI
     }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    if (emailError) setEmailError('');
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (passwordError) setPasswordError('');
+    if (errors.password) {
+      setErrors(prev => ({ ...prev, password: '' }));
+    }
   };
 
   return (
     <div className="loginFormContainer">
       <div className="loginFormCard">
         <div className="loginFormHeader">
-          <h1 className="loginFormTitle">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
-          </h1>
+          <div className="loginFormToggle">
+            {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+            <button 
+              type="button" 
+              onClick={toggleAuthMode} 
+              className="loginFormToggleBtn"
+              disabled={isLoading}
+            >
+              {isLogin ? 'Sign Up' : 'Sign In'}
+            </button>
+          </div>
           <p className="loginFormSubtitle">
-            {isLogin
-              ? 'Sign in to your account to continue'
-              : 'Create your account to get started'
-            }
+            {isLogin ? 'Sign in to your account to continue' : 'Create your account to get started'}
           </p>
         </div>
 
         {error && (
           <div className="loginFormError">
-            <div className="errorIcon"></div>
-            <span>{error}</span>
+            {error}
           </div>
         )}
 
-        <form className="loginFormForm" onSubmit={handleSubmit} noValidate>
+        <form className="loginFormForm" onSubmit={handleSubmit}>
           <div className="loginFormGroup">
             <label className="loginFormLabel" htmlFor="email">
               Email Address
             </label>
             <div className="inputWrapper">
               <input
-                id="email"
                 type="email"
-                required
-                className={`loginFormInput ${emailError ? 'error' : ''}`}
-                placeholder="Enter your email address"
+                id="email"
                 value={email}
                 onChange={handleEmailChange}
-                aria-describedby={emailError ? "email-error" : undefined}
-                aria-invalid={emailError ? "true" : "false"}
+                className={`loginFormInput ${errors.email ? 'error' : ''}`}
+                placeholder="Enter your email"
+                required
               />
-              <div className="inputIcon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-              </div>
+              {errors.email && <span className="fieldError">{errors.email}</span>}
             </div>
-            {emailError && (
-              <span id="email-error" className="fieldError" role="alert">
-                {emailError}
-              </span>
-            )}
           </div>
 
           <div className="loginFormGroup">
@@ -120,42 +153,48 @@ const LoginForm = () => {
             </label>
             <div className="inputWrapper">
               <input
-                id="password"
                 type="password"
-                required
-                className={`loginFormInput ${passwordError ? 'error' : ''}`}
-                placeholder="Enter your password"
+                id="password"
                 value={password}
                 onChange={handlePasswordChange}
-                aria-describedby={passwordError ? "password-error" : undefined}
-                aria-invalid={passwordError ? "true" : "false"}
+                className={`loginFormInput ${errors.password ? 'error' : ''}`}
+                placeholder="Enter your password"
+                required
               />
-              <div className="inputIcon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <circle cx="12" cy="16" r="1"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+              {errors.password && <span className="fieldError">{errors.password}</span>}
+            </div>
+          </div>
+
+          {!isLogin && (
+            <div className="loginFormGroup">
+              <label className="loginFormLabel" htmlFor="confirmPassword">
+                Confirm Password
+              </label>
+              <div className="inputWrapper">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`loginFormInput ${errors.confirmPassword ? 'error' : ''}`}
+                  placeholder="Confirm your password"
+                  required
+                />
+                {errors.confirmPassword && (
+                  <span className="fieldError">{errors.confirmPassword}</span>
+                )}
               </div>
             </div>
-            {passwordError && (
-              <span id="password-error" className="fieldError" role="alert">
-                {passwordError}
-              </span>
-            )}
-          </div>
+          )}
 
           <div className="loginFormActions">
             <button
               type="submit"
-              disabled={isLoading || !email || !password}
+              disabled={isLoading}
               className="loginFormSubmitBtn"
             >
               {isLoading ? (
-                <>
-                  <span className="loginFormLoading"></span>
-                  <span>Signing In...</span>
-                </>
+                <span>{isLogin ? 'Signing In...' : 'Creating Account...'}</span>
               ) : (
                 <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
               )}
@@ -169,26 +208,29 @@ const LoginForm = () => {
 
         <div className="loginFormSocial">
           <button
-            onClick={loginWithGitHub}
+            onClick={() => console.log('GitHub login not implemented')}
             disabled={isLoading}
             type="button"
+            className="githubLoginButton"
           >
-            <span className="githubIcon"></span>
+            <span className="githubIcon">G</span>
             <span>Continue with GitHub</span>
           </button>
         </div>
+
         <div className="loginFormFooter">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={toggleAuthMode}
             className="loginFormToggleBtn"
             type="button"
+            disabled={isLoading}
           >
             {isLogin
               ? "Don't have an account? Create one"
-              : 'Already have an account? Sign in'
-            }
+              : 'Already have an account? Sign in'}
           </button>
         </div>
+
         <div className="loginFormTrust">
           <div className="trustIndicator">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
