@@ -4,7 +4,7 @@
   <h1>🚀 Real-time Collaborative Code Editor</h1>
   <p><strong>Professional VS Code-like collaborative coding experience with real-time collaboration</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
@@ -13,91 +13,126 @@
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
   ![ESM](https://img.shields.io/badge/ES_Modules-100%25-FFCA28.svg)
-
+  [![Test Coverage](https://api.codeclimate.com/v1/badges/main_coverage.svg)](https://codeclimate.com/github/edogola4/Editor/coverage)
+  [![Dependencies](https://img.shields.io/david/edogola4/Editor.svg)](https://david-dm.org/edogola4/Editor)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/edogola4/Editor/pulls)
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/edogola4/Editor/blob/main/CODE_OF_CONDUCT.md)
 </div>
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **Real-time Collaboration**: Multi-user editing with operational transformation
+- **Real-time Collaboration**: Multi-user editing with operational transformation (OT)
 - **VS Code Experience**: Full Monaco Editor integration with IntelliSense
-- **Live Cursor Sharing**: See other users' cursors and selections in real-time
+- **Live Cursor & Selection**: See other users' cursors, selections, and edits in real-time
 - **User Presence**: Visual indicators showing connected users and their activity
 - **Multi-language Support**: 50+ programming languages with syntax highlighting
 - **GitHub Integration**: Sign in with GitHub and import repositories
-- **Session Management**: Save and load collaborative sessions
+- **Session Management**: Save and load collaborative sessions with version history
 - **File Management**: Upload, create, and organize files and folders
 - **Redis-based Pub/Sub**: Scalable real-time messaging with Redis adapter
-- **Rate Limiting**: Protect your server from abuse with configurable rate limits
+- **Rate Limiting**: Configurable rate limits for API and WebSocket endpoints
 - **Comprehensive Monitoring**: Built-in monitoring for system health and performance
-- **Operational Transformation**: Custom OT algorithm implementation for conflict resolution
-- **TypeScript First**: Full type safety across the entire stack with latest TS features
-- **Secure Authentication**: JWT-based authentication with email/password and GitHub OAuth
-- **Password Validation**: Secure password requirements with client and server-side validation
+- **Operational Transformation**: Custom OT algorithm for conflict resolution
+- **TypeScript First**: Full type safety across the entire stack with TypeScript 5.8+
+- **Secure Authentication**: JWT-based authentication with refresh tokens
+- **Password Validation**: Secure password requirements with client/server validation
+- **Document Versioning**: Track changes and revert to previous versions
+- **User Roles & Permissions**: Fine-grained access control system
 
 ### 🛠 **Editor Features**
-- **Monaco Editor**: Full VS Code editing experience
-- **IntelliSense**: Smart code completion and hover information
+- **Monaco Editor**: Full VS Code editing experience with extensions support
+- **IntelliSense**: Smart code completion, parameter hints, and hover information
 - **Multi-cursor Support**: Multiple cursors for efficient editing
-- **Themes**: Built-in light and dark themes with VS Code compatibility
-- **Keybindings**: VS Code keybindings out of the box
+- **Themes**: Built-in light, dark, and high-contrast themes with VS Code compatibility
+- **Keybindings**: VS Code keybindings with customization options
 - **Minimap**: Code overview for easy navigation
-- **Bracket Pair Colorization**: Visual matching of brackets
-- **Word Wrap**: Configurable text wrapping
-- **Auto-Formatting**: Automatic code formatting on save
+- **Bracket Pair Colorization**: Visual matching of brackets and indentation guides
+- **Word Wrap**: Configurable text wrapping with word wrap guides
+- **Auto-Formatting**: Automatic code formatting on save with Prettier integration
+- **Code Folding**: Collapsible code blocks for better navigation
+- **Search & Replace**: Advanced search with regex support
+- **Snippets**: Built-in code snippets for common patterns
+- **Emmet Support**: HTML/CSS abbreviations expansion
 
 ### 🎨 **User Interface**
 - **Modern Design**: Clean, professional interface inspired by VS Code
 - **Responsive Layout**: Works perfectly on desktop and tablet devices
-- **User Avatars**: Color-coded user identification system
-- **Status Indicators**: Real-time connection and activity status
-- **Customizable UI**: Tailwind CSS with custom theme colors
-- **Dark/Light Mode**: Toggle between themes for comfortable coding
+- **User Avatars**: Color-coded user identification system with custom avatars
+- **Status Indicators**: Real-time connection, typing, and activity status
+- **Customizable UI**: Tailwind CSS with theme customization
+- **Dark/Light Mode**: Toggle between themes with system preference detection
+- **Activity Feed**: Real-time updates on user actions and system events
+- **Command Palette**: Quick access to commands with keyboard shortcuts
+- **File Explorer**: Tree view for easy navigation of project files
+- **Terminal Integration**: Built-in terminal for running commands
 
 ### 🔧 **Technical Features**
-- **TypeScript First**: Full type safety across the entire stack with TS 5.8+
-- **Modular Architecture**: Clean separation of concerns with service layers
+- **TypeScript First**: Full type safety with TypeScript 5.8+ and strict mode
+- **Modular Architecture**: Clean separation of concerns with dependency injection
 - **WebSockets**: Real-time bidirectional communication with Socket.IO 4.8+
 - **JWT Authentication**: Secure stateless authentication with refresh tokens
-- **Database Migrations**: Version-controlled database schema changes with Sequelize
-- **Containerized**: Easy deployment with Docker and Docker Compose
-- **Modern State Management**: Zustand + Immer for predictable state updates
-- **Real-time Sync**: Custom Operational Transformation algorithm with Socket.IO
-- **Monorepo Architecture**: Shared code between client and server with proper separation
+- **Database Migrations**: Version-controlled schema changes with Sequelize
+- **Containerized**: Docker and Docker Compose for consistent environments
+- **State Management**: Zustand + Immer for predictable state updates
+- **Real-time Sync**: Custom OT algorithm with conflict resolution
+- **Monorepo**: Shared code between client and server with proper separation
 - **ES Modules**: Native ESM support throughout the application
 - **Optimized Builds**: Vite for fast development and production builds
-- **Comprehensive Testing**: Unit, integration, and E2E tests with Vitest and Jest
-- **Code Quality**: ESLint, Prettier, and TypeScript strict mode enabled
+- **Testing**: Unit, integration, and E2E tests with Vitest and Jest
+- **Code Quality**: ESLint, Prettier, and TypeScript strict mode
+- **API Documentation**: Auto-generated OpenAPI/Swagger documentation
+- **Error Tracking**: Sentry integration for error monitoring
+- **Performance Monitoring**: New Relic integration for performance insights
+- **CI/CD**: GitHub Actions for automated testing and deployment
+- **Infrastructure as Code**: Terraform for cloud infrastructure
 
 ## 🛠 Tech Stack
 
 ### **Frontend**
-- **React 19+** - Modern React with latest features
-- **TypeScript 5.8+** - Full type safety and developer experience
-- **Vite 5+** - Lightning-fast build tool and dev server
-- **Tailwind CSS 4+** - Utility-first CSS framework with custom theme
+- **React 19+** - Modern React with concurrent features
+- **TypeScript 5.8+** - Type safety and developer experience
+- **Vite 5+** - Next-generation frontend tooling
+- **Tailwind CSS 4+** - Utility-first CSS with JIT compiler
 - **Monaco Editor 0.53+** - VS Code's editor component
 - **Socket.IO Client 4.8+** - Real-time communication
 - **Zustand 5+** - Lightweight state management
 - **Immer 10+** - Immutable state updates
-- **React Query 5+** - Server state management
-- **React Hook Form 7+** - Form handling
-- **Axios 1.7+** - HTTP client
-- **React Hot Toast 2.4+** - Toast notifications
-- **React Icons 5.0+** - Icon library
-- **React Router DOM 7+** - Client-side routing
+- **TanStack Query 5+** - Server state management
+- **React Hook Form 7+** - Performant form handling
+- **Axios 1.7+** - Promise-based HTTP client
+- **React Hot Toast 2.4+** - Beautiful toast notifications
+- **React Icons 5.0+** - Popular icon libraries
+- **React Router DOM 7+** - Declarative routing
+- **Framer Motion** - Animation library
+- **Zod** - TypeScript-first schema validation
+- **date-fns** - Date utility library
+- **Vite PWA** - Progressive Web App support
 
 ### **Backend**
 - **Node.js 22+** - Latest LTS with ESM support
-- **Express.js 5+** - Modern web framework with async/await
+- **Express.js 5+** - Fast, unopinionated web framework
 - **TypeScript 5.8+** - Type-safe backend with strict mode
 - **Socket.IO 4.8.1** - Real-time WebSocket communication
 - **PostgreSQL 16+** - Advanced relational database
 - **Redis 7+** - Caching, pub/sub, and rate limiting
-- **JWT** - Stateless authentication
+- **Sequelize 7+** - Modern TypeScript ORM
+- **JWT** - Stateless authentication with refresh tokens
+- **Winston** - Logging with daily rotation
+- **Zod** - TypeScript-first schema validation
+- **Node-cron** - Job scheduling
+- **Multer** - File upload handling
+- **Bcrypt** - Password hashing
+- **CORS** - Cross-Origin Resource Sharing
+- **Helmet** - Security headers
+- **Compression** - Response compression
+- **Rate Limit** - Request rate limiting
+- **Swagger UI** - API documentation
+- **Jest** - Testing framework
+- **Supertest** - HTTP assertions
+- **ESLint & Prettier** - Code quality
 - **Sequelize 7+** - Type-safe ORM with migrations
 - **Winston 3.11+** - Structured logging
 - **bcryptjs 2.4+** - Password hashing
