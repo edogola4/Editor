@@ -10,69 +10,173 @@
   ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
+  ![Docker](https://img.shields.io/badge/Docker-3.8+-2496ED.svg)
+  ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
   
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+  [![Test Coverage](https://api.codeclimate.com/v1/badges/backend_coverage.svg)](https://codeclimate.com/github/edogola4/Editor/coverage)
+  [![Dependencies](https://img.shields.io/david/edogola4/Editor?path=server)](https://david-dm.org/edogola4/Editor?path=server)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </div>
 
-This is the backend service for the Collaborative Code Editor application, built with Node.js, Express, TypeScript, PostgreSQL, and Socket.IO for real-time collaboration.
+This is the backend service for the Collaborative Code Editor application, built with modern technologies to provide a scalable and performant real-time collaboration experience. The backend is designed with a modular architecture, clean separation of concerns, and comprehensive testing to ensure reliability and maintainability.
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **RESTful API** - User management, authentication, and room management
-- **Real-time Collaboration** - WebSockets with Socket.IO for live editing
-- **JWT Authentication** - Secure stateless authentication with refresh tokens
-- **Password Security** - Strong password validation with bcrypt hashing
-- **Input Validation** - Comprehensive request validation using express-validator
-- **Rate Limiting** - Protection against brute force and DDoS attacks
-- **Database Integration** - PostgreSQL with Sequelize ORM
-- **Caching Layer** - Redis for session management and pub/sub
-- **API Documentation** - Comprehensive OpenAPI/Swagger documentation
-- **Comprehensive Testing** - Unit, integration, and E2E tests with Jest
-- **Code Quality** - ESLint, Prettier, and TypeScript for robust code
-- **Security** - Helmet, CORS, rate limiting, and request validation
-- **Logging** - Structured logging with Winston and daily rotation
-- **Containerization** - Docker support for easy deployment
+- **RESTful API** - Comprehensive API for user management, authentication, and document handling
+- **Real-time Collaboration** - WebSockets with Socket.IO for live editing with operational transformation
+- **JWT Authentication** - Secure stateless authentication with refresh tokens and role-based access control
+- **Password Security** - Strong password policies with bcrypt hashing and complexity requirements
+- **Input Validation** - Comprehensive request validation using Zod schemas
+- **Rate Limiting** - Configurable rate limiting for API and WebSocket endpoints
+- **Database Integration** - PostgreSQL with Sequelize ORM and migrations
+- **Caching Layer** - Redis for session management, pub/sub, and distributed locking
+- **API Documentation** - Auto-generated OpenAPI/Swagger documentation
+- **Comprehensive Testing** - Unit, integration, and E2E tests with Jest and Supertest
+- **Code Quality** - ESLint, Prettier, and TypeScript with strict mode
+- **Security** - Helmet, CORS, CSRF protection, and request validation
+- **Structured Logging** - JSON-formatted logs with Winston and daily rotation
+- **Containerization** - Docker and Docker Compose for consistent environments
+- **Health Checks** - Endpoints for monitoring application health
+- **Error Tracking** - Integration with error monitoring services
+- **Performance Monitoring** - Metrics collection and monitoring
+- **Background Jobs** - Support for scheduled and queued tasks
 
 ### 🛠 **Technical Features**
-- **TypeScript 5.3+** - Full type safety throughout the application
-- **Express.js 4.18+** - Fast, unopinionated web framework
-- **Socket.IO 4.7+** - Real-time bidirectional communication
-- **Sequelize 7+** - Modern TypeScript-first ORM with migrations
-- **PostgreSQL 16+** - Powerful open-source relational database
-- **Redis 7+** - In-memory data store for caching and pub/sub
-- **JWT** - Secure stateless authentication
-- **bcryptjs** - Secure password hashing
-- **Winston 3+** - Structured logging with daily rotation
-- **Zod** - TypeScript-first schema validation
-- **CORS** - Secure cross-origin resource sharing
-- **Helmet** - Security headers
-- **Rate Limiting** - Protection against brute force attacks
-- **Compression** - Response compression for better performance
-- **Request Validation** - Input validation middleware
+- **TypeScript 5.8+** - Full type safety with strict mode enabled
+- **Express.js 5.1+** - Fast, unopinionated web framework with async/await
+- **Socket.IO 4.8.1+** - Real-time bidirectional communication with Redis adapter
+- **Sequelize 7.1.0+** - Modern TypeScript ORM with migrations and associations
+- **PostgreSQL 16+** - Advanced relational database with JSONB support
+- **Redis 7.2+** - In-memory data store for caching, pub/sub, and distributed locking
+- **JWT** - Stateless authentication with refresh tokens
+- **bcryptjs** - Secure password hashing with configurable salt rounds
+- **Winston 3.11+** - Structured logging with daily rotation and multiple transports
+- **Zod 3.22+** - TypeScript-first schema validation with runtime type safety
+- **CORS** - Configurable cross-origin resource sharing
+- **Helmet 7.1+** - Security headers for Express
+- **Express Rate Limit 7.1+** - Flexible rate limiting middleware
+- **Compression** - Response compression with multiple algorithms
+- **Request Validation** - Comprehensive input validation with Zod
+- **Dependency Injection** - InversifyJS for dependency injection
+- **Event Sourcing** - Event-driven architecture for complex workflows
+- **Distributed Tracing** - Request tracing across services
+- **API Versioning** - Support for multiple API versions
+- **WebSocket Middleware** - Authentication and validation for WebSocket connections
 
 ## 🛠 Tech Stack
 
-### **Backend**
-- **Node.js 22+** - JavaScript runtime
-- **Express.js 4.18+** - Web application framework
-- **TypeScript 5.3+** - Type-safe backend development
-- **Socket.IO 4.7+ with Redis Adapter** - Scalable WebSocket communication
-- **PostgreSQL 16+** - Relational database
-- **Redis 7+** - In-memory data structure store and pub/sub
-- **Sequelize 7+** - Modern TypeScript ORM with migrations
-- **JWT** - Stateless authentication with refresh tokens
-- **bcryptjs** - Secure password hashing
-- **Winston 3+** - Logging with daily rotation and structured format
-- **node-pg-migrate** - Database migrations with version control
-- **Zod** - TypeScript-first schema validation
-- **CORS** - Secure Cross-Origin Resource Sharing
+### **Runtime & Framework**
+- **Node.js 22+** - JavaScript runtime with ESM support
+- **Express.js 5.1+** - Fast, unopinionated web framework
+- **TypeScript 5.8+** - Type-safe development with strict mode
+- **InversifyJS** - Dependency injection container
+- **ts-node** - TypeScript execution and REPL
+- **tsconfig-paths** - Module path aliases
+
+### **API & Real-time**
+- **Socket.IO 4.8.1+** - Real-time bidirectional communication
+- **Redis Adapter** - Scalable WebSocket communication
+- **Swagger UI Express** - Interactive API documentation
+- **OpenAPI 3.0** - API specification
+- **JWT** - Stateless authentication
+- **Passport.js** - Authentication middleware
+- **Express Validator** - Request validation
+- **CORS** - Cross-Origin Resource Sharing
+- **Compression** - Response compression
 - **Helmet** - Security headers
-- **Express Rate Limit with Redis** - Distributed rate limiting
-- **Compression** - Response compression for performance
-- **Dotenv** - Environment variable management
-- **Redis Commands** - For distributed locking and pub/sub
-- **Socket.IO Middleware** - For authentication and validation
+- **Express Rate Limit** - Request rate limiting
+- **Morgan** - HTTP request logger
+- **Multer** - File upload handling
+- **Formidable** - Multipart form parsing
+- **Cookie Parser** - HTTP cookie parsing
+- **CSURF** - CSRF protection
+- **Express Session** - Session management
+
+### **Database & ORM**
+- **PostgreSQL 16+** - Advanced relational database
+- **Sequelize 7.1.0+** - TypeScript ORM with migrations
+- **Sequelize CLI** - Database migration and seeding
+- **pg** - PostgreSQL client
+- **pg-hstore** - PostgreSQL hstore support
+- **Redis 7.2+** - In-memory data store
+- **ioredis** - Redis client
+- **TypeORM** - Alternative ORM (optional)
+- **MongoDB** - NoSQL database (optional)
+- **Mongoose** - MongoDB ODM (optional)
+
+### **Authentication & Security**
+- **JWT** - JSON Web Tokens
+- **bcryptjs** - Password hashing
+- **Passport** - Authentication middleware
+- **OAuth2** - OAuth 2.0 authentication
+- **OpenID Connect** - Identity layer
+- **Argon2** - Password hashing (alternative to bcrypt)
+- **Joi** - Schema validation
+- **Zod** - TypeScript-first validation
+- **Validator.js** - String validation
+- **Rate Limiter** - Request rate limiting
+- **CSRF** - CSRF protection
+- **Helmet** - Security headers
+- **Express Mung** - Response transformation
+- **Express Status Monitor** - Real-time server monitoring
+
+### **Logging & Monitoring**
+- **Winston 3.11+** - Logging library
+- **Morgan** - HTTP request logger
+- **New Relic** - Application monitoring
+- **Sentry** - Error tracking
+- **Prometheus** - Metrics collection
+- **Grafana** - Monitoring and observability
+- **PM2** - Process manager
+- **Nodemon** - Development server
+- **Debug** - Debugging utility
+- **Pino** - JSON logger
+- **Bunyan** - JSON logger
+
+### **Testing**
+- **Jest 29.7+** - Testing framework
+- **Supertest** - HTTP assertions
+- **Jest Extensions** - Additional Jest matchers
+- **Test Containers** - Integration testing
+- **Faker** - Fake data generation
+- **Factory Girl** - Test fixtures
+- **Nock** - HTTP server mocking
+- **Sinon** - Test spies, stubs and mocks
+- **Istanbul/NYC** - Code coverage
+- **Jest Axe** - Accessibility testing
+- **Jest DOM** - DOM testing
+- **Jest Fetch Mock** - Fetch mocking
+- **Jest Image Snapshot** - Visual regression testing
+- **Jest JUnit** - JUnit test reporting
+- **Jest Styled Components** - Styled Components testing
+- **Jest Watch** - Interactive test watching
+- **MSW** - API mocking
+- **React Testing Library** - React component testing
+
+### **Development Tools**
+- **ESLint** - JavaScript/TypeScript linting
+- **Prettier** - Code formatting
+- **Husky** - Git hooks
+- **Lint Staged** - Run linters on git staged files
+- **Commitizen** - Conventional commit messages
+- **Commitlint** - Lint commit messages
+- **Standard Version** - Automated versioning
+- **TypeDoc** - Documentation generator
+- **TS-Node** - TypeScript execution
+- **TS-Config-Paths** - Module aliases
+- **Nodemon** - Development server
+- **Concurrently** - Run multiple commands
+- **Cross-Env** - Cross-platform environment variables
+- **Rimraf** - Cross-platform file deletion
+- **Chalk** - Terminal string styling
+- **Inquirer** - Interactive command-line prompts
+- **Listr** - Terminal task list
+- **Ora** - Elegant terminal spinner
+- **Signale** - Beautiful console logger
+- **Update Notifier** - Update notifications
+- **Yargs** - Command-line argument parsing
 
 ### **Development & Quality**
 - **Jest 29+** - Testing framework with code coverage
@@ -93,10 +197,54 @@ This is the backend service for the Collaborative Code Editor application, built
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js 18+** (preferably 22+)
-- **PostgreSQL 14+**
+- **Node.js 22+** (LTS)
+- **PostgreSQL 16+**
+- **Redis 7+**
+- **Docker 24+** (optional)
 - **npm 9+** or **yarn 1.22+**
 - **Git**
+
+### Environment Variables
+Create a `.env` file in the server directory with the following variables:
+
+```env
+# Server Configuration
+NODE_ENV=development
+PORT=3001
+HOST=0.0.0.0
+CORS_ORIGIN=http://localhost:5173
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=code_editor
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_LOGGING=false
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# JWT
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your_refresh_secret
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+
+# Logging
+LOG_LEVEL=info
+LOG_TO_FILE=true
+
+# Other
+SENTRY_DSN=
+NEW_RELIC_LICENSE_KEY=
+```
 
 ### Installation & Setup
 
@@ -109,6 +257,10 @@ This is the backend service for the Collaborative Code Editor application, built
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
+   
+   # Generate secure secrets
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   # Use the output for JWT_SECRET and JWT_REFRESH_SECRET
    ```
 
 3. **Start PostgreSQL** (if not already running)
