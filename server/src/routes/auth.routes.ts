@@ -64,16 +64,84 @@ router.post(
 router.get(
   '/github',
   authLimiter,
-  passport.authenticate('github', { scope: ['user:email'] })
+  (req, res, next) => {
+    console.log('=== GITHUB OAUTH INITIATION ===');
+    console.log('Headers:', req.headers);
+    console.log('Session ID:', req.sessionID);
+    
+    const auth = passport.authenticate('github', { 
+      scope: ['user:email'],
+      session: false,
+      state: req.query.state as string || undefined
+    });
+    
+    console.log('Initiating GitHub OAuth with state:', req.query.state);
+    
+    auth(req, res, (err: any) => {
+      if (err) {
+        console.error('GitHub OAuth initiation error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to initiate GitHub OAuth',
+          error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+      } else {
+        console.log('GitHub OAuth initiated successfully');
+      }
+    });
+  }
 );
 
 router.get(
   '/github/callback',
   authLimiter,
-  passport.authenticate('github', { 
-    session: false,
-    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=github_auth_failed`
-  }),
+  (req, res, next) => {
+    console.log('=== GITHUB OAUTH CALLBACK ===');
+    console.log('Callback URL:', req.originalUrl);
+    console.log('Query params:', req.query);
+    console.log('Session ID:', req.sessionID);
+    
+    const auth = passport.authenticate('github', { 
+      session: false,
+      failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=github_auth_failed`,
+      failWithError: true
+    });
+    
+    console.log('Starting GitHub OAuth verification with state:', req.query.state);
+    
+    auth(req, res, (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('GitHub OAuth callback error:', {
+          error: err,
+          message: err.message,
+          stack: err.stack
+        });
+        
+        const errorMessage = err.message || 'GitHub authentication failed';
+        console.log('Redirecting to login with error:', errorMessage);
+        
+        return res.redirect(
+          `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=` +
+          encodeURIComponent(errorMessage)
+        );
+      }
+      
+      if (!user) {
+        const errorMsg = 'No user returned from GitHub OAuth';
+        console.error(errorMsg, { info });
+        return res.redirect(
+          `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=` +
+          encodeURIComponent(errorMsg)
+        );
+      }
+      
+      console.log('GitHub OAuth successful for user:', user.id);
+      
+      // Attach user to request for the next middleware
+      req.user = user;
+      next();
+    });
+  },
   authController.githubAuthCallback
 );
 
