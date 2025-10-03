@@ -2,6 +2,19 @@ import "module-alias/register";
 import moduleAlias from "module-alias";
 import path from "path";
 import { fileURLToPath } from "url";
+import express from "express";
+import http from "http";
+import helmet from "helmet";
+import compression from "compression";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import session from "express-session";
+import { config } from "./config/config.js";
+import passport from "./config/passport.js";
+import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
+import { testConnection } from "../db/index.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { redis } from "./config/redis.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -12,408 +25,78 @@ moduleAlias.addAliases({
   "@db": path.join(__dirname, "../db"),
 });
 
-import express from "express";
-import http from "http";
-import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
-import cors from "cors";
-import helmet from "helmet";
-import compression from "compression";
-import morgan from "morgan";
-import dotenv from "dotenv";
-import session from "express-session";
-import { createClient } from "redis";
-import { RedisStore } from 'connect-redis';
-import { config } from "./config/config.js";
-import passport from "./config/passport.js";
-
-// Initialize Redis client and store
-const redisClient = createClient({
-  url: config.redis.url,
-  password: config.redis.password
-});
-
-// Initialize Redis store
-const redisStore = new RedisStore({
-  client: redisClient,
-  prefix: 'sess:',
-  ttl: 86400 // 24 hours in seconds
-});
-
-// Connect to Redis
-(async () => {
-  try {
-    await redisClient.connect();
-    console.log('✅ Redis client connected');
-  } catch (error) {
-    console.error('❌ Redis connection error:', error);
-    process.exit(1);
-  }
-})();
-
-import { testConnection } from "../db/index.js";
-import { execSync } from "child_process";
-import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
-import { authenticate, authorize } from "./middleware/auth.js";
-import { Room, User, DocumentOperation } from "./socket/types/events.js";
-
-// Import routes
-import authRoutes from "./routes/auth.routes.js";
-import userRoutes from "./routes/user.routes.js";
-import documentRoutes from "./routes/document.routes.js";
-import roomRoutes from "./routes/room.routes.js";
-import devRoutes from "./routes/dev.routes.js";
-
-// Load environment variables
-dotenv.config();
-
+// Initialize Express app
 const app = express();
 const server = http.createServer(app);
-
-// Initialize Socket.IO with our custom setup
-const socketService = setupSocketIO(server);
-const io = socketService.getIO();
 
 // Middleware
 app.use(helmet());
 app.use(compression());
-app.use(morgan("combined"));
-app.use(
-  cors({
-    origin: [
-      process.env.CORS_ORIGIN || "http://localhost:3000",
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-    ],
-    credentials: true,
-  }),
-);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
 
-// Session middleware
+// Session configuration
 app.use(session({
-  store: redisStore,
   secret: config.session.secret,
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
+  store: new session.MemoryStore(), // Using in-memory store for now
 }));
 
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Routes
+app.use("/api/auth", (await import("./routes/auth.routes.js")).default);
+app.use("/api/users", (await import("./routes/user.routes.js")).default);
 
-// API Documentation
-app.get("/", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "Collaborative Code Editor Backend API",
-    version: "1.0.0",
-    documentation: "https://github.com/yourusername/collaborative-code-editor/blob/main/API_DOCUMENTATION.md",
-    endpoints: {
-      auth: "/api/auth",
-      users: "/api/users",
-      documents: "/api/documents",
-      rooms: "/api/rooms",
-      health: "/api/health"
-    },
-  });
-});
-
-// API v1 routes
-const apiRouter = express.Router();
-
-// API root endpoint
-apiRouter.get('/', (req, res) => {
-  res.json({
-    status: "ok",
-    message: "Collaborative Code Editor API v1",
-    version: "1.0.0",
-    endpoints: {
-      auth: "/api/auth",
-      users: "/api/users",
-      documents: "/api/documents",
-      rooms: "/api/rooms",
-      health: "/api/health",
-      dev: process.env.NODE_ENV !== 'production' ? "/api/dev" : undefined
-    },
-  });
-});
-
-apiRouter.use('/auth', authRoutes);
-apiRouter.use('/users', userRoutes);
-apiRouter.use('/documents', documentRoutes);
-apiRouter.use('/rooms', roomRoutes);
-
-// Development routes (only enabled in development)
-if (process.env.NODE_ENV !== 'production') {
-  apiRouter.use('/dev', devRoutes);
-}
-
-// Add API versioning
-app.use('/api', apiRouter);
-
-app.get("/api/health", async (req, res) => {
-  try {
-    // Check database connection
-    await testConnection();
-    
-    // Get system stats
-    const stats = {
-      status: "ok",
-      message: "Server is running",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: {
-        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-      },
-      connections: io.sockets.sockets.size,
-      documents: socketService ? 'active' : 'inactive',
-    };
-    
-    return res.json(stats);
-  } catch (error) {
-    return res.status(503).json({
-      status: "error",
-      message: "Service unavailable",
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/documents", documentRoutes);
-app.use("/api/rooms", roomRoutes);
-
-// Socket.IO connection handling
-io.on("connection", (socket) => {
-  console.log("🔌 New WebSocket connection:", socket.id);
-  console.log("📊 Total connected clients:", io.sockets.sockets.size);
-
-  // Get user ID from auth or generate one
-  const userId = socket.handshake.auth.userId || `user_${socket.id}`;
-  console.log("👤 User connected with ID:", userId);
-
-  // Join user to their personal room for direct communication
-  socket.join(`user:${userId}`);
-  console.log("🏠 User joined personal room: user:" + userId);
-
-  // Handle document operations
-  socket.on("room:join", (payload, callback) => {
-    const { roomId } = payload;
-    console.log(`📄 User ${userId} attempting to join document: ${roomId}`);
-
-    socket.join(`document:${roomId}`);
-    console.log(`✅ User ${userId} successfully joined document ${roomId}`);
-
-    // Create a mock room object
-    const mockRoom: Room = {
-      id: roomId,
-      name: `Room ${roomId}`,
-      owner: userId,
-      members: new Set([userId]),
-      maxMembers: 10,
-      createdAt: new Date()
-    };
-
-    // Create mock user object
-    const user: User = {
-      id: userId,
-      username: `user_${userId.slice(0, 6)}`,
-      color: `#${Math.floor(Math.random()*16777215).toString(16)}`
-    };
-
-    // Call the callback with success response
-    if (callback) {
-      callback({ 
-        success: true,
-        user: user
-      });
-    }
-
-    // Notify other users in the document
-    socket.to(`document:${roomId}`).emit('room:joined', {
-      room: {
-        id: mockRoom.id,
-        name: mockRoom.name,
-        owner: mockRoom.owner,
-        maxMembers: mockRoom.maxMembers,
-        createdAt: mockRoom.createdAt
-      },
-      members: [user]
-    });
-
-    // Send current document state to the new user
-    socket.emit('document:state', {
-      content: `// Welcome to Collaborative Code Editor!
-// Start typing your code here...
-
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-console.log(fibonacci(10)); // Output: 55`,
-      version: 1
-    });
-
-    console.log(`📤 Sent document state to user ${userId}`);
-  });
-
-  socket.on("room:leave", (payload) => {
-    const { roomId } = payload;
-    socket.leave(`document:${roomId}`);
-    console.log(`🚪 User ${userId} left document ${roomId}`);
-
-    // Notify other users
-    socket.to(`document:${roomId}`).emit('room:left', {
-      userId,
-      roomId: `document:${roomId}`
-    });
-  });
-
-  // Handle code changes
-  socket.on("document:operation", (operation, callback) => {
-    const { text, position, type, version } = operation;
-    const roomId = socket.data.roomId || 'default';
-
-    console.log(`📝 ${type} operation from ${userId} in document ${roomId} at position ${position}`);
-
-    // Create the full operation with required fields
-    const fullOperation: DocumentOperation = {
-      ...operation,
-      clientId: socket.id,
-      timestamp: Date.now(),
-      userId
-    };
-
-    // Broadcast to all users in the same document except sender
-    socket.to(`document:${roomId}`).emit('document:operation', fullOperation);
-
-    // Acknowledge the operation
-    if (callback) {
-      callback({ success: true });
-    }
-  });
-
-  // Handle document sync
-  socket.on("document:sync", (payload) => {
-    const { version } = payload;
-    const roomId = socket.data.roomId || 'default';
-
-    console.log(`🔄 Document sync requested by ${userId} for version ${version} in room ${roomId}`);
-
-    // In a real implementation, you would send the current document state
-    // Here we just acknowledge the sync request
-    socket.emit('document:state', { content: '', version });
-  });
-
-  // Handle cursor position updates
-  socket.on("cursor:move", (position) => {
-    const roomId = socket.data.roomId || 'default';
-    
-    console.log(`🎯 Cursor update from ${userId} in room ${roomId}:`, position);
-
-    // Update user's cursor position in the room service
-    if (socket.data.user) {
-      socket.data.user.cursorPosition = position;
-    }
-
-    // Broadcast cursor position to all users in the same room except sender
-    socket.to(`document:${roomId}`).emit('cursor:update', {
-      userId,
-      position
-    });
-  });
-
-  // Handle user typing indicators
-  socket.on("user:typing", (payload) => {
-    const { isTyping, roomId } = payload;
-    const targetRoomId = roomId || socket.data.roomId || 'default';
-
-    console.log(`⌨️ User ${userId} ${isTyping ? 'started' : 'stopped'} typing in room ${targetRoomId}`);
-
-    // Broadcast typing status to all users in the same room except sender
-    socket.to(`document:${targetRoomId}`).emit('user:typing', {
-      userId,
-      isTyping
-    });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("🔌 User disconnected:", userId);
-    console.log("📊 Remaining connected clients:", io.sockets.sockets.size);
-
-    // Notify all documents that this user left
-    // In a real implementation, you'd track which documents the user was in
-    const roomId = socket.data.roomId || 'default';
-    socket.to(`document:${roomId}`).emit('room:left', {
-      userId,
-      roomId: `document:${roomId}`
-    });
-  });
-});
-
-// Error handling middleware (must be last)
+// Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+// Setup Socket.IO
+setupSocketIO(server);
+
+// Start server
 const PORT = process.env.PORT || 5000;
 
-// Initialize database and start server
-async function startServer() {
+const startServer = async () => {
   try {
-    // Test database connection (skip in development if not available)
-    try {
-      const connected = await testConnection();
-      if (!connected) {
-        console.warn("⚠️ Database connection failed - running in mock mode");
-      } else {
-        console.log("✅ Database connected successfully");
-      }
-    } catch (error) {
-      console.warn("⚠️ Database connection failed - running in mock mode:", error.message);
-    }
-
+    await testConnection();
+    console.log("✅ Database connected successfully");
+    
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📱 Frontend URL: http://localhost:5173`);
+      console.log(`📱 Frontend URL: http://localhost:${process.env.FRONTEND_PORT || 5173}`);
       console.log(`🔌 WebSocket URL: ws://localhost:${PORT}`);
-      console.log(`📋 API Documentation: http://localhost:${PORT}/`);
-      console.log(`🔐 Authentication: Mock mode enabled for development`);
-      console.log(`🔄 Real-time collaboration enabled with Socket.IO`);
+      console.log(`📋 API Documentation: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error("❌ Failed to start server:", error);
     process.exit(1);
   }
-}
+};
 
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Shutting down gracefully...');
   await cleanupSocketIO();
-  server.close(() => {
-    console.log('Process terminated');
+  
+  // Close HTTP server
+  if (server) {
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
-});
-
-process.on('SIGINT', async () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  await cleanupSocketIO();
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
+  }
 });
 
 // Start the server
