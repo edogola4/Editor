@@ -155,6 +155,7 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+        field: 'is_private', // Explicitly set the column name
       },
       password: {
         type: DataTypes.STRING,
@@ -164,6 +165,7 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 10,
+        field: 'max_users', // Explicitly set the column name
         validate: {
           min: 1,
           max: 100,
@@ -172,6 +174,7 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
       ownerId: {
         type: DataTypes.UUID,
         allowNull: false,
+        field: 'owner_id', // Explicitly set the column name
         references: {
           model: 'users',
           key: 'id',
@@ -204,32 +207,38 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
+        field: 'last_activity_at', // Explicitly set the column name
       },
       // Statistics
       totalSessions: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
+        field: 'total_sessions', // Explicitly set the column name
       },
       totalEdits: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
+        field: 'total_edits', // Explicitly set the column name
       },
       averageSessionDuration: {
         type: DataTypes.FLOAT,
         allowNull: false,
         defaultValue: 0,
+        field: 'average_session_duration', // Explicitly set the column name
       },
       activeUsers: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
+        field: 'active_users', // Explicitly set the column name
       },
       lastActive: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
+        field: 'last_active', // Explicitly set the column name
       },
     },
     {
@@ -237,18 +246,26 @@ export default function Room(sequelize: Sequelize): RoomModelStatic {
       timestamps: true,
       indexes: [
         {
+          name: 'rooms_name_owner_id',
           unique: true,
-          fields: ["name", "ownerId"],
+          fields: ['name', 'owner_id']
         },
         {
-          fields: ["status"],
+          name: 'idx_rooms_status',
+          fields: ['status']
         },
         {
-          fields: ["createdAt"],
+          name: 'idx_rooms_created_at',
+          fields: ['created_at']
         },
         {
-          fields: ["ownerId"],
+          name: 'idx_rooms_updated_at',
+          fields: ['updated_at']
         },
+        {
+          name: 'idx_rooms_owner_id',
+          fields: ['owner_id']
+        }
       ],
     }
   ) as unknown as RoomModelStatic;
