@@ -28,7 +28,14 @@
   },
   "include": [
     "src/**/*",
-    "db/**/*"
+    "test/**/*",
+    "scripts/**/*",
+    ".env",
+    "src/types/**/*"
+  ],
+  "typeRoots": [
+    "./node_modules/@types",
+    "./src/types"
   ],
   "exclude": [
     "node_modules",
