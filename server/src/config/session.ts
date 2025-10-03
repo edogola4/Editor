@@ -1,20 +1,13 @@
 import session from 'express-session';
-import { createClient } from 'redis';
+import { Redis } from 'ioredis';
 import { RedisStore } from 'connect-redis';
 import { config } from './config.js';
 import { RequestHandler } from 'express';
-
-// Initialize Redis client
-const redisClient = createClient({
-  url: config.redis.url,
-  socket: {
-    reconnectStrategy: (retries) => Math.min(retries * 50, 2000)
-  },
-});
+import { redis } from './redis.js';
 
 // Initialize Redis store
 const redisStore = new (RedisStore as any)({
-  client: redisClient as any,
+  client: redis as any,
   prefix: 'sess:',
   disableTouch: false,
 });
@@ -34,27 +27,16 @@ const sessionConfig: session.SessionOptions = {
   },
 };
 
-// Initialize Redis client
+// Initialize Redis client (already handled by redis.ts)
 const initializeRedis = async (): Promise<void> => {
-  try {
-    if (!redisClient.isOpen) {
-      await redisClient.connect();
-      console.log('Redis client connected');
-    }
-  } catch (error) {
-    console.error('Redis connection error:', error);
-    process.exit(1);
-  }
+  // Redis is already initialized in redis.ts
+  console.log('Redis client is ready for sessions');
 };
 
 // Graceful shutdown
-const shutdownRedis = async () => {
-  try {
-    await redisClient.quit();
-    console.log('Redis client disconnected');
-  } catch (error) {
-    console.error('Error disconnecting Redis:', error);
-  }
+const shutdownRedis = async (): Promise<void> => {
+  // Redis client will be closed by the main process
+  console.log('Redis client shutdown initiated for sessions');
 };
 
-export { sessionConfig, initializeRedis, shutdownRedis, redisClient };
+export { sessionConfig, initializeRedis, shutdownRedis, redis };
