@@ -33,7 +33,7 @@ export default function RoomMember(sequelize: Sequelize) {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'Rooms',
+          model: 'rooms',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -42,7 +42,7 @@ export default function RoomMember(sequelize: Sequelize) {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'users',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -71,16 +71,17 @@ export default function RoomMember(sequelize: Sequelize) {
     {
       tableName: 'room_members',
       timestamps: true,
+      underscored: true,
       indexes: [
         {
           unique: true,
-          fields: ['roomId', 'userId'],
+          fields: ['room_id', 'user_id'],
         },
         {
-          fields: ['userId'],
+          fields: ['user_id'],
         },
         {
-          fields: ['isOnline'],
+          fields: ['is_online'],
         },
       ],
     }
