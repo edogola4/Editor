@@ -76,23 +76,28 @@ export default function User(sequelize: Sequelize): UserModelStatic {
       },
       githubId: {
         type: DataTypes.STRING,
+        field: 'github_id', // Explicitly set the column name to match the database
         allowNull: true,
         unique: true,
       },
       avatarUrl: {
         type: DataTypes.STRING,
+        field: 'avatar_url', // Explicitly set the column name to match the database
         allowNull: true,
       },
       isVerified: {
         type: DataTypes.BOOLEAN,
+        field: 'is_verified',
         defaultValue: false,
       },
       passwordResetToken: {
         type: DataTypes.STRING,
+        field: 'password_reset_token',
         allowNull: true,
       },
       passwordResetExpires: {
         type: DataTypes.DATE,
+        field: 'password_reset_expires',
         allowNull: true,
       },
       createdAt: {
