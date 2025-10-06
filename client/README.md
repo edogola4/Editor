@@ -1,8 +1,8 @@
 # Collaborative Code Editor - Frontend
 
 <div align="center">
-  <h2>🚀 Real-time Collaborative Code Editor - Frontend</h2>
-  <p>Professional VS Code-like collaborative coding experience with real-time collaboration</p>
+  <h2>🚀 Real-time Collaborative Editor</h2>
+  <p>Professional VS Code-like collaborative coding experience with WebSocket synchronization</p>
 
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
@@ -10,7 +10,9 @@
   ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0+-06B6D4.svg)
   ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53.0-007acc.svg)
   ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
-  
+  ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
+  [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg?flag=client)](https://codecov.io/gh/edogola4/Editor)
+  [![CI/CD](https://github.com/edogola4/Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/edogola4/Editor/actions)
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 </div>
 
@@ -20,28 +22,39 @@ This is the frontend client for the Collaborative Code Editor application, built
 
 ### 🎯 **Core Features**
 - **Real-time Collaboration**: Multi-user editing with operational transformation
+- **WebSocket Synchronization**: Low-latency document synchronization
 - **Professional Code Editor**: Monaco Editor with VS Code's powerful features
-- **Live Cursor Sharing**: See other users' cursors and positions in real-time
+- **Live Cursor & Selection**: See other users' cursors and selections in real-time
 - **User Presence**: Visual indicators showing connected users and their activity
-- **Secure Authentication**: JWT-based login and registration with refresh tokens
-- **Password Security**: Client-side validation with strong password requirements
-- **Email Verification**: Optional email verification flow for new accounts
-- **Password Reset**: Self-service password reset functionality
-- **File Management**: Upload, create, and organize files and folders
+- **Document Versioning**: Track changes and revert to previous versions
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
 - **Dark/Light Mode**: Toggle between themes for comfortable coding
 
+### 🚀 **Performance**
+- **Efficient Sync**: Delta synchronization for large documents
+- **Operation Batching**: Minimize network traffic with operation batching
+- **Debounced Updates**: Optimize cursor and selection updates
+- **Offline Support**: Continue editing with offline queue (coming soon)
+
+### 🛡 **Security**
+- **JWT Authentication**: Secure token-based authentication
+- **WebSocket Security**: Encrypted communication with WSS
+- **Input Validation**: Comprehensive client-side validation
+- **Rate Limiting**: Protection against rapid operations
+
 ### 🎨 **Editor Features**
-- **Monaco Editor**: Full VS Code editing experience
-- **IntelliSense**: Smart code completion and hover information
+- **Monaco Editor**: Full VS Code editing experience with extensions support
+- **IntelliSense**: Smart code completion, parameter hints, and hover information
 - **Multi-cursor Support**: Multiple cursors for efficient editing
-- **Themes**: Built-in light and dark themes with VS Code compatibility
-- **Keybindings**: VS Code keybindings out of the box
+- **Themes**: Built-in light, dark, and high-contrast themes
+- **Keybindings**: VS Code keybindings with customization options
 - **Minimap**: Code overview for easy navigation
-- **Bracket Pair Colorization**: Visual matching of brackets
-- **Word Wrap**: Configurable text wrapping
-- **Auto-Formatting**: Automatic code formatting on save
+- **Bracket Pair Colorization**: Visual matching of brackets and indentation
+- **Word Wrap**: Configurable text wrapping with word wrap guides
+- **Auto-Formatting**: Built-in code formatting with Prettier
 - **Language Support**: 50+ programming languages with syntax highlighting
+- **Snippets**: Built-in code snippets for common patterns
+- **Emmet Support**: HTML/CSS abbreviations expansion
 
 ### 🛠 **Technical Features**
 - **React 19+**: Modern React with concurrent features
@@ -95,9 +108,49 @@ This is the frontend client for the Collaborative Code Editor application, built
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js 18+** (preferably 22+)
-- **npm 9+** or **yarn 1.22+**
+- **Node.js 22+** (LTS recommended)
+- **pnpm 8+** (recommended package manager)
 - **Git**
+- **Backend Server**: See [server README](../server/README.md) for setup
+
+### Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/edogola4/Editor.git
+   cd Editor/client
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
+
+4. **Start the development server**
+   ```bash
+   pnpm dev
+   ```
+
+5. **Open in browser**
+   ```
+   http://localhost:3000
+   ```
+
+### Available Scripts
+
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm preview` - Preview production build locally
+- `pnpm test` - Run unit tests
+- `pnpm test:coverage` - Run tests with coverage
+- `pnpm lint` - Lint code
+- `pnpm format` - Format code with Prettier
 
 ### Installation & Setup
 

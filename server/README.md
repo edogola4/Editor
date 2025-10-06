@@ -1,28 +1,71 @@
 # Collaborative Code Editor - Backend
 
 <div align="center">
-  <h2>🚀 Real-time Collaborative Code Editor - Backend</h2>
-  <p>High-performance backend service for real-time collaborative code editing with operational transformation</p>
+  <h2>🚀 Real-time Collaborative Editor - Backend</h2>
+  <p>High-performance backend service with WebSocket-based real-time collaboration</p>
 
+  ![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Express](https://img.shields.io/badge/Express-5+-000000.svg)
   ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
-  ![Docker](https://img.shields.io/badge/Docker-3.8+-2496ED.svg)
-  ![Vitest](https://img.shields.io/badge/Vitest-1.0.0-6E56F7.svg)
+  ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
+  ![k6](https://img.shields.io/badge/k6-0.50.0-7D64FF.svg)
   
-  [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-  [![Test Coverage](https://api.codeclimate.com/v1/badges/backend_coverage.svg)](https://codeclimate.com/github/edogola4/Editor/coverage)
-  [![Dependencies](https://img.shields.io/david/edogola4/Editor?path=server)](https://david-dm.org/edogola4/Editor?path=server)
+  [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg?flag=server)](https://codecov.io/gh/edogola4/Editor)
+  [![CI/CD](https://github.com/edogola4/Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/edogola4/Editor/actions)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/edogola4/Editor/pulls)
+  [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+  [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-This is the backend service for the Collaborative Code Editor application, built with modern technologies to provide a scalable and performant real-time collaboration experience. The backend features operational transformation for conflict-free collaborative editing, real-time synchronization, and a robust authentication system.
+## 🌟 What's New in v3.2.0
 
-The system is designed with a modular architecture, clean separation of concerns, and comprehensive testing to ensure reliability and maintainability. It supports multiple concurrent users, document versioning, and provides real-time presence indicators and cursor tracking.
+- **Enhanced Authentication**: Improved JWT token handling and refresh token flow
+- **Better Error Handling**: More descriptive error messages and validation
+- **Performance Optimizations**: Reduced latency in real-time updates
+- **Improved WebSocket Stability**: Better handling of connection drops and reconnections
+- **Bug Fixes**: Resolved issues with document versioning and conflict resolution
+
+This is the backend service for the Collaborative Code Editor, built with TypeScript and Node.js to provide a scalable and performant real-time collaboration experience.
+
+## ✨ Key Features
+
+- **Real-time Collaboration**: WebSocket-based document synchronization with operational transformation
+- **Scalable Architecture**: Built to handle thousands of concurrent users
+- **Secure Authentication**: JWT with refresh tokens and OAuth 2.0 support
+- **Efficient State Management**: Redis for pub/sub and session management
+- **Reliable Storage**: PostgreSQL for persistent data with migrations
+- **Comprehensive API**: RESTful API with OpenAPI documentation
+- **Monitoring & Logging**: Built-in logging and monitoring capabilities
+- **Container Ready**: Docker and Kubernetes support
+
+## ✨ Features
+
+### 🎯 **Core Features**
+- **Real-time Collaboration**: WebSockets with Socket.IO for live editing
+- **Operational Transformation**: Conflict-free collaborative editing
+- **Document Versioning**: Track changes and history
+- **User Presence**: Real-time presence indicators
+- **Cursor & Selection Sync**: See other users' cursors and selections
+
+### 🚀 **Performance**
+- **Redis Pub/Sub**: Scalable real-time messaging with Redis Cluster support
+- **Connection Pooling**: Optimized PostgreSQL connection management
+- **Operation Batching**: Reduce network traffic with intelligent batching
+- **Debounced Updates**: Efficient cursor and selection synchronization
+- **Load Balancing**: Built-in support for horizontal scaling
+- **Caching**: Multi-level caching for improved response times
+- **Compression**: Gzip and Brotli compression for API responses
+
+### 🛡 **Security**
+- **JWT Authentication**: Stateless authentication
+- **Rate Limiting**: Protection against abuse
+- **Input Validation**: Comprehensive request validation
+- **CORS Protection**: Strict CORS policies
+- **Security Headers**: Helmet.js middleware
 
 ## ✨ Features
 
@@ -58,47 +101,69 @@ The system is designed with a modular architecture, clean separation of concerns
 - **Error Tracking** - Integration with error monitoring services
 - **Background Jobs** - Support for scheduled and queued tasks
 
-### 🚀 **Getting Started**
+### 🚀 Quick Start
 
-#### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
-- Redis 6+
-- Docker (optional)
+### Prerequisites
+- **Node.js 22+** (LTS recommended)
+- **PostgreSQL 16+** (with PostGIS extension)
+- **Redis 7+** (for pub/sub and caching)
+- **Docker** and **Docker Compose** (recommended)
 
-#### Installation
+## 🚀 Quick Start
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/edogola4/Editor.git
-   cd Editor/server
-   ```
+### Prerequisites
 
-2. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
+- Node.js v22 or higher
+- PostgreSQL 16+
+- Redis 7+
+- npm or yarn
 
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Update the .env file with your configuration
-   ```
+### Development Setup
 
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-#### Running with Docker
-
+#### With Docker (Recommended)
 ```bash
+# Clone the repository
+git clone https://github.com/edogola4/Editor.git
+cd Editor
+
+# Start all services
 docker-compose up -d
+
+# Run database migrations
+docker-compose exec server pnpm db:migrate
+
+# Access the API at http://localhost:5000
 ```
+
+#### Manual Setup
+```bash
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start services
+docker-compose up -d postgres redis
+
+# Run migrations
+pnpm db:migrate
+
+# Start development server
+pnpm dev
+```
+
+### Available Scripts
+- `pnpm dev` - Start development server with hot-reload
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm test` - Run tests
+- `pnpm test:coverage` - Run tests with coverage
+- `pnpm db:migrate` - Run database migrations
+- `pnpm db:seed` - Seed the database
+- `pnpm lint` - Lint code
+- `pnpm format` - Format code with Prettier
 
 ### 🧪 Testing
 

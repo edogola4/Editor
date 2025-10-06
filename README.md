@@ -2,9 +2,9 @@
 
 <div align="center">
   <h1>🚀 Real-time Collaborative Code Editor</h1>
-  <p><strong>Professional VS Code-like collaborative coding experience with real-time collaboration</strong></p>
+  <p><strong>Professional VS Code-like collaborative coding experience with real-time WebSocket synchronization</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
@@ -12,35 +12,54 @@
   ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53.0-007acc.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
-  ![ESM](https://img.shields.io/badge/ES_Modules-100%25-FFCA28.svg)
-  [![Test Coverage](https://api.codeclimate.com/v1/badges/main_coverage.svg)](https://codeclimate.com/github/edogola4/Editor/coverage)
-  [![Dependencies](https://img.shields.io/david/edogola4/Editor.svg)](https://david-dm.org/edogola4/Editor)
+  ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
+  ![k6](https://img.shields.io/badge/k6-0.50.0-7D64FF.svg)
+  [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg)](https://codecov.io/gh/edogola4/Editor)
+  [![CI/CD](https://github.com/edogola4/Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/edogola4/Editor/actions)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/edogola4/Editor/pulls)
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/edogola4/Editor/blob/main/CODE_OF_CONDUCT.md)
+  [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
+
+## 🌟 What's New in v3.2.0
+
+- **Enhanced Authentication**: Improved JWT token handling and refresh token flow
+- **Better Error Handling**: More descriptive error messages and validation
+- **Performance Optimizations**: Reduced latency in real-time updates
+- **UI Improvements**: Smoother cursor synchronization and presence indicators
+- **Bug Fixes**: Resolved issues with document versioning and conflict resolution
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
 - **Real-time Collaboration**: Multi-user editing with operational transformation (OT)
-- **VS Code Experience**: Full Monaco Editor integration with IntelliSense
-- **Live Cursor & Selection**: See other users' cursors, selections, and edits in real-time
+- **WebSocket-based Synchronization**: Low-latency document synchronization using Socket.IO
+- **VS Code Experience**: Full Monaco Editor integration with IntelliSense and code completion
+- **Live Cursor & Selection**: See other users' cursors and selections in real-time with user-specific colors
 - **User Presence**: Visual indicators showing connected users and their activity
 - **Multi-language Support**: 50+ programming languages with syntax highlighting
-- **GitHub Integration**: Sign in with GitHub and import repositories
-- **Session Management**: Save and load collaborative sessions with version history
-- **File Management**: Upload, create, and organize files and folders
-- **Redis-based Pub/Sub**: Scalable real-time messaging with Redis adapter
+- **Document Versioning**: Track changes and revert to previous versions with full history
+- **Redis-based State Management**: Scalable document state management with pub/sub
 - **Rate Limiting**: Configurable rate limits for API and WebSocket endpoints
-- **Comprehensive Monitoring**: Built-in monitoring for system health and performance
 - **Operational Transformation**: Custom OT algorithm for conflict resolution
-- **TypeScript First**: Full type safety across the entire stack with TypeScript 5.8+
-- **Secure Authentication**: JWT-based authentication with refresh tokens
-- **Password Validation**: Secure password requirements with client/server validation
-- **Document Versioning**: Track changes and revert to previous versions
-- **User Roles & Permissions**: Fine-grained access control system
+- **TypeScript First**: Full type safety across the entire stack
+- **Responsive Design**: Works on desktop and tablet devices
+
+### 🚀 **Performance**
+- **Efficient Sync**: Delta synchronization for large documents
+- **Operation Batching**: Minimize network traffic with operation batching
+- **Debounced Updates**: Optimize cursor and selection updates
+- **Scalable Architecture**: Designed to handle thousands of concurrent users
+- **Load Tested**: k6 load testing scripts included for performance validation
+
+### 🛡 **Security**
+- **JWT Authentication**: Secure token-based authentication
+- **WebSocket Security**: Encrypted communication with WSS
+- **Input Validation**: Comprehensive request validation
+- **Rate Limiting**: Protection against abuse and DoS attacks
+- **CORS Protection**: Strict CORS policies
+- **Security Headers**: Helmet.js for secure HTTP headers
 
 ### 🛠 **Editor Features**
 - **Monaco Editor**: Full VS Code editing experience with extensions support
@@ -153,18 +172,117 @@
 
 ### Prerequisites
 - **Node.js 22+** (LTS recommended)
+- **Docker** and **Docker Compose** (for containerized development)
 - **PostgreSQL 16+** (with PostGIS extension)
-- **Redis 7+** (for caching and pub/sub)
-- **npm 10+** or **pnpm 8+** (recommended)
+- **Redis 7+** (for real-time features and caching)
+- **pnpm 8+** (recommended package manager)
 - **Git**
+
+### Development Setup
+
+#### With Docker (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/edogola4/Editor.git
+cd Editor
+
+# Copy environment files
+cp .env.example .env
+cp server/.env.example server/.env
+cp client/.env.example client/.env.local
+
+# Start all services
+docker-compose up -d
+
+# Run database migrations
+docker-compose exec server pnpm db:migrate
+
+# Access the application at http://localhost:3000
+```
+
+#### Manual Setup
+```bash
+# Install dependencies
+pnpm install
+cd server && pnpm install
+cd ../client && pnpm install
+cd ..
+
+# Start services
+docker-compose up -d postgres redis
+
+# Run migrations
+cd server
+pnpm db:migrate
+
+# Start development servers
+pnpm dev:server  # In one terminal
+pnpm dev:client  # In another terminal
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js v22 or higher
+- PostgreSQL 16+
+- Redis 7+
+- npm or yarn
 
 ### Installation & Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/collaborative-code-editor.git
-   cd collaborative-code-editor
+   git clone https://github.com/edogola4/Editor.git
+   cd Editor
    ```
+
+2. **Set up environment variables**
+   ```bash
+   # Copy the example .env file
+   cp .env.example .env
+   
+   # Edit the .env file with your configuration
+   # You'll need to set up database credentials, JWT secrets, etc.
+   ```
+
+3. **Install dependencies**
+   ```bash
+   # Install root dependencies
+   npm install
+   
+   # Install client dependencies
+   cd client
+   npm install
+   
+   # Install server dependencies
+   cd ../server
+   npm install
+   ```
+
+4. **Set up the database**
+   ```bash
+   # Run database migrations
+   cd server
+   npx sequelize-cli db:migrate
+   
+   # (Optional) Seed the database with test data
+   npx sequelize-cli db:seed:all
+   ```
+
+5. **Start the development servers**
+   ```bash
+   # In the root directory, start both client and server
+   npm run dev
+   ```
+
+   This will start:
+   - Frontend on http://localhost:5173
+   - Backend API on http://localhost:5000
+   - WebSocket server on ws://localhost:5000
+
+6. **Access the application**
+   Open your browser and navigate to http://localhost:5173
 
 2. **Set up environment variables**
    ```bash
