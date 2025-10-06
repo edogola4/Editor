@@ -59,7 +59,7 @@ interface UserInstance
   generatePasswordResetToken(): { resetToken: string; resetTokenExpiry: Date };
   generateEmailVerificationToken(): { token: string; expires: Date };
   toJSON(): UserAttributes;
-  [key: string]: any; // Allow additional methods
+  [key: string]: any;
 }
 
 // Define the static methods of the User model
@@ -68,11 +68,13 @@ type UserModelStatic = typeof Model & {
   associate?: (models: any) => void;
   findByPk: (id: string, options?: any) => Promise<UserInstance | null>;
   findOne: (options: any) => Promise<UserInstance | null>;
-  // Add other static methods as needed
 };
 
 // Define the model initialization function
 export default function User(sequelize: Sequelize): UserModelStatic {
+  const SALT_ROUNDS = 10;
+  const TOKEN_EXPIRY_HOURS = 1;
+
   // Define the model
   const User = sequelize.define<UserInstance>(
     "User",
@@ -204,79 +206,85 @@ export default function User(sequelize: Sequelize): UserModelStatic {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       tableName: 'users',
       timestamps: true,
       indexes: [
-        {
-          unique: true,
-          fields: ['email'],
-        },
-        {
-          unique: true,
-          fields: ['username'],
-        },
-        {
-          fields: ['role'],
-        },
-        {
-          fields: ['status'],
-        },
+        { unique: true, fields: ['email'] },
+        { unique: true, fields: ['username'] },
+        { fields: ['role'] },
+        { fields: ['status'] },
       ],
       hooks: {
         beforeCreate: async (user: UserInstance) => {
           if (user.password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
+            user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
           }
         },
         beforeUpdate: async (user: UserInstance) => {
-          if (user.changed("password")) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
+          if (user.changed('password') && user.password) {
+            user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
           }
         },
       },
-    },
-  ) as unknown as UserModelStatic;
+    }
+  ) as UserModelStatic;
 
-  // Add instance method to check password
-  const userPrototype = User.prototype as UserInstance;
-  
   // Instance methods
-  userPrototype.comparePassword = async function (
-    candidatePassword: string,
-  ): Promise<boolean> {
-    if (!this.password) return false; // For OAuth users without password
+  User.prototype.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+    if (!this.password) return false;
     return bcrypt.compare(candidatePassword, this.password);
   };
 
-  userPrototype.createPasswordResetToken = function (): string {
+  User.prototype.generatePasswordResetToken = function() {
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date();
+    resetTokenExpiry.setHours(resetTokenExpiry.getHours() + TOKEN_EXPIRY_HOURS);
+    
     this.passwordResetToken = crypto
       .createHash('sha256')
       .update(resetToken)
       .digest('hex');
-    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    return resetToken;
+    this.passwordResetExpires = resetTokenExpiry;
+
+    return { resetToken, resetTokenExpiry };
   };
 
-  userPrototype.markAsVerified = async function (): Promise<void> {
-    this.isVerified = true;
-    this.passwordResetToken = null;
-    this.passwordResetExpires = null;
-    await this.save();
+  User.prototype.generateEmailVerificationToken = function() {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + TOKEN_EXPIRY_HOURS * 24); // 24 hours
+
+    this.emailVerificationToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+    this.emailVerificationExpires = expires;
+
+    return { token, expires };
+  };
+
+  // Override toJSON to exclude sensitive data
+  User.prototype.toJSON = function() {
+    const values = Object.assign({}, this.get());
+    delete values.password;
+    delete values.passwordResetToken;
+    delete values.passwordResetExpires;
+    delete values.emailVerificationToken;
+    delete values.emailVerificationExpires;
+    return values;
+  };
+
+  // Class methods
+  User.associate = (models: any) => {
+    // Define associations here
+    User.hasMany(models.Session, {
+      foreignKey: 'userId',
+      as: 'sessions'
+    });
+    
+    // Add other associations as needed
   };
 
   return User;
