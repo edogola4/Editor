@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd server && npm ci
+        cd ../client && npm ci
+      working-directory: .
+    
+    - name: Run server tests
+      run: npm test -- --coverage
+      working-directory: server
+      env:
+        NODE_ENV: test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+    
+    - name: Run client tests
+      run: npm test -- --coverage
+      working-directory: client
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: server/coverage
+        fail_ci_if_error: false
+
+  load-test:
+    name: Load Test
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd server && npm ci
+        cd ../load-test && npm ci
+    
+    - name: Start server
+      run: npm run dev
+      working-directory: server
+      env:
+        NODE_ENV: test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+      continue-on-error: true
+      background: true
+    
+    - name: Run smoke test
+      run: |
+        cd load-test
+        npm install -g k6
+        npm run test:smoke
+    
+    - name: Run load test (if not PR)
+      if: github.event_name != 'pull_request'
+      run: |
+        cd load-test
+        npm install -g k6
+        npm run test:load
+
+  deploy:
+    name: Deploy
+    needs: [test, load-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Build and push server
+      uses: docker/build-push-action@v3
+      with:
+        context: ./server
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/collab-editor-server:latest
+    
+    - name: Build and push client
+      uses: docker/build-push-action@v3
+      with:
+        context: ./client
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/collab-editor-client:latest
+    
+    - name: Deploy to production
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Add your deployment steps here
+        # For example, using SSH to connect to your server and run docker-compose
+        echo "Deploying to production..."
+        # ssh user@server "cd /path/to/app && docker-compose pull && docker-compose up -d"

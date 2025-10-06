@@ -1,0 +1,15 @@
+{
+  "name": "collaborative-editor-load-test",
+  "version": "1.0.0",
+  "description": "Load testing for collaborative editor",
+  "scripts": {
+    "test:smoke": "k6 run --vus 5 --duration 1m editor-load-test.js",
+    "test:load": "k6 run --vus 50 --duration 5m editor-load-test.js",
+    "test:stress": "k6 run --vus 200 --duration 10m editor-load-test.js",
+    "test:spike": "k6 run --vus 1000 --duration 1m editor-load-test.js"
+  },
+  "dependencies": {
+    "k6": "^0.0.0",
+    "k6-experimental": "^0.0.2"
+  }
+}
