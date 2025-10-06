@@ -1,0 +1,13 @@
+{
+  "app": {
+    "baseUrl": "http://localhost:5000",
+    "port": 5000
+  },
+  "github": {
+    "clientId": "Ov23li65ibtgEFoM2n6u",
+    "clientSecret": "250a597c8a8740ee7b2fb10295be27697f8d48f6",
+    "webhookSecret": "your_github_webhook_secret",
+    "callbackURL": "http://localhost:5000/api/auth/github/callback",
+    "appName": "Collaborative-Editor"
+  }
+}
