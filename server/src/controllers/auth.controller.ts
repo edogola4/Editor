@@ -64,12 +64,12 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw CustomError.badRequest('Validation failed', errors.array());
+      throw new CustomError('Validation failed', 400, { errors: errors.array() });
     }
 
-    const { email, password } = req.body as LoginBody;
-    const ipAddress = (req.ip || req.connection.remoteAddress) as string;
-    const userAgent = (req.headers['user-agent'] || '') as string;
+    const { email, password } = req.body;
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const userAgent = req.headers['user-agent'] || '';
 
     // Authenticate user using AuthService
     const { user, token } = await AuthService.login(
@@ -80,12 +80,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     );
 
     // Set auth cookies
-    if (typeof token === 'string') {
-      const tokens = JSON.parse(token);
-      setTokenCookies(res, tokens);
-    } else {
-      setTokenCookies(res, token);
-    }
+    setTokenCookies(res, token);
 
     // Log the login
     await logger.security(
