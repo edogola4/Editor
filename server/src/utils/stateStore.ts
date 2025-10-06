@@ -230,30 +230,46 @@ export class StateStore {
   }
   
   private async logAvailableStates(method: string): Promise<void> {
-    if (process.env.NODE_ENV === 'production') return;
-    
     try {
-      const keys = await this.redis.keys(getStateKey('*'));
+      // Use SCAN instead of KEYS for better performance in production
+      let cursor = '0';
+      const states: Array<{key: string, state: string}> = [];
       
-      if (keys.length > 0) {
-        const states = await Promise.all(
-          keys.map(async (key) => {
-            const ttl = await this.redis.ttl(key);
-            const value = await this.redis.get(key);
-            return { key, ttl, value: value ? '...' : 'empty' };
-          })
-        );
+      do {
+        const [nextCursor, keys] = await this.redis.scan(
+          cursor,
+          'MATCH',
+          getStateKey('*'),
+          'COUNT',
+          '100'
+        ) as [string, string[]];
         
-        this.logDebug(method, 'Available states in Redis', { states });
-      } else {
-        this.logDebug(method, 'No states found in Redis');
-      }
+        cursor = nextCursor;
+        
+        // Get state data for each key
+        for (const key of keys) {
+          try {
+            const stateData = await this.redis.get(key);
+            if (stateData) {
+              const stateDataParsed = JSON.parse(stateData) as StateData;
+              states.push({ key, state: stateDataParsed.state });
+            }
+          } catch (err) {
+            this.logError(method, `Error getting state data for key ${key}`, err);
+          }
+        }
+      } while (cursor !== '0');
+      
+      this.logDebug(method, 'Available states in store', { 
+        count: states.length,
+        states: states.map(s => s.key) // Only log keys to avoid sensitive data
+      });
     } catch (error) {
-      this.logError(method, 'Error fetching available states', error);
+      // Don't throw, just log the error
+      this.logError(method, 'Error in logAvailableStates', error);
     }
   }
   
-  // Logging helpers
   private logDebug(method: string, message: string, data?: any): void {
     if (process.env.NODE_ENV !== 'production') {
       console.debug(`[${this.logContext}.${method}] ${message}`, data || '');

@@ -7,13 +7,12 @@ import http from "http";
 import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
-import dotenv from "dotenv";
 import session from "express-session";
 import cors from "cors";
 import { config } from "./config/config.js";
 import passport from "./config/passport.js";
 import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
-import { testConnection } from "../db/index.js";
+import { db, testConnection } from "./models/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { redis } from "./config/redis.js";
 
@@ -22,8 +21,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configure module aliases
+const rootDir = path.resolve(__dirname, '..');
 moduleAlias.addAliases({
-  "@db": path.join(__dirname, "../db"),
+  "@db": path.join(rootDir, "db"),
 });
 
 // Initialize Express app

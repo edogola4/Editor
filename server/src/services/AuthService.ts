@@ -1,5 +1,7 @@
-import User, { UserRole, UserStatus } from '../models/User.js';
-import Session from '../models/Session.js';
+import db from '../models/index.js';
+import { UserStatus } from '../models/User.js';
+const { User, UserRole } = db;
+// Session model is already imported from db
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
@@ -7,8 +9,11 @@ import crypto from 'crypto';
 
 export class AuthService {
   private static instance: AuthService;
+  private Session: any;
   
-  private constructor() {}
+  private constructor() {
+    this.Session = db.Session;
+  }
 
   public static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -94,22 +99,27 @@ export class AuthService {
    * Create a new session for the user
    */
   public async createSession(
-    userId: string, 
+    userId: string,
     deviceInfo?: any, 
     ipAddress?: string
   ): Promise<string> {
     const token = uuidv4();
     
-    await Session.create({
+    // Set session to expire in 7 days
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    
+    await this.Session.create({
       userId,
       token,
       deviceInfo: deviceInfo || {},
-      locationInfo: { ip: ipAddress },
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      lastActivity: new Date(),
+      ipAddress: ipAddress || 'unknown',
       isActive: true,
+      lastActiveAt: new Date(),
+      expiresAt,
+      locationInfo: {}
     });
-
+    
     return token;
   }
 
@@ -117,27 +127,28 @@ export class AuthService {
    * Verify session token
    */
   public async verifyToken(token: string): Promise<{ isValid: boolean; user?: any }> {
-    const session = await Session.findOne({
+    const session = await this.Session.findOne({
       where: {
         token,
         isActive: true,
         expiresAt: { [Op.gt]: new Date() }
       },
-      include: [
-        { model: User, as: 'user' }
-      ]
+      include: [{
+        model: User,
+        attributes: { exclude: ['password'] }
+      }]
     });
 
-    if (!session) {
+    if (!session || !session.User) {
       return { isValid: false };
     }
 
-    // Update last activity
-    await session.update({ lastActivity: new Date() });
+    // Update last active time
+    await session.update({ lastActiveAt: new Date() });
 
     return {
       isValid: true,
-      user: session.user?.toJSON()
+      user: session.User.get({ plain: true })
     };
   }
 
@@ -145,11 +156,10 @@ export class AuthService {
    * Logout user by invalidating the session
    */
   public async logout(token: string): Promise<boolean> {
-    const result = await Session.update(
+    const result = await this.Session.update(
       { isActive: false },
       { where: { token } }
     );
-
     return result[0] > 0;
   }
 
@@ -157,17 +167,16 @@ export class AuthService {
    * Invalidate all sessions for a user
    */
   public async invalidateAllSessions(userId: string): Promise<number> {
-    const result = await Session.update(
+    const result = await this.Session.update(
       { isActive: false },
       { where: { userId } }
     );
-
     return result[0];
   }
 
   /**
    * Change user password
-   */
+{{ ... }}
   public async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
     const user = await User.findByPk(userId);
     if (!user) {
