@@ -1,13 +1,13 @@
 import passport from 'passport';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { sequelize } from './database.js';
-import UserFactory, { UserInstance } from '../models/User.js';
+import db from '../models';
+import { UserInstance } from '../models/User.js';
+const { User } = db;
 import { config } from './config.js';
 import { Sequelize, Op } from 'sequelize';
 import { stateStore } from '../utils/stateStore';
 
-// Initialize the User model
-const User = UserFactory(sequelize);
 
 // Extend Express User type to include our User model
 declare global {

@@ -72,7 +72,7 @@ type UserModelStatic = typeof Model & {
 };
 
 // Define the model initialization function
-export default function User(sequelize: Sequelize): UserModelStatic {
+export const User = (sequelize: Sequelize): UserModelStatic => {
   // Define the model
   const User = sequelize.define<UserInstance>(
     "User",
@@ -284,3 +284,11 @@ export default function User(sequelize: Sequelize): UserModelStatic {
 
 // Export the User model and interfaces
 export type { UserAttributes, UserInstance, UserModelStatic };
+
+export default User;
+
+declare global {
+  namespace Express {
+    interface User extends UserInstance {}
+  }
+}
