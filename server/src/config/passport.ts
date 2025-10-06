@@ -41,17 +41,29 @@ const stateHandler = {
   store: (req: any, state: string | undefined, meta: any, callback: (err: Error | null, state?: string) => void) => {
     try {
       // Generate a new state if none provided
-      const stateToStore = state || Math.random().toString(36).substring(2, 15);
+      const stateToStore = state || [
+        Math.random().toString(36).substring(2, 15),
+        Math.random().toString(36).substring(2, 15),
+        Date.now().toString(36)
+      ].join('_');
+      
       console.log('Storing state in state handler:', { state: stateToStore, meta });
       
+      // Add request metadata
+      const stateMeta = {
+        ...meta,
+        userAgent: req.headers['user-agent'],
+        ip: req.ip || req.connection.remoteAddress,
+        timestamp: Date.now()
+      };
+      
       // Store the state in Redis
-      stateStore.storeState(req, stateToStore, meta, (err, storedState) => {
+      stateStore.storeState(req, stateToStore, stateMeta, (err, storedState) => {
         if (err) {
           console.error('Error in state store callback:', err);
           return callback(err);
         }
         console.log('State stored successfully:', { state: storedState });
-        // Return the state that was stored
         callback(null, storedState);
       });
     } catch (error) {
@@ -59,31 +71,49 @@ const stateHandler = {
       callback(error as Error);
     }
   },
+  
   verify: (req: any, providedState: string | undefined, callback: any) => {
+    const logContext = 'StateHandler.verify';
+    
     try {
-      console.log('Verifying state in state handler:', { providedState });
+      console.log(`${logContext}: Verifying state`, { 
+        providedState,
+        query: req.query,
+        body: req.body
+      });
+      
       if (!providedState) {
         const error = new Error('No state provided for verification');
-        console.error(error.message);
+        console.error(`${logContext}: ${error.message}`);
         return callback(error, false);
       }
       
+      // Verify the state using our state store
       stateStore.verifyState(req, providedState, (err, ok, state, meta) => {
         if (err) {
-          console.error('Error in state verification callback:', err);
+          console.error(`${logContext}: State verification error:`, err);
           return callback(err, false);
         }
         
         if (!ok) {
-          console.error('State verification failed:', { providedState });
-          return callback(new Error('Invalid state'), false);
+          const error = new Error('Invalid or expired state');
+          console.error(`${logContext}: State verification failed:`, { 
+            providedState,
+            error: error.message 
+          });
+          return callback(error, false);
         }
         
-        console.log('State verification successful:', { state, meta });
+        console.log(`${logContext}: State verification successful`, { 
+          state,
+          meta: meta ? '***' : 'none' 
+        });
+        
+        // Pass the state and meta to the callback
         callback(null, true, state, meta);
       });
     } catch (error) {
-      console.error('Error in state handler verify:', error);
+      console.error(`${logContext}: Unexpected error:`, error);
       callback(error, false);
     }
   }
