@@ -2,23 +2,21 @@ import { Model, DataTypes, Sequelize, Optional } from "sequelize";
 
 // Define the attributes of the Session model
 export interface SessionAttributes {
-  id: string;
   userId: string;
   token: string;
   deviceInfo: DeviceInfo;
   locationInfo: LocationInfo;
   expiresAt: Date;
-  lastActivity: Date;
+  lastActiveAt: Date;
   isActive: boolean;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
-
 // Define the attributes required to create a new Session
 export interface SessionCreationAttributes
   extends Optional<
     SessionAttributes,
-    "id" | "createdAt" | "updatedAt" | "lastActivity" | "isActive"
+    "id" | "createdAt" | "updatedAt" | "lastActiveAt" | "isActive"
   > {}
 
 // Define device information interface
@@ -110,7 +108,7 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      lastActivity: {
+      lastActiveAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
         allowNull: false,
@@ -132,57 +130,27 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
     {
       tableName: "sessions",
       timestamps: true,
-      indexes: [
-        {
-          unique: true,
-          fields: ["token"],
-        },
-        {
-          fields: ["user_id", "is_active"],
-        },
-        {
-          fields: ["expires_at"],
-        },
-        {
-          fields: ["last_activity"],
-        },
-        {
-          fields: ["created_at"],
-        },
-      ],
     },
   ) as unknown as SessionModelStatic;
 
   // Add instance methods
   const sessionPrototype = SessionModel.prototype as SessionInstance;
 
-  /**
-   * Refresh the last activity timestamp
-   */
   sessionPrototype.refreshActivity = async function (): Promise<void> {
-    this.lastActivity = new Date();
+    this.lastActiveAt = new Date();
     await this.save();
   };
 
-  /**
-   * Check if the session is expired
-   */
   sessionPrototype.isExpired = function (): boolean {
     return new Date() > this.expiresAt;
   };
 
-  /**
-   * Revoke the session
-   */
   sessionPrototype.revoke = async function (): Promise<void> {
     this.isActive = false;
-    this.expiresAt = new Date(); // Expire immediately
+    this.expiresAt = new Date();
     await this.save();
   };
 
-  /**
-   * Extend the session duration
-   */
   sessionPrototype.extendSession = async function (
     durationMinutes: number,
   ): Promise<void> {
@@ -192,13 +160,9 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
     await this.save();
   };
 
-  /**
-   * Check if the device information matches
-   */
   sessionPrototype.matchesDevice = function (
     deviceInfo: Partial<DeviceInfo>,
   ): boolean {
-    // Basic comparison - in production you might want more sophisticated matching
     const current = this.deviceInfo;
 
     if (deviceInfo.ip && current.ip !== deviceInfo.ip) {
@@ -220,9 +184,6 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
   };
 
   // Add static methods
-  /**
-   * Find session by token
-   */
   SessionModel.findByToken = async function (
     token: string,
     options?: any,
@@ -233,9 +194,6 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
     });
   };
 
-  /**
-   * Find all sessions for a user
-   */
   SessionModel.findByUserId = async function (
     userId: string,
     options?: any,
@@ -247,9 +205,6 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
     });
   };
 
-  /**
-   * Clean up expired sessions
-   */
   SessionModel.cleanupExpired = async function (): Promise<number> {
     const result = await this.destroy({
       where: {
@@ -264,12 +219,3 @@ export default function Session(sequelize: Sequelize): SessionModelStatic {
 
   return SessionModel;
 }
-
-// Export types
-export {
-  SessionAttributes,
-  SessionInstance,
-  SessionModelStatic,
-  DeviceInfo,
-  LocationInfo,
-};

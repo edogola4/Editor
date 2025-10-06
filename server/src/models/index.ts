@@ -1,12 +1,13 @@
 import { Sequelize } from "sequelize";
 import { config } from "../config/config.js";
-import User, { UserAttributes, UserInstance, UserModelStatic } from "./User.js";
+import User, { UserAttributes, UserInstance, UserModelStatic, UserStatus } from "./User.js";
 import Room, { RoomAttributes, RoomInstance, RoomModelStatic, UserRole, InvitationStatus } from "./Room.js";
 import Document, { DocumentAttributes, DocumentInstance } from "./Document.js";
 import DocumentVersion, { DocumentVersionAttributes, DocumentVersionInstance } from "./DocumentVersion.js";
 import RoomMember, { RoomMemberAttributes, RoomMemberInstance } from "./RoomMember.js";
 import RoomInvitation, { RoomInvitationAttributes, RoomInvitationInstance } from "./RoomInvitation.js";
-import RoomActivity, { RoomActivityAttributes, RoomActivityInstance, ActivityType } from "./RoomActivity.js";
+import RoomActivity, { RoomActivityInstance } from "./RoomActivity.js";
+import Session, { SessionAttributes, SessionInstance, SessionModelStatic } from "./Session.js";
 
 // Initialize Sequelize with configuration
 const sequelize = new Sequelize(
@@ -33,6 +34,7 @@ const DocumentVersionModel = DocumentVersion(sequelize);
 const RoomMemberModel = RoomMember(sequelize);
 const RoomInvitationModel = RoomInvitation(sequelize);
 const RoomActivityModel = RoomActivity(sequelize);
+const SessionModel = Session(sequelize);
 
 // Set up associations
 const models = {
@@ -43,6 +45,7 @@ const models = {
   RoomMember: RoomMemberModel,
   RoomInvitation: RoomInvitationModel,
   RoomActivity: RoomActivityModel,
+  Session: SessionModel,
 };
 
 // Set up model associations
@@ -158,6 +161,7 @@ const db = {
   RoomMember: RoomMemberModel,
   RoomInvitation: RoomInvitationModel,
   RoomActivity: RoomActivityModel,
+  Session: SessionModel,
   testConnection,
 };
 
@@ -172,7 +176,6 @@ export type {
   RoomInstance,
   RoomModelStatic,
   DocumentAttributes,
-  DocumentInstance,
   DocumentVersionAttributes,
   DocumentVersionInstance,
   RoomMemberAttributes,
@@ -181,12 +184,17 @@ export type {
   RoomInvitationInstance,
   RoomActivityAttributes,
   RoomActivityInstance,
+  SessionAttributes,
+  SessionInstance,
+  SessionModelStatic,
 };
 
 // Export enums
-export { UserRole, InvitationStatus, ActivityType };
+export { UserRole, UserStatus, InvitationStatus, ActivityType };
 
 // Export models
+// Export the testConnection function separately
+export { testConnection };
 export {
   sequelize,
   Sequelize,
@@ -197,4 +205,5 @@ export {
   RoomMemberModel as RoomMember,
   RoomInvitationModel as RoomInvitation,
   RoomActivityModel as RoomActivity,
+  SessionModel as Session,
 };
