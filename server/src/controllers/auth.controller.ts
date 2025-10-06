@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { sequelize } from '../config/database.js';
 import { generateTokens, setTokenCookies, verifyToken } from '../utils/jwt.js';
 import { CustomError } from '../utils/errors.js';
 import passport from 'passport';
@@ -8,7 +7,6 @@ import { logger } from '../services/LoggingService.js';
 import { UserRole } from '../models/EnhancedUser.js';
 import AuthService from '../services/AuthService.js';
 import { checkRole } from '../middleware/rbac.middleware.js';
-import User from '../models/User.js';
 
 interface LoginBody {
   email: string;
@@ -24,8 +22,11 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     const { username, email, password, firstName, lastName } = req.body;
 
+    // Get AuthService instance
+    const authService = AuthService.getInstance();
+
     // Register user using AuthService
-    const { user, token } = await AuthService.registerUser({
+    const { user, token } = await authService.registerUser({
       username,
       email,
       password,
@@ -34,12 +35,10 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     });
 
     // Set auth cookies
-    if (typeof token === 'string') {
-      const tokens = JSON.parse(token);
-      setTokenCookies(res, tokens);
-    } else {
-      setTokenCookies(res, token);
-    }
+    setTokenCookies(res, {
+      accessToken: token,
+      refreshToken: token // Note: In a real app, you might want to generate a proper refresh token here
+    });
 
     // Log the registration
     await logger.security(

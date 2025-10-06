@@ -1,18 +1,52 @@
-import db from '../models/index.js';
-import { UserStatus } from '../models/User.js';
-const { User, UserRole } = db;
-// Session model is already imported from db
+import { UserRole, UserStatus } from '../models/User.js';
+import { sequelize } from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { Op } from 'sequelize';
+import { Op, FindOptions } from 'sequelize';
 import crypto from 'crypto';
+import type { UserInstance } from '../models/User.js';
+import type { SessionInstance } from '../models/Session.js';
+import db from '../models/index.js';
 
-export class AuthService {
+// Extend Express types
+declare global {
+  namespace Express {
+    interface User extends UserInstance {}
+  }
+}
+
+type SessionModel = typeof db.Session;
+type UserModel = typeof db.User;
+
+interface DeviceInfo {
+  userAgent: string;
+  platform: string;
+  browser: string;
+  os: string;
+  ip: string;
+  fingerprint?: string;
+}
+
+interface LocationInfo {
+  country?: string;
+  region?: string;
+  city?: string;
+  timezone?: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+class AuthService {
   private static instance: AuthService;
-  private Session: any;
+  private Session: SessionModel;
+  private User: UserModel;
   
   private constructor() {
+    // Use models from the central models/index.ts
     this.Session = db.Session;
+    this.User = db.User;
   }
 
   public static getInstance(): AuthService {
@@ -31,9 +65,9 @@ export class AuthService {
     password: string;
     firstName?: string;
     lastName?: string;
-  }): Promise<{ user: any; token: string }> {
+  }): Promise<{ user: UserInstance; token: string }> {
     // Check if user already exists
-    const existingUser = await User.findOne({
+    const existingUser = await this.User.findOne({
       where: {
         [Op.or]: [
           { email: userData.email },
@@ -46,100 +80,115 @@ export class AuthService {
       throw new Error('User with this email or username already exists');
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
     // Create new user
-    const user = await User.create({
+    const user = await this.User.create({
       ...userData,
+      password: hashedPassword,
       role: UserRole.USER,
       status: UserStatus.PENDING_VERIFICATION,
       emailNotifications: true,
     });
 
     // Generate auth token
-    const token = await this.createSession(user.id);
+    const token = uuidv4();
+    const hashedToken = await bcrypt.hash(token, 10);
 
-    // TODO: Send verification email
+    // Create session
+    await (this.Session as any).create({
+      userId: user.id,
+      token: hashedToken,
+      deviceInfo: {
+        userAgent: 'unknown',
+        platform: 'unknown',
+        browser: 'unknown',
+        os: 'unknown',
+        ip: 'unknown',
+      },
+      locationInfo: {
+        country: 'unknown',
+        region: 'unknown',
+        city: 'unknown',
+      },
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      lastActiveAt: new Date(),
+      isActive: true,
+    });
 
-    return { user: user.toJSON(), token };
+    return { user, token };
   }
 
   /**
-   * Authenticate user with email and password
+   * Login user
    */
-  public async login(email: string, password: string, deviceInfo: any, ipAddress: string): Promise<{ user: any; token: string }> {
-    const user = await User.findOne({ where: { email } });
-    
+  public async login(credentials: {
+    email: string;
+    password: string;
+    deviceInfo?: DeviceInfo;
+    ipAddress?: string;
+  }): Promise<{ user: UserInstance; token: string }> {
+    const { email, password, deviceInfo, ipAddress } = credentials;
+
+    // Find user by email
+    const user = await this.User.findOne({ where: { email } });
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new Error('Invalid email or password');
     }
 
     // Check if password is correct
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new Error('Invalid email or password');
     }
 
-    // Check if account is active
-    if (user.status !== UserStatus.ACTIVE) {
-      throw new Error('Account is not active. Please check your email for verification.');
-    }
-
-    // Update user's last login and login count
-    await user.update({
-      lastLoginAt: new Date(),
-      loginCount: (user.loginCount || 0) + 1
-    });
-
-    // Create new session
-    const token = await this.createSession(user.id, deviceInfo, ipAddress);
-
-    return { user: user.toJSON(), token };
-  }
-
-  /**
-   * Create a new session for the user
-   */
-  public async createSession(
-    userId: string,
-    deviceInfo?: any, 
-    ipAddress?: string
-  ): Promise<string> {
+    // Generate auth token
     const token = uuidv4();
-    
-    // Set session to expire in 7 days
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-    
-    await this.Session.create({
-      userId,
-      token,
-      deviceInfo: deviceInfo || {},
-      ipAddress: ipAddress || 'unknown',
-      isActive: true,
+    const hashedToken = await bcrypt.hash(token, 10);
+
+    // Create session
+    await (this.Session as any).create({
+      userId: user.id,
+      token: hashedToken,
+      deviceInfo: {
+        userAgent: deviceInfo?.userAgent || 'unknown',
+        platform: deviceInfo?.platform || 'unknown',
+        browser: deviceInfo?.browser || 'unknown',
+        os: deviceInfo?.os || 'unknown',
+        ip: ipAddress || 'unknown',
+      },
+      locationInfo: {
+        country: 'unknown',
+        region: 'unknown',
+        city: 'unknown',
+      },
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       lastActiveAt: new Date(),
-      expiresAt,
-      locationInfo: {}
+      isActive: true,
     });
-    
-    return token;
+
+    return { user, token };
   }
 
   /**
-   * Verify session token
+   * Validate session token
    */
-  public async verifyToken(token: string): Promise<{ isValid: boolean; user?: any }> {
-    const session = await this.Session.findOne({
+  public async validateToken(token: string): Promise<{ isValid: boolean; user?: UserInstance }> {
+    const session = await (this.Session as any).findOne({
       where: {
         token,
         isActive: true,
         expiresAt: { [Op.gt]: new Date() }
       },
       include: [{
-        model: User,
+        model: this.User,
+        as: 'user',
         attributes: { exclude: ['password'] }
-      }]
+      }] as FindOptions['include']
     });
 
-    if (!session || !session.User) {
+    if (!session || !session.user) {
       return { isValid: false };
     }
 
@@ -148,7 +197,7 @@ export class AuthService {
 
     return {
       isValid: true,
-      user: session.User.get({ plain: true })
+      user: session.user.get({ plain: true })
     };
   }
 
@@ -156,7 +205,7 @@ export class AuthService {
    * Logout user by invalidating the session
    */
   public async logout(token: string): Promise<boolean> {
-    const result = await this.Session.update(
+    const result = await (this.Session as any).update(
       { isActive: false },
       { where: { token } }
     );
@@ -167,7 +216,7 @@ export class AuthService {
    * Invalidate all sessions for a user
    */
   public async invalidateAllSessions(userId: string): Promise<number> {
-    const result = await this.Session.update(
+    const result = await (this.Session as any).update(
       { isActive: false },
       { where: { userId } }
     );
@@ -176,23 +225,24 @@ export class AuthService {
 
   /**
    * Change user password
-{{ ... }}
+   */
   public async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-    const user = await User.findByPk(userId);
+    const user = await this.User.findByPk(userId);
     if (!user) {
       throw new Error('User not found');
     }
 
     // Verify current password
-    const isPasswordValid = await user.comparePassword(currentPassword);
-    if (!isPasswordValid) {
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
       throw new Error('Current password is incorrect');
     }
 
     // Update password
-    await user.update({ password: newPassword });
-    
-    // Invalidate all sessions for security
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await user.update({ password: hashedPassword });
+
+    // Invalidate all sessions
     await this.invalidateAllSessions(userId);
 
     return true;
@@ -202,33 +252,34 @@ export class AuthService {
    * Request password reset
    */
   public async requestPasswordReset(email: string): Promise<{ resetToken: string }> {
-    const user = await User.findOne({ where: { email } });
+    const user = await this.User.findOne({ where: { email } });
     if (!user) {
-      // Don't reveal if user exists or not
+      // Don't reveal that the email doesn't exist
       return { resetToken: '' };
     }
 
-    const { resetToken } = user.generatePasswordResetToken();
-    await user.save();
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    // TODO: Send password reset email
-    
+    await user.update({
+      resetToken,
+      resetTokenExpiry
+    });
+
     return { resetToken };
   }
 
   /**
-   * Reset password using reset token
+   * Reset password with token
    */
   public async resetPassword(token: string, newPassword: string): Promise<boolean> {
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
-
-    const user = await User.findOne({
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    
+    const user = await this.User.findOne({
       where: {
-        passwordResetToken: hashedToken,
-        passwordResetExpires: { [Op.gt]: new Date() }
+        resetToken: hashedToken,
+        resetTokenExpiry: { [Op.gt]: new Date() }
       }
     });
 
@@ -236,33 +287,30 @@ export class AuthService {
       throw new Error('Invalid or expired token');
     }
 
-    // Update password and clear reset token
+    // Update password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await user.update({
-      password: newPassword,
-      passwordResetToken: null,
-      passwordResetExpires: null
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null
     });
 
-    // Invalidate all sessions for security
+    // Invalidate all sessions
     await this.invalidateAllSessions(user.id);
 
     return true;
   }
 
   /**
-   * Verify email using verification token
+   * Verify email with token
    */
   public async verifyEmail(token: string): Promise<boolean> {
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
-
-    const user = await User.findOne({
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    
+    const user = await this.User.findOne({
       where: {
         emailVerificationToken: hashedToken,
-        emailVerificationExpires: { [Op.gt]: new Date() },
-        isVerified: false
+        emailVerificationExpiry: { [Op.gt]: new Date() }
       }
     });
 
@@ -270,12 +318,12 @@ export class AuthService {
       throw new Error('Invalid or expired verification token');
     }
 
-    // Mark email as verified
+    // Update user status
     await user.update({
-      isVerified: true,
       status: UserStatus.ACTIVE,
       emailVerificationToken: null,
-      emailVerificationExpires: null
+      emailVerificationExpiry: null,
+      emailVerified: true
     });
 
     return true;
@@ -285,25 +333,31 @@ export class AuthService {
    * Resend verification email
    */
   public async resendVerificationEmail(email: string): Promise<{ success: boolean }> {
-    const user = await User.findOne({ where: { email } });
-    
+    const user = await this.User.findOne({ where: { email } });
     if (!user) {
-      // Don't reveal if user exists or not
+      // Don't reveal that the email doesn't exist
       return { success: true };
     }
 
-    if (user.isVerified) {
-      return { success: true };
+    if (user.status === UserStatus.ACTIVE) {
+      throw new Error('Email is already verified');
     }
 
     // Generate new verification token
-    const { token } = user.generateEmailVerificationToken();
-    await user.save();
+    const token = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour
 
-    // TODO: Send verification email
-    
+    await user.update({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpiry: expiresAt
+    });
+
+    // TODO: Send verification email with the token
+
     return { success: true };
   }
 }
 
-export default AuthService.getInstance();
+
+export default AuthService;

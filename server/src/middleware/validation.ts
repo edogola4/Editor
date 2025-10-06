@@ -1,8 +1,8 @@
 import { body, ValidationChain } from 'express-validator';
 import { CustomError } from '../utils/errors.js';
-import User from '../models/User.js';
+import db from '../models/index.js';
 
-const UserModel = User;
+const UserModel = db.User;
 
 export const validateRegister = (): ValidationChain[] => [
   body('username')
