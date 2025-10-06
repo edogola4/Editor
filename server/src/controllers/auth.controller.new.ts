@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { sequelize } from '../config/database.js';
 import { generateTokens, setTokenCookies, verifyToken } from '../utils/jwt.js';
 import { CustomError } from '../utils/errors.js';
 import passport from 'passport';
@@ -8,18 +7,12 @@ import { logger } from '../services/LoggingService.js';
 import { UserRole } from '../models/EnhancedUser.js';
 import AuthService from '../services/AuthService.js';
 import { checkRole } from '../middleware/rbac.middleware.js';
-import User from '../models/User.js';
-
-interface LoginBody {
-  email: string;
-  password: string;
-}
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw CustomError.badRequest('Validation failed', errors.array());
+      throw new CustomError('Validation failed', 400, { errors: errors.array() });
     }
 
     const { username, email, password, firstName, lastName } = req.body;
@@ -34,12 +27,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     });
 
     // Set auth cookies
-    if (typeof token === 'string') {
-      const tokens = JSON.parse(token);
-      setTokenCookies(res, tokens);
-    } else {
-      setTokenCookies(res, token);
-    }
+    setTokenCookies(res, token);
 
     // Log the registration
     await logger.security(
@@ -64,12 +52,12 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw CustomError.badRequest('Validation failed', errors.array());
+      throw new CustomError('Validation failed', 400, { errors: errors.array() });
     }
 
-    const { email, password } = req.body as LoginBody;
-    const ipAddress = (req.ip || req.connection.remoteAddress) as string;
-    const userAgent = (req.headers['user-agent'] || '') as string;
+    const { email, password } = req.body;
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const userAgent = req.headers['user-agent'] || '';
 
     // Authenticate user using AuthService
     const { user, token } = await AuthService.login(
@@ -80,12 +68,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     );
 
     // Set auth cookies
-    if (typeof token === 'string') {
-      const tokens = JSON.parse(token);
-      setTokenCookies(res, tokens);
-    } else {
-      setTokenCookies(res, token);
-    }
+    setTokenCookies(res, token);
 
     // Log the login
     await logger.security(
@@ -143,27 +126,30 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
     }
 
     // Verify refresh token
-    const decoded = verifyToken(refreshToken, true); // true indicates it's a refresh token
+    const decoded = verifyToken(refreshToken, 'refresh');
     
     // Get user from database
-    const user = await User.findByPk(decoded.id);
+    const user = await AuthService.getUserById(decoded.userId);
     
     if (!user) {
-      throw CustomError.unauthorized('User not found');
+      throw new CustomError('User not found', 404);
     }
 
     // Generate new tokens
-    const tokens = generateTokens({
-      id: user.id,
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens({
+      userId: user.id,
       email: user.email,
       role: user.role
     });
-    
+
+    // Set new cookies
+    setTokenCookies(res, accessToken, newRefreshToken);
+
     res.json({
       success: true,
       message: 'Token refreshed successfully',
-      token: tokens.accessToken,
-      refreshToken: tokens.refreshToken
+      token: accessToken,
+      refreshToken: newRefreshToken
     });
   } catch (error) {
     next(error);
@@ -397,26 +383,19 @@ export const deactivateUser = [
 export const githubAuth = passport.authenticate('github');
 
 export const githubAuthCallback = (req: Request, res: Response, next: NextFunction): void => {
-  console.log('Starting GitHub OAuth callback handler');
-  console.log('Request URL:', req.originalUrl);
-  console.log('Query params:', req.query);
-  
-  passport.authenticate('github', { 
-    session: false,
-    failureRedirect: `${process.env.CLIENT_URL ? process.env.CLIENT_URL : 'http://localhost:5173'}/login?error=github_auth_failed`
-  }, async (err: Error, user: any, info: any) => {
+  passport.authenticate('github', { session: false }, async (err: Error, user: any, info: any) => {
     try {
       if (err || !user) {
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
         const errorMessage = err?.message || 'GitHub authentication failed';
-        return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(errorMessage)}`);
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=${encodeURIComponent(errorMessage)}`);
       }
 
       // Generate tokens
-      const { accessToken, refreshToken } = generateTokens(
-        user.id,
-        user.email,
-      );
+      const { accessToken, refreshToken } = generateTokens({
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      });
 
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
@@ -429,22 +408,12 @@ export const githubAuthCallback = (req: Request, res: Response, next: NextFuncti
         { userId: user.id, provider: 'github' }
       );
 
-      // Ensure CLIENT_URL is set
-      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-      
-      // Construct the redirect URL with tokens
-      try {
-        const redirectUrl = new URL('/auth/callback', clientUrl);
-        redirectUrl.searchParams.append('accessToken', accessToken);
-        redirectUrl.searchParams.append('refreshToken', refreshToken);
-        
-        console.log('Redirecting to:', redirectUrl.toString());
-        return res.redirect(redirectUrl.toString());
-      } catch (error) {
-        console.error('Error constructing redirect URL:', error);
-        // Fallback to a simple redirect with tokens in query params
-        return res.redirect(`${clientUrl}/auth/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`);
-      }
+      // Redirect to success URL with tokens in query params (for clients that don't support cookies)
+      res.redirect(
+        `${process.env.CLIENT_URL}/auth/callback?` +
+        `token=${accessToken}` +
+        `&refreshToken=${refreshToken}`
+      );
     } catch (error) {
       next(error);
     }
