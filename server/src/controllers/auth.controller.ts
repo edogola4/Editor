@@ -5,7 +5,10 @@ import { CustomError } from '../utils/errors.js';
 import passport from 'passport';
 import { logger } from '../services/LoggingService.js';
 import { UserRole } from '../models/EnhancedUser.js';
-import AuthService from '../services/AuthService.js';
+import AuthService from '../services/auth.service.js';
+
+// Get the AuthService instance
+const authService = AuthService.getInstance();
 import { checkRole } from '../middleware/rbac.middleware.js';
 
 interface LoginBody {
@@ -71,12 +74,12 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const userAgent = req.headers['user-agent'] || '';
 
     // Authenticate user using AuthService
-    const { user, token } = await AuthService.login(
-      email, 
-      password, 
-      { userAgent, ip: ipAddress }, 
+    const { user, token } = await authService.login({
+      email,
+      password,
+      deviceInfo: { userAgent, ip: ipAddress },
       ipAddress
-    );
+    });
 
     // Set auth cookies
     setTokenCookies(res, token);
