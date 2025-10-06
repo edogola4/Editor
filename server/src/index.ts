@@ -9,6 +9,7 @@ import compression from "compression";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import session from "express-session";
+import cors from "cors";
 import { config } from "./config/config.js";
 import passport from "./config/passport.js";
 import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
@@ -29,7 +30,23 @@ moduleAlias.addAliases({
 const app = express();
 const server = http.createServer(app);
 
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:5173', // Vite dev server
+    'http://localhost:5000', // Local API server
+    'http://localhost:3000', // Common React dev server port
+    /https?:\/\/.*\.yourdomain\.com$/, // Your production domain
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
 // Middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable preflight for all routes
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
