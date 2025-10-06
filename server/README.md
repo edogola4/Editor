@@ -2,7 +2,7 @@
 
 <div align="center">
   <h2>🚀 Real-time Collaborative Code Editor - Backend</h2>
-  <p>High-performance backend service for real-time collaborative code editing</p>
+  <p>High-performance backend service for real-time collaborative code editing with operational transformation</p>
 
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
@@ -11,42 +11,130 @@
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
   ![Docker](https://img.shields.io/badge/Docker-3.8+-2496ED.svg)
-  ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
+  ![Vitest](https://img.shields.io/badge/Vitest-1.0.0-6E56F7.svg)
   
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
   [![Test Coverage](https://api.codeclimate.com/v1/badges/backend_coverage.svg)](https://codeclimate.com/github/edogola4/Editor/coverage)
   [![Dependencies](https://img.shields.io/david/edogola4/Editor?path=server)](https://david-dm.org/edogola4/Editor?path=server)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/edogola4/Editor/pulls)
 </div>
 
-This is the backend service for the Collaborative Code Editor application, built with modern technologies to provide a scalable and performant real-time collaboration experience. The backend is designed with a modular architecture, clean separation of concerns, and comprehensive testing to ensure reliability and maintainability.
+This is the backend service for the Collaborative Code Editor application, built with modern technologies to provide a scalable and performant real-time collaboration experience. The backend features operational transformation for conflict-free collaborative editing, real-time synchronization, and a robust authentication system.
+
+The system is designed with a modular architecture, clean separation of concerns, and comprehensive testing to ensure reliability and maintainability. It supports multiple concurrent users, document versioning, and provides real-time presence indicators and cursor tracking.
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **RESTful API** - Comprehensive API for user management, authentication, and document handling
 - **Real-time Collaboration** - WebSockets with Socket.IO for live editing with operational transformation
 - **JWT Authentication** - Secure stateless authentication with refresh tokens and role-based access control
+- **RESTful API** - Comprehensive API for user management, authentication, and document handling
+- **Document Versioning** - Track changes and revert to previous versions with full history
+- **User Presence** - Real-time presence indicators and cursor tracking
+
+### 🔒 **Security**
 - **Password Security** - Strong password policies with bcrypt hashing and complexity requirements
-- **Input Validation** - Comprehensive request validation using Zod schemas
 - **Rate Limiting** - Configurable rate limiting for API and WebSocket endpoints
-- **Database Integration** - PostgreSQL with Sequelize ORM and migrations
-- **Caching Layer** - Redis for session management, pub/sub, and distributed locking
-- **API Documentation** - Auto-generated OpenAPI/Swagger documentation
-- **Comprehensive Testing** - Unit, integration, and E2E tests with Jest and Supertest
-- **Code Quality** - ESLint, Prettier, and TypeScript with strict mode
-- **Security** - Helmet, CORS, CSRF protection, and request validation
-- **Structured Logging** - JSON-formatted logs with Winston and daily rotation
-- **Containerization** - Docker and Docker Compose for consistent environments
-- **Health Checks** - Endpoints for monitoring application health
-- **Error Tracking** - Integration with error monitoring services
-- **Performance Monitoring** - Metrics collection and monitoring
-- **Background Jobs** - Support for scheduled and queued tasks
+- **Input Validation** - Comprehensive request validation using Zod schemas
+- **Security Headers** - Helmet middleware for secure HTTP headers
+- **CORS Protection** - Configurable CORS policies
+- **CSRF Protection** - Built-in CSRF protection
+- **Request Validation** - Request body, query, and parameter validation
+- **Session Management** - Secure session handling with Redis
 
 ### 🛠 **Technical Features**
 - **TypeScript 5.8+** - Full type safety with strict mode enabled
 - **Express.js 5.1+** - Fast, unopinionated web framework with async/await
 - **Socket.IO 4.8.1+** - Real-time bidirectional communication with Redis adapter
+- **PostgreSQL 16+** - Robust relational database with Sequelize ORM
+- **Redis 7+** - In-memory data store for caching and pub/sub
+- **Docker & Docker Compose** - Containerization for consistent environments
+- **Testing** - Comprehensive test suite with Vitest and Jest
+- **Code Quality** - ESLint, Prettier, and TypeScript with strict mode
+- **Structured Logging** - JSON-formatted logs with Winston and daily rotation
+- **API Documentation** - Auto-generated OpenAPI/Swagger documentation
+- **Health Checks** - Endpoints for monitoring application health
+- **Error Tracking** - Integration with error monitoring services
+- **Background Jobs** - Support for scheduled and queued tasks
+
+### 🚀 **Getting Started**
+
+#### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 6+
+- Docker (optional)
+
+#### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/edogola4/Editor.git
+   cd Editor/server
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Update the .env file with your configuration
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+#### Running with Docker
+
+```bash
+docker-compose up -d
+```
+
+### 🧪 Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run tests with coverage:
+```bash
+npm test -- --coverage
+```
+
+### 🛠 Development
+
+- Lint code:
+  ```bash
+  npm run lint
+  ```
+
+- Format code:
+  ```bash
+  npm run format
+  ```
+
+- Generate API documentation:
+  ```bash
+  npm run docs
+  ```
+
+### 📦 Production Build
+
+```bash
+npm run build
+npm start
+```
 - **Sequelize 7.1.0+** - Modern TypeScript ORM with migrations and associations
 - **PostgreSQL 16+** - Advanced relational database with JSONB support
 - **Redis 7.2+** - In-memory data store for caching, pub/sub, and distributed locking
@@ -136,17 +224,17 @@ This is the backend service for the Collaborative Code Editor application, built
 - **Bunyan** - JSON logger
 
 ### **Testing**
-- **Jest 29.7+** - Testing framework
+- **Vitest 1.0.0+** - Next generation testing framework (primary test runner)
+- **Jest 29.7+** - Testing framework (legacy, being migrated to Vitest)
 - **Supertest** - HTTP assertions
-- **Jest Extensions** - Additional Jest matchers
 - **Test Containers** - Integration testing
 - **Faker** - Fake data generation
-- **Factory Girl** - Test fixtures
+- **ioredis-mock** - In-memory Redis for testing
 - **Nock** - HTTP server mocking
 - **Sinon** - Test spies, stubs and mocks
-- **Istanbul/NYC** - Code coverage
-- **Jest Axe** - Accessibility testing
-- **Jest DOM** - DOM testing
+- **@vitest/coverage-v8** - Code coverage with V8
+- **@vitest/ui** - Beautiful UI for test running
+- **@vitest/snapshot** - Snapshot testing
 - **Jest Fetch Mock** - Fetch mocking
 - **Jest Image Snapshot** - Visual regression testing
 - **Jest JUnit** - JUnit test reporting
@@ -195,6 +283,61 @@ This is the backend service for the Collaborative Code Editor application, built
 - **Test Containers** - Integration testing with real services
 
 ## 🚀 Quick Start
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run specific test file
+npm test -- src/__tests__/basic.test.ts
+
+# Debug tests
+# Add `debugger` statements in your test files, then run:
+npm run test:debug
+```
+
+### Test Structure
+- Unit tests: `src/__tests__/*.test.ts`
+- Integration tests: `src/__tests__/integration/`
+- E2E tests: `src/__tests__/e2e/`
+
+### Test Configuration
+
+Tests are configured in `vite.config.ts` with the following settings:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        '**/*.d.ts',
+        '**/__tests__/**',
+        '**/*.test.ts',
+        '**/test/**',
+        '**/tests/**',
+      ],
+    },
+  },
+  // ...
+});
+```
 
 ### Prerequisites
 - **Node.js 22+** (LTS)
