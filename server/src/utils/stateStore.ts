@@ -1,18 +1,39 @@
 import { IncomingMessage } from 'http';
+import { Redis } from 'ioredis';
 import { redis } from '../config/redis.js';
 
-type StateData = {
+interface StateData {
   state: string;
-  meta?: any;
-};
+  meta: {
+    returnTo?: string;
+    userAgent?: string;
+    ip?: string;
+    [key: string]: any;
+  };
+  timestamp: number;
+  clientId?: string;
+}
 
 const STATE_PREFIX = 'oauth:state:';
+const STATE_INDEX_KEY = `${STATE_PREFIX}index`;
 const STATE_TTL = 600; // 10 minutes in seconds
+
+// Helper functions
+const getStateKey = (state: string): string => `${STATE_PREFIX}${state}`;
+const generateState = (): string => [
+  Math.random().toString(36).substring(2, 15),
+  Math.random().toString(36).substring(2, 15),
+  Date.now().toString(36)
+].join('_');
 
 export class StateStore {
   private static instance: StateStore;
+  private logContext = 'StateStore';
+  private redis: Redis;
 
-  private constructor() {}
+  private constructor() {
+    this.redis = redis;
+  }
 
   public static getInstance(): StateStore {
     if (!StateStore.instance) {
@@ -21,107 +42,235 @@ export class StateStore {
     return StateStore.instance;
   }
 
-  public async storeState(
+  /**
+   * Store OAuth state in Redis
+   */
+  async storeState(
     req: IncomingMessage,
     state: string | undefined,
-    meta: any,
+    meta: any = {},
     callback: (err: Error | null, state?: string) => void
   ): Promise<void> {
+    const method = 'storeState';
+    const startTime = Date.now();
+    
     try {
+      // Generate a new state if not provided
       if (!state) {
-        state = Math.random().toString(36).substring(2, 15);
+        state = generateState();
       }
       
-      const stateData: StateData = { state, meta };
-      const key = `${STATE_PREFIX}${state}`;
-      
-      console.log('Storing state in Redis:', { key, state, meta });
-      
-      // Store in Redis with expiration
-      await redis.setex(
-        key,
-        STATE_TTL,
-        JSON.stringify(stateData)
-      );
-      
-      // Verify the state was stored
-      const storedData = await redis.get(key);
-      const verification = {
-        key,
-        stored: !!storedData,
-        matches: storedData === JSON.stringify(stateData)
+      const key = getStateKey(state);
+      const stateData: StateData = {
+        state,
+        meta: {
+          ...meta,
+          userAgent: req.headers['user-agent'] || '',
+          ip: this.getClientIp(req) || ''
+        },
+        timestamp: Date.now()
       };
       
-      console.log('State stored successfully. Verification:', verification);
+      this.logDebug(method, 'Storing state', { key, state, meta: stateData.meta });
       
-      if (!verification.stored || !verification.matches) {
-        throw new Error('Failed to verify state storage');
-      }
+      // Store the state with expiration
+      await this.redis.set(key, JSON.stringify(stateData), 'EX', STATE_TTL);
+      
+      this.logInfo(method, 'State stored successfully', { 
+        key, 
+        state, 
+        duration: Date.now() - startTime 
+      });
       
       return callback(null, state);
-    } catch (err) {
-      console.error('Error storing state:', err);
-      return callback(err as Error);
+    } catch (error) {
+      this.logError(method, 'Error storing state', error);
+      return callback(error as Error);
     }
   }
-
-  public async verifyState(
+  
+  /**
+   * Verify OAuth state from Redis
+   */
+  async verifyState(
     req: IncomingMessage,
     providedState: string | undefined,
     callback: (err: Error | null, ok: boolean, state?: string, meta?: any) => void
   ): Promise<void> {
+    const method = 'verifyState';
+    const startTime = Date.now();
+    
     try {
+      // Validate input
       if (!providedState) {
         const error = new Error('No state provided for verification');
-        console.error(error.message);
+        this.logError(method, 'Validation failed', error);
         return callback(error, false);
       }
       
-      const key = `${STATE_PREFIX}${providedState}`;
-      console.log('Verifying state with key:', key);
-      
-      // Get the state data from Redis
-      const stateDataStr = await redis.get(key);
-      
-      if (!stateDataStr) {
-        // Get all keys for debugging purposes only
-        const allKeys = await redis.keys(`${STATE_PREFIX}*`);
-        console.error('State not found in store. Available keys:', allKeys);
-        return callback(new Error('Invalid or expired state'), false);
-      }
+      const key = getStateKey(providedState);
+      this.logDebug(method, 'Verifying state', { key, state: providedState });
       
       try {
-        const stateData: StateData = JSON.parse(stateDataStr);
+        // Get the state data from Redis
+        const stateDataStr = await this.redis.get(key);
+        
+        // Delete the state immediately after retrieval
+        await this.redis.del(key);
+        
+        // Check if state exists
+        if (!stateDataStr) {
+          await this.logAvailableStates(method);
+          const error = new Error('Invalid or expired state');
+          this.logError(method, 'State not found', { 
+            key, 
+            error: error.message 
+          });
+          return callback(error, false);
+        }
+        
+        // Parse the state data
+        const stateData = JSON.parse(stateDataStr) as StateData;
         
         // Verify the state matches
         if (stateData.state !== providedState) {
-          console.error('State mismatch:', {
+          const error = new Error('State verification failed');
+          this.logError(method, 'State mismatch', {
             expected: providedState,
-            actual: stateData.state
+            actual: stateData.state,
+            key
           });
-          return callback(new Error('State verification failed'), false);
+          return callback(error, false);
         }
         
-        console.log('State verification successful:', { 
+        // Verify timestamp (prevent replay attacks)
+        const now = Date.now();
+        const stateAge = now - stateData.timestamp;
+        const maxAge = STATE_TTL * 1000; // Convert to ms
+        
+        if (stateAge > maxAge) {
+          const error = new Error('State has expired');
+          this.logError(method, 'State expired', {
+            key,
+            state: stateData.state,
+            ageMs: stateAge,
+            maxAgeMs: maxAge
+          });
+          return callback(error, false);
+        }
+        
+        this.logInfo(method, 'State verified successfully', {
           key,
           state: stateData.state,
-          meta: stateData.meta 
-        });
-        
-        // Delete the state after successful verification
-        await redis.del(key).catch(err => {
-          console.error('Error deleting state from Redis:', err);
+          duration: Date.now() - startTime,
+          meta: stateData.meta
         });
         
         return callback(null, true, stateData.state, stateData.meta);
-      } catch (parseError) {
-        console.error('Error parsing state data:', parseError);
-        return callback(parseError as Error, false);
+        
+      } catch (error) {
+        this.logError(method, 'Error verifying state', error);
+        return callback(error as Error, false);
       }
-    } catch (err) {
-      console.error('Error in verifyState:', err);
-      return callback(err as Error, false);
+    } catch (error) {
+      this.logError(method, 'Error in verifyState', error);
+      return callback(error as Error, false);
     }
+  }
+  
+  /**
+   * Clean up expired states (run periodically)
+   */
+  async cleanupExpiredStates(): Promise<number> {
+    const method = 'cleanupExpiredStates';
+    try {
+      const keys = await this.redis.keys(getStateKey('*'));
+      
+      if (!keys.length) {
+        this.logDebug(method, 'No states to clean up');
+        return 0;
+      }
+      
+      const pipeline = this.redis.pipeline();
+      keys.forEach(key => {
+        pipeline.del(key);
+        pipeline.srem(STATE_INDEX_KEY, key);
+      });
+      
+      const results = await pipeline.exec();
+      const deletedCount = results?.filter(([err]) => !err).length || 0;
+      
+      this.logInfo(method, 'Cleaned up expired states', { 
+        total: keys.length, 
+        deleted: deletedCount 
+      });
+      
+      return deletedCount;
+    } catch (error) {
+      this.logError(method, 'Error cleaning up expired states', error);
+      return 0;
+    }
+  }
+  
+  // Helper methods
+  private getClientIp(req: IncomingMessage): string {
+    return (
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 
+      (req.socket?.remoteAddress) || 
+      'unknown'
+    );
+  }
+  
+  private getClientId(req: IncomingMessage): string | undefined {
+    return (
+      (req.headers['x-client-id'] as string) ||
+      req.socket?.remoteAddress ||
+      undefined
+    );
+  }
+  
+  private async logAvailableStates(method: string): Promise<void> {
+    if (process.env.NODE_ENV === 'production') return;
+    
+    try {
+      const keys = await this.redis.keys(getStateKey('*'));
+      
+      if (keys.length > 0) {
+        const states = await Promise.all(
+          keys.map(async (key) => {
+            const ttl = await this.redis.ttl(key);
+            const value = await this.redis.get(key);
+            return { key, ttl, value: value ? '...' : 'empty' };
+          })
+        );
+        
+        this.logDebug(method, 'Available states in Redis', { states });
+      } else {
+        this.logDebug(method, 'No states found in Redis');
+      }
+    } catch (error) {
+      this.logError(method, 'Error fetching available states', error);
+    }
+  }
+  
+  // Logging helpers
+  private logDebug(method: string, message: string, data?: any): void {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`[${this.logContext}.${method}] ${message}`, data || '');
+    }
+  }
+  
+  private logInfo(method: string, message: string, data?: any): void {
+    console.log(`[${this.logContext}.${method}] ${message}`, data || '');
+  }
+  
+  private logError(method: string, message: string, error: any): void {
+    console.error(`[${this.logContext}.${method}] ${message}`, {
+      error: error?.message || String(error),
+      stack: error?.stack,
+      ...(error?.code && { code: error.code }),
+      ...(error?.statusCode && { statusCode: error.statusCode })
+    });
   }
 }
 
