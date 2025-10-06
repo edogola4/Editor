@@ -1,0 +1,38 @@
+<%- include('base', { 
+  subject: 'Welcome to ' + (typeof appName !== 'undefined' ? appName : 'Collaborative Editor') + '!',
+  appName: typeof appName !== 'undefined' ? appName : 'Collaborative Editor',
+  appUrl: typeof appUrl !== 'undefined' ? appUrl : 'http://localhost:3000',
+  supportEmail: typeof supportEmail !== 'undefined' ? supportEmail : 'support@collabeditor.com',
+  to: typeof to !== 'undefined' ? to : ''
+}) %>
+
+<h1>Welcome to <%= appName %>, <%= name %>! 👋</h1>
+
+<p>We're thrilled to have you on board! You've taken the first step toward seamless collaboration and productivity.</p>
+
+<p>With <%= appName %>, you can:</p>
+
+<ul>
+  <li>Collaborate in real-time with your team</li>
+  <li>Edit documents simultaneously with others</li>
+  <li>Track changes and view document history</li>
+  <li>Share your work with ease</li>
+</ul>
+
+<p style="text-align: center; margin: 30px 0;">
+  <a href="<%= loginUrl || (appUrl + '/login') %>" class="btn">Get Started</a>
+</p>
+
+<p>If you have any questions or need help getting started, don't hesitate to reach out to our support team at <a href="mailto:<%= supportEmail || 'support@collabeditor.com' %>"><%= supportEmail || 'support@collabeditor.com' %></a>.</p>
+
+<p>Happy collaborating!</p>
+
+<p>Best regards,<br>The <%= appName %> Team</p>
+
+<div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+  <h3 style="margin-top: 0;">Getting Started Guide</h3>
+  <p>Check out our <a href="<%= appUrl %>/getting-started">Getting Started Guide</a> for tips on making the most of <%= appName %>.</p>
+  
+  <h3>Need Help?</h3>
+  <p>Visit our <a href="<%= appUrl %>/help">Help Center</a> or <a href="<%= appUrl %>/contact">contact support</a> if you have any questions.</p>
+</div>

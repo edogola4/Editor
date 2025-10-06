@@ -1,0 +1,35 @@
+<%- include('base', { 
+  subject: 'Verify Your Email Address',
+  appName: typeof appName !== 'undefined' ? appName : 'Collaborative Editor',
+  appUrl: typeof appUrl !== 'undefined' ? appUrl : 'http://localhost:3000',
+  supportEmail: typeof supportEmail !== 'undefined' ? supportEmail : 'support@collabeditor.com',
+  to: typeof to !== 'undefined' ? to : ''
+}) %>
+
+<h1>Welcome to <%= appName %>!</h1>
+
+<p>Hello <%= name %>,</p>
+
+<p>Thank you for signing up for <%= appName %>. To complete your registration, please verify your email address by clicking the button below:</p>
+
+<p style="text-align: center;">
+  <a href="<%= verificationUrl %>" class="btn">Verify Email Address</a>
+</p>
+
+<p>Or copy and paste this link into your browser:</p>
+
+<p style="word-break: break-all;">
+  <a href="<%= verificationUrl %>"><%= verificationUrl %></a>
+</p>
+
+<p>This verification link will expire in 24 hours. If you did not create an account, you can safely ignore this email.</p>
+
+<p>Best regards,<br>The <%= appName %> Team</p>
+
+<p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+  If you're having trouble with the button above, copy and paste the following URL into your web browser:
+  <br><br>
+  <span style="background-color: #f3f4f6; padding: 5px 10px; border-radius: 4px; display: inline-block; word-break: break-all;">
+    <%= verificationUrl %>
+  </span>
+</p>
