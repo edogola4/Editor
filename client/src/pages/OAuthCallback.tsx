@@ -5,62 +5,85 @@ import { useAuthStore } from '../store/authStore';
 const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { set } = useAuthStore();
+  const { set, handleGitHubMessage } = useAuthStore();
 
   useEffect(() => {
-    // Extract tokens and user info from URL
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
-    const userId = searchParams.get('userId');
-    const email = searchParams.get('email');
-    const username = searchParams.get('username');
+    // Check if this is a GitHub OAuth callback
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    const cleanupUrl = () => {
-      // Remove all OAuth parameters from URL
-      const url = new URL(window.location.href);
-      const paramsToRemove = [
-        'accessToken', 'refreshToken', 'error', 'userId', 'email', 'username'
-      ];
-      
-      paramsToRemove.forEach(param => url.searchParams.delete(param));
-      window.history.replaceState({}, document.title, url.toString());
+    const handleGitHubAuth = async () => {
+      if (code && state) {
+        try {
+          // Handle GitHub OAuth callback
+          const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+          localStorage.removeItem('redirectAfterLogin');
+          
+          // Clean up the URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('code');
+          url.searchParams.delete('state');
+          window.history.replaceState({}, document.title, url.toString());
+          
+          // Redirect to the dashboard
+          navigate(redirectTo);
+        } catch (err) {
+          console.error('GitHub OAuth error:', err);
+          navigate(`/login?error=${encodeURIComponent('GitHub authentication failed')}`);
+        }
+      } else if (error) {
+        // Handle OAuth error
+        const errorDescription = searchParams.get('error_description');
+        console.error('OAuth error:', { error, errorDescription });
+        navigate(
+          `/login?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
+        );
+      } else {
+        // Check for message from popup
+        const messageListener = (event: MessageEvent) => {
+          // Only handle messages from our origin
+          if (event.origin !== window.location.origin) return;
+          
+          if (event.data?.type === 'OAUTH_SUCCESS') {
+            const { accessToken, refreshToken, user } = event.data.payload;
+            
+            // Update auth store
+            set({
+              user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                role: user.role || 'user',
+                isVerified: true,
+                avatarUrl: user.avatarUrl,
+                createdAt: user.createdAt || new Date().toISOString(),
+                updatedAt: user.updatedAt || new Date().toISOString(),
+              },
+              tokens: { accessToken, refreshToken },
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+
+            // Redirect to dashboard or intended URL
+            const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+            localStorage.removeItem('redirectAfterLogin');
+            navigate(redirectTo);
+          }
+        };
+
+        window.addEventListener('message', messageListener);
+        
+        // Clean up
+        return () => {
+          window.removeEventListener('message', messageListener);
+        };
+      }
     };
 
-    if (accessToken && refreshToken && userId) {
-      // Clean up the URL first
-      cleanupUrl();
-      
-      // Update auth store with user data and tokens
-      set({
-        user: {
-          id: userId,
-          email: email || '',
-          username: username || '',
-          role: 'user', // Default role
-          isVerified: true, // GitHub users are verified by default
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        tokens: { accessToken, refreshToken },
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-
-      // Redirect to dashboard or intended URL
-      const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
-      localStorage.removeItem('redirectAfterLogin');
-      navigate(redirectTo);
-    } else if (error) {
-      cleanupUrl();
-      navigate(`/login?error=${encodeURIComponent(error)}`);
-    } else {
-      // No tokens or error, redirect to login
-      cleanupUrl();
-      navigate('/login');
-    }
-  }, [searchParams, navigate, set]);
+    handleGitHubAuth();
+  }, [searchParams, navigate, set, handleGitHubMessage]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
