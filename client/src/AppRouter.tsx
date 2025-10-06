@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import OAuthCallback from './pages/OAuthCallback';
+import GitHubCallback from './pages/GitHubCallback';
 import Editor from './App';
 import { useAuthStore } from './store/authStore';
 
@@ -52,14 +53,15 @@ const AppRouter = () => {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/callback" element={<GitHubCallback />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         
-        {/* Protected routes */}
+        {/* Root route - redirects to login if not authenticated */}
         <Route
           path="/"
           element={
             <RequireAuth>
-              <Dashboard />
+              <Navigate to="/dashboard" replace />
             </RequireAuth>
           }
         />
@@ -82,8 +84,8 @@ const AppRouter = () => {
           }
         />
         
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Catch all route - redirects to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );
