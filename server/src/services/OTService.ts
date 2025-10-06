@@ -1,4 +1,4 @@
-import { Operation } from 'ot-types';
+import { Operation } from 'ottypes';
 
 /**
  * Operational Transform Service for handling concurrent editing conflicts

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth/AuthService';
+import AuthService from '../services/auth.service.js';
 import { getTestRedisClient } from '../tests/setup';
 
 declare global {

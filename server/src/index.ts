@@ -15,6 +15,7 @@ import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
 import { db, testConnection } from "./models/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { redis } from "./config/redis.js";
+import { githubRoutes } from "./routes/github.routes.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -64,7 +65,6 @@ app.use(session({
   },
   store: new session.MemoryStore(), // Using in-memory store for now
 }));
-
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
@@ -72,12 +72,12 @@ app.use(passport.session());
 // Routes
 app.use("/api/auth", (await import("./routes/auth.routes.js")).default);
 app.use("/api/users", (await import("./routes/user.routes.js")).default);
+app.use("/api/documents", (await import("./routes/document.routes.js")).default);
+app.use("/api/github", githubRoutes);
 
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
-
-// Setup Socket.IO
 setupSocketIO(server);
 
 // Start server

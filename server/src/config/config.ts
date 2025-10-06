@@ -45,7 +45,9 @@ interface Config {
   github: {
     clientId: string;
     clientSecret: string;
+    webhookSecret: string;
     callbackURL: string;
+    appName: string;
   };
   cors: {
     origin: string | string[];
@@ -82,13 +84,15 @@ const config: Config = {
   },
   session: {
     secret: process.env.SESSION_SECRET || 'your_session_secret_here',
-    name: process.env.SESSION_NAME || 'sid',
+    name: 'collab-editor.sid',
     cookieMaxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   },
   github: {
     clientId: process.env.GITHUB_CLIENT_ID || '',
     clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
-    callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/api/auth/github/callback',
+    webhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
+    callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:5000/api/github/callback',
+    appName: process.env.APP_NAME || 'Collaborative-Editor',
   },
   cors: {
     origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : 'http://localhost:5173',
@@ -100,5 +104,4 @@ const config: Config = {
   },
   serverUrl: process.env.SERVER_URL || 'http://localhost:5000',
 };
-
 export { config };

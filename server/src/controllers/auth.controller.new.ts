@@ -5,7 +5,7 @@ import { CustomError } from '../utils/errors.js';
 import passport from 'passport';
 import { logger } from '../services/LoggingService.js';
 import { UserRole } from '../models/EnhancedUser.js';
-import AuthService from '../services/AuthService.js';
+import AuthService from '../services/auth.service.js';
 import { checkRole } from '../middleware/rbac.middleware.js';
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

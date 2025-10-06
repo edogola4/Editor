@@ -85,14 +85,13 @@ jobs:
         cd ../load-test && npm ci
     
     - name: Start server
-      run: npm run dev
+      run: npm run dev &
       working-directory: server
       env:
         NODE_ENV: test
         REDIS_HOST: localhost
         REDIS_PORT: 6379
       continue-on-error: true
-      background: true
     
     - name: Run smoke test
       run: |
