@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import { gitHubService } from '../services/github/GitHubService.js';
 import User from '../models/User.js';
 import { AppError } from '../utils/error.js';
-import type { GitHubError } from '../types/github.js';
+import type { GitHubError, GitHubSearchParams, GitHubSearchResult } from '../types/github.js';
 
 class GitHubController {
   /**
@@ -302,6 +302,129 @@ class GitHubController {
     }
     
     return new AppError('An unexpected error occurred', 500);
+  }
+
+  /**
+   * List branches for a repository
+   */
+  public async listBranches(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { owner, repo } = req.params;
+      const { page = 1, perPage = 30 } = req.query;
+      
+      const branches = await gitHubService.listBranches(
+        owner,
+        repo,
+        Number(page),
+        Number(perPage)
+      );
+      
+      res.json(branches);
+    } catch (error) {
+      next(this.handleGitHubError(error));
+    }
+  }
+
+  /**
+   * List pull requests for a repository
+   */
+  public async listPullRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { owner, repo } = req.params;
+      const { state = 'open', page = 1, perPage = 30 } = req.query;
+      
+      const pullRequests = await gitHubService.listPullRequests(
+        owner,
+        repo,
+        state as string,
+        Number(page),
+        Number(perPage)
+      );
+      
+      res.json(pullRequests);
+    } catch (error) {
+      next(this.handleGitHubError(error));
+    }
+  }
+
+  /**
+   * List issues for a repository
+   */
+  public async listIssues(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { owner, repo } = req.params;
+      const { state = 'open', labels, page = 1, perPage = 30 } = req.query;
+      
+      const issues = await gitHubService.listIssues(
+        owner,
+        repo,
+        state as string,
+        labels as string | undefined,
+        Number(page),
+        Number(perPage)
+      );
+      
+      res.json(issues);
+    } catch (error) {
+      next(this.handleGitHubError(error));
+    }
+  }
+
+  /**
+   * List user's gists
+   */
+  public async listGists(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { page = 1, perPage = 30 } = req.query;
+      const user = (req as any).user; // User from auth middleware
+      
+      const gists = await gitHubService.listGists(
+        user.githubAccessToken,
+        Number(page),
+        Number(perPage)
+      );
+      
+      res.json(gists);
+    } catch (error) {
+      next(this.handleGitHubError(error));
+    }
+  }
+
+  /**
+   * Search GitHub
+   */
+  public async search(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { q, type, page = 1, perPage = 30 } = req.query;
+      const user = (req as any).user; // User from auth middleware
+      
+      const searchParams: GitHubSearchParams = {
+        q: q as string,
+        type: type as 'repositories' | 'code' | 'issues' | 'users',
+        page: Number(page),
+        perPage: Number(perPage)
+      };
+      
+      const results = await gitHubService.search(user.githubAccessToken, searchParams);
+      res.json(results);
+    } catch (error) {
+      next(this.handleGitHubError(error));
+    }
+  }
+
+  /**
+   * Handle GitHub API errors
+   */
+  private handleGitHubError(error: any): Error {
+    if (error.response) {
+      const { status, data } = error.response;
+      return new AppError(
+        data.message || 'GitHub API error',
+        status || 500,
+        data
+      );
+    }
+    return error;
   }
 }
 
