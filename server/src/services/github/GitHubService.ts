@@ -19,6 +19,12 @@ import {
   GitHubError,
   GitHubClient,
   GitHubWebhookConfig,
+  GitHubSearchParams,
+  GitHubSearchResult,
+  GitHubGist,
+  GitHubIssue,
+  GitHubPullRequest as GitHubPR,
+  GitHubSearchType,
 } from '../../types/github';
 
 export class GitHubService {
@@ -92,7 +98,6 @@ export class GitHubService {
     });
 
     const { token } = await auth({
-      type: 'oauth-user',
       code,
     });
 
@@ -101,7 +106,7 @@ export class GitHubService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         client_id: this.clientId,
@@ -139,14 +144,17 @@ export class GitHubService {
   /**
    * List user repositories
    */
-  async listRepositories(accessToken: string, options: {
-    visibility?: 'all' | 'public' | 'private';
-    affiliation?: string;
-    sort?: 'created' | 'updated' | 'pushed' | 'full_name';
-    direction?: 'asc' | 'desc';
-    per_page?: number;
-    page?: number;
-  } = {}): Promise<GitHubRepository[]> {
+  async listRepositories(
+    accessToken: string, 
+    options: {
+      visibility?: 'all' | 'public' | 'private';
+      affiliation?: string;
+      sort?: 'created' | 'updated' | 'pushed' | 'full_name';
+      direction?: 'asc' | 'desc';
+      per_page?: number;
+      page?: number;
+    } = {}
+  ): Promise<GitHubRepository[]> {
     const octokit = this.createClient(accessToken);
     const { data } = await octokit.repos.listForAuthenticatedUser({
       ...options,
