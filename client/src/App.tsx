@@ -77,27 +77,12 @@ function AppContent() {
             selection: null,
             color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
             isTyping: false,
-            lastSeen: Date.now(),
             connectionStatus: 'online' as const
           }))}
           onShare={handleShare}
           onSettings={handleSettings}
           onThemeToggle={handleThemeToggle}
           onCommandPalette={handleCommandPalette}
-        />
-        
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto">
-            <CodeEditor height="calc(100vh - 56px)" />
-          </div>
-        </main>
-        
-        <StatusBar 
-          cursorPosition={cursorPosition}
-          selection={selection}
-          language="typescript"
-          userCount={connectedUsers.length + 1}
-          connectionStatus="connected"
         />
         
         <Toaster 
