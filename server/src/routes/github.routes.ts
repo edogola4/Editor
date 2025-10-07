@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body, query } from 'express-validator';
+import { body, query, param } from 'express-validator';
 import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validation.js';
 import { githubController } from '../controllers/github.controller.js';
@@ -46,6 +46,72 @@ router.get(
   ],
   validate('getFileContent'),
   githubController.getFileContent
+);
+
+// Branches
+router.get(
+  '/repos/:owner/:repo/branches',
+  [
+    param('owner').isString().notEmpty(),
+    param('repo').isString().notEmpty(),
+    query('page').optional().isInt({ min: 1 }),
+    query('perPage').optional().isInt({ min: 1, max: 100 }),
+  ],
+  validate('listBranches'),
+  githubController.listBranches
+);
+
+// Pull Requests
+router.get(
+  '/repos/:owner/:repo/pulls',
+  [
+    param('owner').isString().notEmpty(),
+    param('repo').isString().notEmpty(),
+    query('state').optional().isIn(['open', 'closed', 'all']),
+    query('page').optional().isInt({ min: 1 }),
+    query('perPage').optional().isInt({ min: 1, max: 100 }),
+  ],
+  validate('listPullRequests'),
+  githubController.listPullRequests
+);
+
+// Issues
+router.get(
+  '/repos/:owner/:repo/issues',
+  [
+    param('owner').isString().notEmpty(),
+    param('repo').isString().notEmpty(),
+    query('state').optional().isIn(['open', 'closed', 'all']),
+    query('labels').optional().isString(),
+    query('page').optional().isInt({ min: 1 }),
+    query('perPage').optional().isInt({ min: 1, max: 100 }),
+  ],
+  validate('listIssues'),
+  githubController.listIssues
+);
+
+// Gists
+router.get(
+  '/gists',
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('perPage').optional().isInt({ min: 1, max: 100 }),
+  ],
+  validate('listGists'),
+  githubController.listGists
+);
+
+// Search
+router.get(
+  '/search',
+  [
+    query('q').isString().notEmpty(),
+    query('type').isIn(['repositories', 'code', 'issues', 'users']),
+    query('page').optional().isInt({ min: 1 }),
+    query('perPage').optional().isInt({ min: 1, max: 100 }),
+  ],
+  validate('search'),
+  githubController.search
 );
 
 // Save file
