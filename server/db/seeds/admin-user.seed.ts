@@ -1,5 +1,4 @@
 import { User } from '../../src/models/index.js';
-import bcrypt from 'bcryptjs';
 
 /**
  * Seed an admin user for development/testing
@@ -16,18 +15,19 @@ export async function seedAdminUser() {
       return existingAdmin;
     }
 
-    // Create admin user
+    // Create admin user - password will be hashed by the User model's beforeCreate hook
+    const adminPassword = 'Admin123!@#Secure';
     const adminUser = await User.create({
       username: 'admin',
       email: 'admin@example.com',
-      password: 'Admin123!@#', // This will be hashed by the model
+      password: adminPassword, // Will be hashed by the model
       role: 'admin' as 'admin',
       isVerified: true,
     });
 
     console.log('✓ Admin user created successfully');
     console.log('  Email: admin@example.com');
-    console.log('  Password: Admin123!@#');
+    console.log('  Password: Admin123!@#Secure');
     console.log('  Role: admin');
 
     return adminUser;
@@ -46,21 +46,21 @@ export async function seedTestUsers() {
       {
         username: 'testuser1',
         email: 'user1@example.com',
-        password: 'User123!@#',
+        password: 'User123!@#Secure',
         role: 'user' as 'user',
         isVerified: true,
       },
       {
         username: 'testuser2',
         email: 'user2@example.com',
-        password: 'User123!@#',
+        password: 'User123!@#Secure',
         role: 'user' as 'user',
         isVerified: true,
       },
       {
         username: 'testuser3',
         email: 'user3@example.com',
-        password: 'User123!@#',
+        password: 'User123!@#Secure',
         role: 'user' as 'user',
         isVerified: false,
       },
@@ -72,6 +72,7 @@ export async function seedTestUsers() {
       });
 
       if (!existingUser) {
+        // Create test user - password will be hashed by the User model's beforeCreate hook
         await User.create(userData);
         console.log(`✓ Test user created: ${userData.email}`);
       } else {
@@ -92,6 +93,7 @@ export async function seedTestUsers() {
 export async function runSeeds() {
   console.log('\n🌱 Starting database seeding...\n');
   
+  await seedAdminUser();
   await seedTestUsers();
   
   console.log('\n✓ Database seeding completed!\n');

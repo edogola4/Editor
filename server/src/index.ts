@@ -16,6 +16,8 @@ import { db, testConnection } from "./models/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { redis } from "./config/redis.js";
 import { githubRoutes } from "./routes/github.routes.js";
+import WebSocketService from "./services/WebSocketService.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -71,14 +73,36 @@ app.use(passport.session());
 
 // Routes
 app.use("/api/auth", (await import("./routes/auth.routes.js")).default);
-app.use("/api/users", (await import("./routes/user.routes.js")).default);
 app.use("/api/documents", (await import("./routes/document.routes.js")).default);
 app.use("/api/github", githubRoutes);
+
+// Initialize WebSocket Service
+const webSocketService = new WebSocketService(server);
+
+// Document management endpoints
+app.get('/api/documents/:id', (req, res) => {
+  // In a real app, you would fetch the document from a database
+  res.json({
+    id: req.params.id,
+    content: '',
+    language: 'plaintext',
+    users: []
+  });
+});
+
+app.post('/api/documents', (req, res) => {
+  const documentId = uuidv4();
+  res.status(201).json({
+    id: documentId,
+    content: '',
+    language: 'plaintext',
+    users: []
+  });
+});
 
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
-setupSocketIO(server);
 
 // Start server
 const PORT = process.env.PORT || 5000;
@@ -88,12 +112,35 @@ const startServer = async () => {
     await testConnection();
     console.log("✅ Database connected successfully");
     
-    server.listen(PORT, () => {
+    const serverInstance = server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📱 Frontend URL: http://localhost:${process.env.FRONTEND_PORT || 5173}`);
       console.log(`🔌 WebSocket URL: ws://localhost:${PORT}`);
       console.log(`📋 API Documentation: http://localhost:${PORT}/api-docs`);
     });
+
+    // Handle server errors
+    serverInstance.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.syscall !== 'listen') {
+        throw error;
+      }
+
+      // Handle specific listen errors with friendly messages
+      switch (error.code) {
+        case 'EACCES':
+          console.error(`Port ${PORT} requires elevated privileges`);
+          process.exit(1);
+          break;
+        case 'EADDRINUSE':
+          console.error(`Port ${PORT} is already in use`);
+          process.exit(1);
+          break;
+        default:
+          throw error;
+      }
+    });
+
+    return serverInstance;
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     process.exit(1);

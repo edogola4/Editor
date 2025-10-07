@@ -37,7 +37,7 @@ export default function RoomInvitation(sequelize: Sequelize) {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'Rooms',
+          model: 'rooms',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -68,7 +68,7 @@ export default function RoomInvitation(sequelize: Sequelize) {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'users',
           key: 'id',
         },
       },
@@ -83,8 +83,9 @@ export default function RoomInvitation(sequelize: Sequelize) {
       timestamps: true,
       indexes: [
         {
+          name: 'room_invitations_room_id_email_status',
           unique: true,
-          fields: ['roomId', 'email', 'status'],
+          fields: ['room_id', 'email', 'status'],
           where: {
             status: 'pending',
           },
@@ -97,7 +98,7 @@ export default function RoomInvitation(sequelize: Sequelize) {
           fields: ['email'],
         },
         {
-          fields: ['expiresAt'],
+          fields: ['expires_at'],
         },
       ],
     }

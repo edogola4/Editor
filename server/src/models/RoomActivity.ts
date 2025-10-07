@@ -43,7 +43,7 @@ export default function RoomActivity(sequelize: Sequelize) {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'Rooms',
+          model: 'rooms',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -52,7 +52,7 @@ export default function RoomActivity(sequelize: Sequelize) {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'users',
           key: 'id',
         },
       },
@@ -83,16 +83,16 @@ export default function RoomActivity(sequelize: Sequelize) {
       updatedAt: false, // We only care about creation time
       indexes: [
         {
-          fields: ['roomId'],
+          fields: ['room_id'],
         },
         {
-          fields: ['userId'],
+          fields: ['user_id'],
         },
         {
-          fields: ['activityType'],
+          fields: ['activity_type'],
         },
         {
-          fields: ['createdAt'],
+          fields: ['created_at'],
         },
       ],
     }
