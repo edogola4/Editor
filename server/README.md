@@ -2,17 +2,16 @@
 
 <div align="center">
   <h2>🚀 Real-time Collaborative Editor - Backend</h2>
-  <p>High-performance backend service with WebSocket-based real-time collaboration</p>
+  <p>High-performance backend service with native WebSocket-based real-time collaboration</p>
 
-  ![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Express](https://img.shields.io/badge/Express-5+-000000.svg)
-  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
+  ![WebSocket](https://img.shields.io/badge/WebSocket-100%25-010101.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
   ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
-  ![k6](https://img.shields.io/badge/k6-0.50.0-7D64FF.svg)
   
   [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg?flag=server)](https://codecov.io/gh/edogola4/Editor)
   [![CI/CD](https://github.com/edogola4/Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/edogola4/Editor/actions)
@@ -21,20 +20,22 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v3.2.0
+## 🌟 What's New in v4.1.0
 
-- **Enhanced Authentication**: Improved JWT token handling and refresh token flow
-- **Better Error Handling**: More descriptive error messages and validation
-- **Performance Optimizations**: Reduced latency in real-time updates
-- **Improved WebSocket Stability**: Better handling of connection drops and reconnections
-- **Bug Fixes**: Resolved issues with document versioning and conflict resolution
+- **Enhanced Database Schema**: Added support for user profiles and session management
+- **Improved Authentication**: Secure session handling with JWT and refresh tokens
+- **Better Error Handling**: More descriptive error messages and validation feedback
+- **Simplified Setup**: Streamlined database initialization and configuration
+- **Performance Optimizations**: Improved database queries and WebSocket handling
+- **Comprehensive Logging**: Enhanced logging for better debugging and monitoring
 
 This is the backend service for the Collaborative Code Editor, built with TypeScript and Node.js to provide a scalable and performant real-time collaboration experience.
 
 ## ✨ Key Features
 
-- **Real-time Collaboration**: WebSocket-based document synchronization with operational transformation
-- **Scalable Architecture**: Built to handle thousands of concurrent users
+- **Real-time Collaboration**: Native WebSocket-based document synchronization with operational transformation
+- **High Performance**: Optimized for low-latency real-time updates
+- **Scalable Architecture**: Built to handle thousands of concurrent users with Redis pub/sub
 - **Secure Authentication**: JWT with refresh tokens and OAuth 2.0 support
 - **Efficient State Management**: Redis for pub/sub and session management
 - **Reliable Storage**: PostgreSQL for persistent data with migrations
