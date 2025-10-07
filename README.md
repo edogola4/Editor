@@ -4,16 +4,15 @@
   <h1>🚀 Real-time Collaborative Code Editor</h1>
   <p><strong>Professional VS Code-like collaborative coding experience with real-time WebSocket synchronization</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
-  ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
+  ![WebSocket](https://img.shields.io/badge/WebSocket-100%25-010101.svg)
   ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53.0-007acc.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
   ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
-  ![k6](https://img.shields.io/badge/k6-0.50.0-7D64FF.svg)
   [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg)](https://codecov.io/gh/edogola4/Editor)
   [![CI/CD](https://github.com/edogola4/Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/edogola4/Editor/actions)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -22,13 +21,14 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v3.2.0
+## 🌟 What's New in v4.1.0
 
-- **Enhanced Authentication**: Improved JWT token handling and refresh token flow
-- **Better Error Handling**: More descriptive error messages and validation
-- **Performance Optimizations**: Reduced latency in real-time updates
-- **UI Improvements**: Smoother cursor synchronization and presence indicators
-- **Bug Fixes**: Resolved issues with document versioning and conflict resolution
+- **Database Schema Update**: Enhanced user and session management with new fields and relationships
+- **Improved Authentication**: More secure session handling with proper token management
+- **Enhanced Error Handling**: Better error messages and validation feedback
+- **Simplified Setup**: Streamlined installation and configuration process
+- **Documentation**: Comprehensive setup guides and API documentation
+- **Performance Improvements**: Optimized database queries and WebSocket communication
 
 ## ✨ Features
 
