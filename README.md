@@ -21,17 +21,23 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v4.2.0
+## 🌟 What's New in v4.3.0
 
+### 🏗 State Management Overhaul
+- **Zustand Integration**: Lightweight, fast state management with minimal boilerplate
+- **Type-Safe Stores**: Full TypeScript support with strict type checking
+- **Optimistic UI Updates**: Smooth user experience with instant feedback
+- **Modular Architecture**: Separated concerns with dedicated stores for editor, room, user, and UI states
+- **Redux DevTools Integration**: Powerful debugging with time-travel capabilities
+- **Persistence Middleware**: Automatic state persistence across page reloads
+- **Performance Optimized**: Memoized selectors and batched updates
+
+### 🛠 Enhanced Features
 - **Room Management System**: Comprehensive room-based collaboration with role-based access control
-- **Room Creation Wizard**: Intuitive multi-step form for creating and configuring new rooms
-- **User Role Management**: Granular permissions for owners, admins, editors, and viewers
-- **Invite System**: Generate and manage invite codes with configurable expiration and usage limits
-- **Real-time User Presence**: See who's online and their current activity in each room
-- **Room Settings Panel**: Configure room visibility, permissions, and collaboration settings
-- **Enhanced Security**: Password protection and access controls for private rooms
-- **Session Recovery**: Automatic reconnection and state synchronization after disconnections
-- **Activity Logging**: Track changes and user actions within each room
+- **Real-time State Sync**: Seamless synchronization across clients with operational transformation
+- **Error Boundaries**: Graceful error handling and recovery
+- **Performance Monitoring**: Built-in performance tracking and optimization
+- **Testing Utilities**: Comprehensive test coverage for state management
 
 ## ✨ Features
 
@@ -99,9 +105,14 @@
 
 ### 🔧 **Technical Features**
 - **TypeScript First**: Full type safety with TypeScript 5.8+ and strict mode
-- **Modular Architecture**: Clean separation of concerns with dependency injection
+- **State Management**: Zustand with middleware for persistence, logging, and Redux DevTools
+- **Modular Architecture**: Clean separation of concerns with dedicated stores
 - **WebSockets**: Real-time bidirectional communication with Socket.IO 4.8+
 - **JWT Authentication**: Secure stateless authentication with refresh tokens
+- **Optimistic Updates**: Smooth UI experience with automatic rollback on error
+- **Performance Monitoring**: Built-in performance tracking and optimization
+- **Error Boundaries**: Comprehensive error handling and recovery
+- **Testing**: Jest and React Testing Library for unit and integration tests
 - **Database Migrations**: Version-controlled schema changes with Sequelize
 - **Containerized**: Docker and Docker Compose for consistent environments
 - **State Management**: Zustand + Immer for predictable state updates
@@ -117,12 +128,58 @@
 - **CI/CD**: GitHub Actions for automated testing and deployment
 - **Infrastructure as Code**: Terraform for cloud infrastructure
 
+## 🧠 State Management
+
+Our application uses **Zustand** for state management, providing a lightweight yet powerful solution with excellent TypeScript support. The state is organized into modular stores for better maintainability and performance.
+
+### Key Features
+
+- **Modular Architecture**: Separate stores for editor, room, user, socket, and UI state
+- **Type Safety**: Full TypeScript support with strict type checking
+- **Optimistic Updates**: Smooth UI experience with automatic rollback on error
+- **Redux DevTools**: Time-travel debugging and state inspection
+- **Persistence**: Automatic state persistence across page reloads
+- **Performance Optimized**: Memoized selectors and batched updates
+- **Middleware Support**: Custom middleware for logging, persistence, and more
+
+### Store Structure
+
+```
+store/
+├── index.ts         # Main store configuration and exports
+├── types.ts         # TypeScript types and interfaces
+└── middleware/      # Custom middleware
+    ├── persist.ts   # State persistence
+    ├── logger.ts    # Action logging
+    └── devtools.ts  # Redux DevTools integration
+```
+
+### Example Usage
+
+```typescript
+// Accessing state
+const { content, isSaving } = useEditor();
+const { currentUser } = useUser();
+
+// Updating state
+const { setContent } = useEditorActions();
+setContent({ content: 'New content', isDirty: true });
+
+// Using selectors for optimized re-renders
+const userName = useUser(state => state.currentUser?.name);
+```
+
+For more details, see the [State Management Documentation](./client/src/store/README.md).
+
 ## 🛠 Tech Stack
 
 ### **Frontend**
 - **React 19+** - Modern React with concurrent features
 - **TypeScript 5.8+** - Type safety and developer experience
 - **Vite 5+** - Next-generation frontend tooling
+- **Zustand 5+** - Lightweight state management with hooks
+- **Immer 10+** - Immutable state with mutable syntax
+- **React Query 5+** - Server state management and caching
 - **Tailwind CSS 4+** - Utility-first CSS with JIT compiler
 - **Monaco Editor 0.53+** - VS Code's editor component
 - **Socket.IO Client 4.8+** - Real-time communication
