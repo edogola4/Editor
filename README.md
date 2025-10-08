@@ -21,23 +21,29 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v4.1.0
+## 🌟 What's New in v4.2.0
 
-- **Database Schema Update**: Enhanced user and session management with new fields and relationships
-- **Improved Authentication**: More secure session handling with proper token management
-- **Enhanced Error Handling**: Better error messages and validation feedback
-- **Simplified Setup**: Streamlined installation and configuration process
-- **Documentation**: Comprehensive setup guides and API documentation
-- **Performance Improvements**: Optimized database queries and WebSocket communication
+- **Room Management System**: Comprehensive room-based collaboration with role-based access control
+- **Room Creation Wizard**: Intuitive multi-step form for creating and configuring new rooms
+- **User Role Management**: Granular permissions for owners, admins, editors, and viewers
+- **Invite System**: Generate and manage invite codes with configurable expiration and usage limits
+- **Real-time User Presence**: See who's online and their current activity in each room
+- **Room Settings Panel**: Configure room visibility, permissions, and collaboration settings
+- **Enhanced Security**: Password protection and access controls for private rooms
+- **Session Recovery**: Automatic reconnection and state synchronization after disconnections
+- **Activity Logging**: Track changes and user actions within each room
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
-- **Real-time Collaboration**: Multi-user editing with operational transformation (OT)
+- **Room-based Collaboration**: Organize work in dedicated rooms with access controls
+- **Role-based Access Control**: Granular permissions (Owner, Admin, Editor, Viewer, Guest)
+- **Real-time Editing**: Multi-user editing with operational transformation (OT)
 - **WebSocket-based Synchronization**: Low-latency document synchronization using Socket.IO
 - **VS Code Experience**: Full Monaco Editor integration with IntelliSense and code completion
 - **Live Cursor & Selection**: See other users' cursors and selections in real-time with user-specific colors
-- **User Presence**: Visual indicators showing connected users and their activity
+- **User Presence & Activity**: Visual indicators showing connected users and their current actions
+- **Room Invitations**: Generate and manage invite links with configurable permissions
 - **Multi-language Support**: 50+ programming languages with syntax highlighting
 - **Document Versioning**: Track changes and revert to previous versions with full history
 - **Redis-based State Management**: Scalable document state management with pub/sub
@@ -78,12 +84,15 @@
 
 ### 🎨 **User Interface**
 - **Modern Design**: Clean, professional interface inspired by VS Code
+- **Room Management**: Intuitive interface for creating, joining, and managing rooms
+- **User Roles & Permissions**: Clear visual indicators of user roles and permissions
 - **Responsive Layout**: Works perfectly on desktop and tablet devices
 - **User Avatars**: Color-coded user identification system with custom avatars
 - **Status Indicators**: Real-time connection, typing, and activity status
+- **Room Activity Feed**: Track changes and user actions within each room
+- **Invite Management**: Easy-to-use interface for generating and managing room invites
 - **Customizable UI**: Tailwind CSS with theme customization
 - **Dark/Light Mode**: Toggle between themes with system preference detection
-- **Activity Feed**: Real-time updates on user actions and system events
 - **Command Palette**: Quick access to commands with keyboard shortcuts
 - **File Explorer**: Tree view for easy navigation of project files
 - **Terminal Integration**: Built-in terminal for running commands
