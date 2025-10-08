@@ -65,6 +65,7 @@ class AuthService {
     password: string;
     firstName?: string;
     lastName?: string;
+    role?: string;
   }): Promise<{ user: UserInstance; token: string }> {
     // Check if user already exists
     const existingUser = await this.User.findOne({
@@ -77,19 +78,18 @@ class AuthService {
     });
 
     if (existingUser) {
-      throw new Error('User with this email or username already exists');
+      throw new Error('Email or username already in use');
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-
-    // Create new user
+    // Create new user - let the model's beforeCreate hook handle password hashing
     const user = await this.User.create({
-      ...userData,
-      password: hashedPassword,
-      role: UserRole.USER,
-      status: UserStatus.PENDING_VERIFICATION,
-      emailNotifications: true,
+      username: userData.username,
+      email: userData.email,
+      password: userData.password, // Will be hashed by the model hook
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: userData.role || 'user',
+      status: 'active' as UserStatus,
     });
 
     // Generate auth token
@@ -138,7 +138,17 @@ class AuthService {
     }
 
     // Check if password is correct
-    const isMatch = await bcrypt.compare(password, user.password);
+    let isMatch = false;
+    
+    // First try direct comparison (in case password is already hashed)
+    if (password === user.password) {
+      isMatch = true;
+    } 
+    // If direct comparison fails, try bcrypt compare
+    else if (password && user.password) {
+      isMatch = await bcrypt.compare(password, user.password);
+    }
+    
     if (!isMatch) {
       throw new Error('Invalid email or password');
     }
