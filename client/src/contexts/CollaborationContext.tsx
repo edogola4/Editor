@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email?: string;
@@ -247,5 +247,11 @@ export const useCollaboration = (): CollaborationContextType => {
   }
   return context;
 };
+
+// Export the context and hooks
+export { useCollaboration };
+
+// Export types
+export type { User, CollaborationContextType };
 
 export default CollaborationContext;

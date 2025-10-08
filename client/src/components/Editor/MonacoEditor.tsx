@@ -1,26 +1,37 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as monaco from 'monaco-editor';
 import { editor } from 'monaco-editor';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCollaboration } from '../../contexts/CollaborationContext';
+import type { User } from '../../contexts/CollaborationContext';
 import { CursorIndicator } from './CursorIndicator';
 import { CollaborationStatus } from './CollaborationStatus';
-import { Box, Tooltip, IconButton, Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material';
-import {
-  Code as CodeIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  WrapText as WrapTextIcon,
-  UnfoldMore as UnfoldMoreIcon,
-  UnfoldLess as UnfoldLessIcon,
-  Map as MapIcon,
-  MapOutlined as MapOutlinedIcon,
-  FormatColorFill as FormatColorFillIcon,
-  ErrorOutline as ErrorOutlineIcon,
-  WarningAmber as WarningAmberIcon,
-  InfoOutlined as InfoOutlinedIcon,
-} from '@mui/icons';
+import UserPresenceList from '../collaboration/UserPresenceList';
+import ConnectionStatus from '../collaboration/ConnectionStatus';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// MUI Components
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+
+// MUI Icons
+import CodeIcon from '@mui/icons-material/Code';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import WrapTextIcon from '@mui/icons-material/WrapText';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import MapIcon from '@mui/icons-material/Map';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 // Enhanced language configurations
 const LANGUAGE_CONFIGS = [
@@ -167,6 +178,26 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
         'semanticHighlighting.enabled': true,
       });
       
+      // Set up cursor change listener
+      editorInstance.current.onDidChangeCursorPosition((e) => {
+        setCurrentUserCursor(e.position);
+        onCursorChange?.(e.position);
+        
+        // Broadcast cursor position to other users
+        if (broadcastCursorPosition) {
+          broadcastCursorPosition({
+            lineNumber: e.position.lineNumber,
+            column: e.position.column
+          });
+        }
+      });
+
+      // Set up selection change listener
+      editorInstance.current.onDidChangeCursorSelection((e) => {
+        setCurrentUserSelection(e.selection);
+        onSelectionChange?.(e.selection);
+      });
+      
       // Restore view state if available
       if (viewState) {
         editorInstance.current.restoreViewState(viewState);
@@ -184,9 +215,32 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }
 
     // Set up content change handler with debounce
-    const debouncedChangeHandler = debounce((value: string) => {
+    const debouncedChangeHandler = debounce((value: string, changes: editor.IModelContentChangedEvent) => {
       onContentChange?.(value);
-      onCollaborationChange?.(value);
+      
+      // Broadcast changes to other collaborators
+      if (onCollaborationChange) {
+        const changeData = {
+          documentId,
+          changes: changes.changes.map(change => ({
+            range: {
+              startLineNumber: change.range.startLineNumber,
+              startColumn: change.range.startColumn,
+              endLineNumber: change.range.endLineNumber,
+              endColumn: change.range.endColumn,
+            },
+            text: change.text,
+            rangeLength: change.rangeLength,
+            rangeOffset: change.rangeOffset,
+          })),
+          versionId: changes.versionId,
+          isUndoing: changes.isUndoing,
+          isRedoing: changes.isRedoing,
+          timestamp: Date.now(),
+        };
+        
+        onCollaborationChange(value, changeData);
+      }
     }, 300);
 
     // Set up cursor and selection change handlers
