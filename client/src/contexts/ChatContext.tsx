@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react';
-import { ChatEvent, ChatMessage, ChatRoom, ChatState } from '@/types/chat';
+import type { ChatEvent, ChatMessage, ChatRoom, ChatState, ChatUser } from '@/types/chat';
 import { chatService } from '@/services/chat/ChatService';
 import { useAuth } from './AuthContext';
 
@@ -181,8 +181,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
-    // Initialize chat service
-    chatService.connect(user.token);
+    // Initialize chat service with user ID
+    chatService.connect(user.id);
 
     // Subscribe to chat events
     const unsubscribe = chatService.subscribe(handleChatEvent);
@@ -195,7 +195,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         // const rooms = await chatService.getRooms();
         // dispatch({ type: 'SET_ROOMS', payload: rooms });
       } catch (error) {
-        dispatch({ type: 'SET_ERROR', payload: error.message });
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        dispatch({ type: 'SET_ERROR', payload: errorMessage });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
@@ -246,7 +247,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         name: state.rooms.find(r => r.id === roomId)?.name || 'Room',
         participants: state.rooms.find(r => r.id === roomId)?.participants || [],
         isGroup: state.rooms.find(r => r.id === roomId)?.isGroup || true,
-        createdAt: state.rooms.find(r => r.id === roomId)?.createdAt || Date.now(),
+        // Remove createdAt as it's not part of ChatRoom interface
         updatedAt: Date.now()
       } as ChatRoom,
     });
@@ -260,8 +261,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         roomId: state.activeRoomId,
         content,
       });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
     }
   };
 
@@ -274,8 +276,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         messageId,
         emoji,
       });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to react to message';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
     }
   };
 
@@ -294,12 +297,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         );
         
         if (moreMessages.length > 0) {
-          // Update the messages for the room
-          const updatedMessages = {
-            ...state.messages,
-            [state.activeRoomId]: [...moreMessages, ...messages]
-          };
-          
           // Update the room's last message if needed
           const updatedRooms = state.rooms.map(room => {
             if (room.id === state.activeRoomId) {

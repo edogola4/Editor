@@ -1,5 +1,5 @@
-import { io, Socket } from 'socket.io-client';
-import { ChatEvent, ChatMessage, ChatRoom, ChatUser, ReactToMessagePayload, SendMessagePayload } from '@/types/chat';
+import { io, type Socket } from 'socket.io-client';
+import type { ChatEvent, ChatMessage, ReactToMessagePayload, SendMessagePayload } from '../../types/chat';
 
 type EventHandler = (event: ChatEvent) => void;
 
@@ -33,7 +33,7 @@ export class ChatService {
       console.log('Connected to chat server');
     });
 
-    this.socket.on('disconnect', (reason) => {
+    this.socket.on('disconnect', (reason: string) => {
       console.log('Disconnected from chat server:', reason);
     });
 

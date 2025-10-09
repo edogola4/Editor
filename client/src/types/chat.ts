@@ -46,12 +46,53 @@ export interface ChatState {
   error: string | null;
 }
 
-export type ChatEvent =
-  | { type: 'MESSAGE'; payload: { roomId: string; message: ChatMessage } }
-  | { type: 'ROOM_UPDATE'; payload: ChatRoom }
-  | { type: 'USER_JOINED'; payload: { roomId: string; user: ChatUser } }
-  | { type: 'USER_LEFT'; payload: { roomId: string; userId: string } }
-  | { type: 'MESSAGE_REACTION'; payload: { roomId: string; messageId: string; emoji: string; userId: string } };
+// Individual event types
+export interface MessageEvent {
+  type: 'MESSAGE';
+  payload: {
+    roomId: string;
+    message: ChatMessage;
+  };
+}
+
+export interface RoomUpdateEvent {
+  type: 'ROOM_UPDATE';
+  payload: ChatRoom;
+}
+
+export interface UserJoinedEvent {
+  type: 'USER_JOINED';
+  payload: {
+    roomId: string;
+    user: ChatUser;
+  };
+}
+
+export interface UserLeftEvent {
+  type: 'USER_LEFT';
+  payload: {
+    roomId: string;
+    userId: string;
+  };
+}
+
+export interface MessageReactionEvent {
+  type: 'MESSAGE_REACTION';
+  payload: {
+    roomId: string;
+    messageId: string;
+    emoji: string;
+    userId: string;
+  };
+}
+
+// Union type for all chat events
+export type ChatEvent = 
+  | MessageEvent
+  | RoomUpdateEvent
+  | UserJoinedEvent
+  | UserLeftEvent
+  | MessageReactionEvent;
 
 export interface SendMessagePayload {
   roomId: string;
