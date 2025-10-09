@@ -50,19 +50,16 @@ const AppRouter = () => {
   return (
     <>
       <AuthInitializer />
-      <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/auth/callback" element={<GitHubCallback />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         
-        {/* Root route - redirects to login if not authenticated */}
+        {/* Root route - redirects to login */}
         <Route
           path="/"
           element={
-            <RequireAuth>
-              <Navigate to="/dashboard" replace />
-            </RequireAuth>
+            <Navigate to="/login" replace />
           }
         />
         

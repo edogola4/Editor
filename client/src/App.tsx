@@ -1,29 +1,21 @@
+import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { CodeEditor } from './components/CodeEditor';
 import { Header } from './components/Header';
 import { StatusBar } from './components/StatusBar';
 import { useEditorStore } from './store/editorStore';
-import { useEffect } from 'react';
 import { useSocket } from './utils/socket';
 import { ThemeProvider } from './components/theme-provider';
-import { ChatProvider } from './contexts/ChatContext';
 import { ChatContainer } from './components/chat/ChatContainer';
+import { ChatProvider } from './contexts/ChatContext';
 
 // Import global styles with theme variables
 import './globals.css';
 
-function AppContent() {
-  const { connectedUsers, documentId, cursorPositions } = useEditorStore();
+function App() {
+  const { documentId } = useEditorStore();
   const { joinDocument } = useSocket();
-  const [theme, setTheme] = React.useState('dark');
-  
-  // Get current user's cursor position (using a placeholder for current user ID)
-  const currentUser = 'current-user'; // TODO: Replace with actual user ID from auth
-  const cursorPosition = cursorPositions[currentUser] || { line: 0, column: 0 };
-  const selection = {
-    start: { line: 0, column: 0 },
-    end: { line: 0, column: 0 }
-  };
+  const [hasError, setHasError] = useState(false);
 
   // Use a fixed document ID so all tabs can collaborate together
   useEffect(() => {
@@ -41,85 +33,66 @@ function AppContent() {
     }
   }, [documentId, joinDocument]);
 
-  // Handler functions for header actions
-  const handleShare = () => {
-    const shareUrl = `${window.location.origin}?session=${documentId}`;
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        console.log('Link copied to clipboard!');
-      })
-      .catch(err => {
-        console.error('Failed to copy URL: ', err);
-      });
-  };
-
-  const handleSettings = () => {
-    // Open settings modal
-    console.log('Settings clicked');
-  };
-  
-  const handleCommandPalette = () => {
-    // Open command palette
-    console.log('Command palette opened');
-  };
-
-  const handleThemeToggle = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background text-foreground p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <p className="mb-4">The application encountered an unexpected error.</p>
+          <button
+            onClick={() => {
+              setHasError(false);
+              window.location.reload();
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Reload Application
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-      <div className="min-h-screen flex flex-col bg-background text-foreground">
-        <Header 
-          documentId={documentId || 'Untitled'}
-          users={connectedUsers.map((userId) => ({
-            id: userId,
-            name: `User ${userId.slice(0, 8)}`,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
-            cursor: { line: 1, column: 1 },
-            selection: null,
-            color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-            isTyping: false,
-            connectionStatus: 'online' as const
-          }))}
-          onShare={handleShare}
-          onSettings={handleSettings}
-          onThemeToggle={handleThemeToggle}
-          onCommandPalette={handleCommandPalette}
-        />
-        
-        <Toaster 
-          position="bottom-right"
-          toastOptions={{
-            className: '!bg-background !text-foreground !border !border-border',
-            success: {
-              className: '!bg-success/10 !text-success border !border-success/20',
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#ecfdf5'
-              },
-            },
-            error: {
-              className: '!bg-destructive/10 !text-destructive border !border-destructive/20',
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fef2f2'
-              },
-            },
-          }}
-        />
+    <div className="flex flex-col h-screen bg-background text-foreground">
+      <Header />
+      <main className="flex-1 flex overflow-hidden">
+        <CodeEditor />
         <ChatContainer />
-      </div>
-  )
+      </main>
+      <StatusBar />
+      <Toaster 
+        position="bottom-right"
+        toastOptions={{
+          className: '!bg-background !text-foreground !border !border-border',
+          success: {
+            className: '!bg-success/10 !text-success border !border-success/20',
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#ecfdf5'
+            },
+          },
+          error: {
+            className: '!bg-destructive/10 !text-destructive border !border-destructive/20',
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fef2f2'
+            },
+          },
+        }}
+      />
+    </div>
+  );
 }
 
-function App() {
+function AppWrapper() {
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
       <ChatProvider>
-        <AppContent />
+        <App />
       </ChatProvider>
     </ThemeProvider>
   );
 }
 
-export default App;
+export default AppWrapper;
