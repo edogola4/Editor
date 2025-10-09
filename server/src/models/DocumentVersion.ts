@@ -31,7 +31,7 @@ type DocumentVersionModelStatic = typeof Model & {
 };
 
 // Define the model initialization function
-export default function DocumentVersion(sequelize: Sequelize): DocumentVersionModelStatic {
+const DocumentVersion = (sequelize: Sequelize): DocumentVersionModelStatic => {
   const DocumentVersion = sequelize.define<DocumentVersionInstance>(
     "DocumentVersion",
     {
@@ -114,6 +114,8 @@ export default function DocumentVersion(sequelize: Sequelize): DocumentVersionMo
   };
 
   return DocumentVersion;
-}
+};
+
+export default DocumentVersion;
 
 export type { DocumentVersionInstance, DocumentVersionAttributes, DocumentVersionCreationAttributes };

@@ -1,209 +1,49 @@
-import { Sequelize } from "sequelize";
-import { config } from "../config/config.js";
-import User, { UserAttributes, UserInstance, UserModelStatic, UserStatus } from "./User.js";
-import Room, { RoomAttributes, RoomInstance, RoomModelStatic, UserRole, InvitationStatus } from "./Room.js";
-import Document, { DocumentAttributes, DocumentInstance } from "./Document.js";
-import DocumentVersion, { DocumentVersionAttributes, DocumentVersionInstance } from "./DocumentVersion.js";
-import RoomMember, { RoomMemberAttributes, RoomMemberInstance } from "./RoomMember.js";
-import RoomInvitation, { RoomInvitationAttributes, RoomInvitationInstance } from "./RoomInvitation.js";
-import RoomActivity, { RoomActivityInstance } from "./RoomActivity.js";
-import Session, { SessionAttributes, SessionInstance, SessionModelStatic } from "./Session.js";
+// Re-export models
+export { default as User } from './User.js';
+export { default as Document } from './Document.js';
+export { default as DocumentPermission } from './DocumentPermission.js';
+export { default as Operation } from './Operation.js';
+export { default as Room } from './Room.js';
+export { default as RoomMember } from './RoomMember.js';
+export { default as RoomActivity } from './RoomActivity.js';
+export { default as RoomInvitation } from './RoomInvitation.js';
+export { default as Session } from './Session.js';
+export { default as Log } from './Log.js';
+export { default as EnhancedUser } from './EnhancedUser.js';
+export { default as DocumentVersion } from './DocumentVersion.js';
 
-// Initialize Sequelize with configuration
-const sequelize = new Sequelize(
-  config.db.name,
-  config.db.user,
-  config.db.password,
-  {
-    host: config.db.host,
-    port: config.db.port,
-    dialect: "postgres",
-    logging: process.env.NODE_ENV === "development" ? console.log : false,
-    define: {
-      timestamps: true,
-      underscored: true,
-    },
-  },
-);
+// Export types and enums
+export * from './types.js';
 
-// Initialize models
-const UserModel = User(sequelize);
-const RoomModel = Room(sequelize);
-const DocumentModel = Document(sequelize);
-const DocumentVersionModel = DocumentVersion(sequelize);
-const RoomMemberModel = RoomMember(sequelize);
-const RoomInvitationModel = RoomInvitation(sequelize);
-const RoomActivityModel = RoomActivity(sequelize);
-const SessionModel = Session(sequelize);
+// Import models to create db object (avoiding circular dependencies by importing after exports)
+import User from './User.js';
+import Document from './Document.js';
+import DocumentPermission from './DocumentPermission.js';
+import Operation from './Operation.js';
+import Room from './Room.js';
+import RoomMember from './RoomMember.js';
+import RoomActivity from './RoomActivity.js';
+import RoomInvitation from './RoomInvitation.js';
+import Session from './Session.js';
+import Log from './Log.js';
+import EnhancedUser from './EnhancedUser.js';
+import DocumentVersion from './DocumentVersion.js';
 
-// Set up associations
-const models = {
-  User: UserModel,
-  Room: RoomModel,
-  Document: DocumentModel,
-  DocumentVersion: DocumentVersionModel,
-  RoomMember: RoomMemberModel,
-  RoomInvitation: RoomInvitationModel,
-  RoomActivity: RoomActivityModel,
-  Session: SessionModel,
-};
-
-// Set up model associations
-const setupAssociations = () => {
-  // Room - User (Owner) association
-  RoomModel.belongsTo(UserModel, {
-    foreignKey: 'ownerId',
-    as: 'owner',
-    onDelete: 'CASCADE',
-  });
-
-  // Room - RoomMember associations
-  RoomModel.hasMany(RoomMemberModel, {
-    foreignKey: 'roomId',
-    as: 'members',
-    onDelete: 'CASCADE',
-  });
-  
-  RoomMemberModel.belongsTo(RoomModel, {
-    foreignKey: 'roomId',
-    as: 'room',
-  });
-  
-  RoomMemberModel.belongsTo(UserModel, {
-    foreignKey: 'userId',
-    as: 'user',
-  });
-
-  // Room - RoomInvitation associations
-  RoomModel.hasMany(RoomInvitationModel, {
-    foreignKey: 'roomId',
-    as: 'invitations',
-    onDelete: 'CASCADE',
-  });
-  
-  RoomInvitationModel.belongsTo(RoomModel, {
-    foreignKey: 'roomId',
-    as: 'room',
-  });
-  
-  RoomInvitationModel.belongsTo(UserModel, {
-    foreignKey: 'invitedBy',
-    as: 'inviter',
-  });
-
-  // Room - RoomActivity associations
-  RoomModel.hasMany(RoomActivityModel, {
-    foreignKey: 'roomId',
-    as: 'activities',
-    onDelete: 'CASCADE',
-  });
-  
-  RoomActivityModel.belongsTo(RoomModel, {
-    foreignKey: 'roomId',
-    as: 'room',
-  });
-  
-  RoomActivityModel.belongsTo(UserModel, {
-    foreignKey: 'userId',
-    as: 'user',
-  });
-
-  // User - Room associations
-  UserModel.hasMany(RoomModel, {
-    foreignKey: 'ownerId',
-    as: 'ownedRooms',
-  });
-  
-  UserModel.hasMany(RoomMemberModel, {
-    foreignKey: 'userId',
-    as: 'roomMemberships',
-  });
-  
-  UserModel.hasMany(RoomInvitationModel, {
-    foreignKey: 'invitedBy',
-    as: 'sentInvitations',
-  });
-  
-  UserModel.hasMany(RoomActivityModel, {
-    foreignKey: 'userId',
-    as: 'activities',
-  });
-};
-
-// Call associate methods if they exist
-Object.values(models).forEach((model: any) => {
-  if (model.associate) {
-    model.associate(models);
-  }
-});
-
-// Set up associations
-setupAssociations();
-
-// Test the database connection
-const testConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("Database connection has been established successfully.");
-  } catch (error) {
-    console.error("Unable to connect to the database:", error);
-    process.exit(1);
-  }
-};
-
+// Create db object with all models
 const db = {
-  sequelize,
-  Sequelize,
-  User: UserModel,
-  Room: RoomModel,
-  Document: DocumentModel,
-  DocumentVersion: DocumentVersionModel,
-  RoomMember: RoomMemberModel,
-  RoomInvitation: RoomInvitationModel,
-  RoomActivity: RoomActivityModel,
-  Session: SessionModel,
-  testConnection,
+  User,
+  Document,
+  DocumentPermission,
+  Operation,
+  Room,
+  RoomMember,
+  RoomActivity,
+  RoomInvitation,
+  Session,
+  Log,
+  EnhancedUser,
+  DocumentVersion
 };
 
 export default db;
-
-// Export types and enums
-export type {
-  UserAttributes,
-  UserInstance,
-  UserModelStatic,
-  RoomAttributes,
-  RoomInstance,
-  RoomModelStatic,
-  DocumentAttributes,
-  DocumentVersionAttributes,
-  DocumentVersionInstance,
-  RoomMemberAttributes,
-  RoomMemberInstance,
-  RoomInvitationAttributes,
-  RoomInvitationInstance,
-  RoomActivityAttributes,
-  RoomActivityInstance,
-  SessionAttributes,
-  SessionInstance,
-  SessionModelStatic,
-};
-
-// Export enums
-export { UserRole, UserStatus, InvitationStatus, ActivityType };
-
-// Export models
-// Export the testConnection function separately
-export { testConnection };
-export {
-  sequelize,
-  Sequelize,
-  UserModel as User,
-  RoomModel as Room,
-  DocumentModel as Document,
-  DocumentVersionModel as DocumentVersion,
-  RoomMemberModel as RoomMember,
-  RoomInvitationModel as RoomInvitation,
-  RoomActivityModel as RoomActivity,
-  SessionModel as Session,
-};
+export { db };

@@ -1,139 +1,114 @@
-import { Model, DataTypes, Sequelize, Optional } from "sequelize";
+import { Table, Column, Model, DataType, ForeignKey, BelongsTo, HasMany, PrimaryKey, Default } from 'sequelize-typescript';
+import { User } from './User';
+import DocumentPermission from './DocumentPermission';
+import Operation from './Operation';
 
-// Define the attributes of the Document model
-interface DocumentAttributes {
-  id: string;
-  name: string;
-  content: string;
-  language: string;
-  version: number;
-  ownerId: string;
+export enum DocumentVisibility {
+  PRIVATE = 'private',
+  PUBLIC = 'public',
+  UNLISTED = 'unlisted'
+}
+
+@Table({
+  tableName: 'documents',
+  timestamps: true,
+  version: true,
+  underscored: true
+})
+export class Document extends Model {
+
+  @PrimaryKey
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    allowNull: false
+  })
+  id!: string;
+
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: false,
+    validate: {
+      notEmpty: true
+    }
+  })
+  name!: string;
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    defaultValue: ''
+  })
+  content!: string;
+
+  @Column({
+    type: DataType.STRING(50),
+    allowNull: false,
+    defaultValue: 'plaintext'
+  })
+  language!: string;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  })
+  version!: number;
+
+  @ForeignKey(() => User)
+  @Column(DataType.UUID)
+  ownerId!: string;
+
+  @Column(DataType.UUID)
   roomId?: string;
-  isPublic: boolean;
-  readonly createdAt?: Date;
-  readonly updatedAt?: Date;
-}
 
-// Define the attributes required to create a new Document
-interface DocumentCreationAttributes
-  extends Optional<DocumentAttributes, "id" | "version" | "createdAt" | "updatedAt"> {}
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  })
+  isPublic!: boolean;
 
-// Define the Document instance
-interface DocumentInstance
-  extends Model<DocumentAttributes, DocumentCreationAttributes>,
-    DocumentAttributes {
-  [key: string]: any;
-}
+  @Column({
+    type: DataType.ENUM(...Object.values(DocumentVisibility)),
+    allowNull: false,
+    defaultValue: DocumentVisibility.PRIVATE
+  })
+  visibility!: DocumentVisibility;
 
-// Define the static methods of the Document model
-type DocumentModelStatic = typeof Model & {
-  new (values?: object, options?: any): DocumentInstance;
-  associate?: (models: any) => void;
-  findByPk: (id: string, options?: any) => Promise<DocumentInstance | null>;
-  findOne: (options: any) => Promise<DocumentInstance | null>;
+  // Timestamps
+  @Column(DataType.DATE)
+  createdAt!: Date;
+
+  @Column(DataType.DATE)
+  updatedAt!: Date;
+
+  @Column(DataType.DATE)
+  deletedAt?: Date;
+
+  // Associations
+  @BelongsTo(() => User, 'ownerId')
+  owner!: User;
+
+  @HasMany(() => DocumentPermission, 'documentId')
+  permissions!: DocumentPermission[];
+
+  @HasMany(() => Operation, 'documentId')
+  operations!: Operation[];
+
+  // Instance methods
+  async incrementVersion(): Promise<this> {
+    this.version += 1;
+    return this.save();
+  }
+
+  toJSON(): any {
+    const values = { ...this.get() };
+    return values;
+  }
 };
 
-// Define the model initialization function
-export default function Document(sequelize: Sequelize): DocumentModelStatic {
-  const Document = sequelize.define<DocumentInstance>(
-    "Document",
-    {
-      id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: "Untitled Document",
-      },
-      content: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        defaultValue: "",
-      },
-      language: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: "javascript",
-      },
-      version: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      ownerId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-      },
-      roomId: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-          model: "rooms",
-          key: "id",
-        },
-        onDelete: "SET NULL",
-      },
-      isPublic: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-    },
-    {
-      tableName: "Documents",
-      timestamps: true,
-      underscored: true,
-      indexes: [
-        {
-          fields: ["owner_id"],
-        },
-        {
-          fields: ["room_id"],
-        },
-        {
-          fields: ["created_at"],
-        },
-      ],
-    }
-  ) as DocumentModelStatic;
+// Export interfaces for type safety
+export interface IDocument extends Document {}
 
-  // Define associations
-  Document.associate = (models: any) => {
-    Document.belongsTo(models.User, {
-      foreignKey: "ownerId",
-      as: "owner",
-    });
-    
-    Document.belongsTo(models.Room, {
-      foreignKey: "roomId",
-      as: "room",
-    });
-
-    Document.hasMany(models.DocumentVersion, {
-      foreignKey: "documentId",
-      as: "versions",
-    });
-  };
-
-  return Document;
-}
-
-export type { DocumentInstance, DocumentAttributes, DocumentCreationAttributes };
+export default Document;

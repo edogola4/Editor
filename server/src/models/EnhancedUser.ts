@@ -1,4 +1,4 @@
-import { Model, DataTypes, Sequelize, Optional } from "sequelize";
+import { Model, DataTypes, Sequelize, ModelStatic, ModelDefined, Optional } from "sequelize";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -42,24 +42,23 @@ interface UserAttributes {
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   emailVerificationToken?: string;
-  emailVerificationExpires?: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  [key: string]: any;
 }
 
-// Define the attributes required to create a new User
-interface UserCreationAttributes
-  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt" | "loginCount" | "emailNotifications" | "isVerified" | "twoFactorEnabled"> {}
+// Define UserCreationAttributes type
+type UserCreationAttributes = Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt'>;
 
-// Define the User instance methods
-interface UserInstance
-  extends Model<UserAttributes, UserCreationAttributes>,
-    UserAttributes {
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generatePasswordResetToken(): { resetToken: string; resetTokenExpiry: Date };
-  generateEmailVerificationToken(): { token: string; expires: Date };
-  toJSON(): UserAttributes;
-  [key: string]: any;
+// Define the instance methods and properties
+interface UserInstance extends Model<UserAttributes, UserCreationAttributes>, UserAttributes {
+  // Instance methods
+  comparePassword: (candidatePassword: string) => Promise<boolean>;
+  generatePasswordResetToken: () => { resetToken: string; resetTokenExpiry: Date };
+  generateEmailVerificationToken: () => { token: string; expires: Date };
+  
+  // Override toJSON to exclude sensitive data
+  toJSON: () => Omit<UserAttributes, 'password' | 'passwordResetToken' | 'passwordResetExpires' | 'emailVerificationToken' | 'emailVerificationExpires'>;
 }
 
 // Define the static methods of the User model
@@ -68,15 +67,16 @@ type UserModelStatic = typeof Model & {
   associate?: (models: any) => void;
   findByPk: (id: string, options?: any) => Promise<UserInstance | null>;
   findOne: (options: any) => Promise<UserInstance | null>;
+  prototype: UserInstance;
 };
 
-// Define the model initialization function
-export default function User(sequelize: Sequelize): UserModelStatic {
-  const SALT_ROUNDS = 10;
-  const TOKEN_EXPIRY_HOURS = 1;
+// Constants
+const SALT_ROUNDS = 10;
+const TOKEN_EXPIRY_HOURS = 1;
 
-  // Define the model
-  const User = sequelize.define<UserInstance>(
+// Define the model initialization function
+const EnhancedUser = (sequelize: Sequelize): UserModelStatic => {
+  const User = sequelize.define<UserInstance, UserAttributes>(
     "User",
     {
       id: {
@@ -205,7 +205,7 @@ export default function User(sequelize: Sequelize): UserModelStatic {
       emailVerificationExpires: {
         type: DataTypes.DATE,
         allowNull: true,
-      },
+      }
     },
     {
       tableName: 'users',
@@ -229,15 +229,16 @@ export default function User(sequelize: Sequelize): UserModelStatic {
         },
       },
     }
-  ) as UserModelStatic;
+  ) as unknown as UserModelStatic;
 
-  // Instance methods
-  User.prototype.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  // Add instance methods
+  User.prototype.comparePassword = async function(this: UserInstance, candidatePassword: string): Promise<boolean> {
     if (!this.password) return false;
     return bcrypt.compare(candidatePassword, this.password);
   };
 
-  User.prototype.generatePasswordResetToken = function() {
+  // Generate password reset token
+  User.prototype.generatePasswordResetToken = function(this: UserInstance) {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date();
     resetTokenExpiry.setHours(resetTokenExpiry.getHours() + TOKEN_EXPIRY_HOURS);
@@ -251,7 +252,8 @@ export default function User(sequelize: Sequelize): UserModelStatic {
     return { resetToken, resetTokenExpiry };
   };
 
-  User.prototype.generateEmailVerificationToken = function() {
+  // Generate email verification token
+  UserModel.prototype.generateEmailVerificationToken = function(this: UserInstance) {
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date();
     expires.setHours(expires.getHours() + TOKEN_EXPIRY_HOURS * 24); // 24 hours
@@ -266,7 +268,7 @@ export default function User(sequelize: Sequelize): UserModelStatic {
   };
 
   // Override toJSON to exclude sensitive data
-  User.prototype.toJSON = function() {
+  UserModel.prototype.toJSON = function() {
     const values = Object.assign({}, this.get());
     delete values.password;
     delete values.passwordResetToken;
@@ -287,8 +289,10 @@ export default function User(sequelize: Sequelize): UserModelStatic {
     // Add other associations as needed
   };
 
-  return User;
-}
+  return User as UserModelStatic;
+};
 
-// Export the User model and interfaces
-export type { UserAttributes, UserInstance, UserModelStatic };
+export default EnhancedUser;
+
+// Export interfaces
+export type { UserAttributes as IEnhancedUser, UserRole, UserStatus, UserInstance, UserModelStatic };
