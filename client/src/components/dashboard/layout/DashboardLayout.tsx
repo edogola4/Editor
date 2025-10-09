@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useAuthStore } from '../../../store/authStore';
 import { 
   FiMenu, 
   FiX, 
@@ -18,9 +19,15 @@ import {
   FiTerminal,
   FiGlobe,
   FiChevronDown,
-  FiChevronRight
+  FiChevronRight,
+  FiUser,
+  FiLogOut
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ErrorBoundary } from '../../common/ErrorBoundary';
+import { LoadingSpinner } from '../../common/LoadingSpinner';
+import { toast } from 'react-toastify';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import styles from './DashboardLayout.module.css';
 
 interface DashboardLayoutProps {
@@ -46,8 +53,44 @@ interface Collaborator {
   currentFile?: string;
 }
 
+// Memoized sidebar item component to prevent unnecessary re-renders
+const SidebarItem = memo(({ 
+  icon: Icon, 
+  text, 
+  to, 
+  isActive,
+  badge 
+}: { 
+  icon: React.ElementType; 
+  text: string; 
+  to: string; 
+  isActive: boolean;
+  badge?: number;
+}) => (
+  <Link 
+    to={to}
+    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+      isActive 
+        ? 'bg-gray-100 text-gray-900' 
+        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+    }`}
+  >
+    <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+    <span className="truncate">{text}</span>
+    {badge && (
+      <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+        {badge}
+      </span>
+    )}
+  </Link>
+));
+
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const queryClient = useQueryClient();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -60,7 +103,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     collaborators: true
   });
 
-  const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -187,7 +229,60 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Toggle sidebar
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  // Handle logout with loading state and toast notification
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const handleLogout = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      // Invalidate all queries to clear the cache
+      await queryClient.invalidateQueries();
+      navigate('/login');
+      toast.success('Successfully logged out');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast.error('Failed to log out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [logout, navigate, queryClient]);
+  
+  // Memoize the user menu to prevent unnecessary re-renders
+  const userMenu = useMemo(() => (
+    <div className="py-1">
+      <Link
+        to="/profile"
+        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        Your Profile
+      </Link>
+      <Link
+        to="/settings"
+        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        Settings
+      </Link>
+      <button
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 flex items-center"
+      >
+        {isLoggingOut ? (
+          <>
+            <LoadingSpinner size="sm" className="mr-2" />
+            Signing out...
+          </>
+        ) : (
+          'Sign out'
+        )}
+      </button>
+    </div>
+  ), [handleLogout, isLoggingOut]);
+
   const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);
 
   const toggleSection = (section: string) => {
@@ -398,11 +493,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
         <div className={styles.sidebarFooter}>
           <div className={styles.userProfile}>
-            <div className={styles.avatar}>JD</div>
-            {sidebarOpen && (
+            <div className={styles.avatar}>
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            {sidebarOpen && user && (
               <div className={styles.userInfo}>
-                <div className={styles.userName}>John Doe</div>
-                <div className={styles.userEmail}>john@example.com</div>
+                <div className={styles.userName}>{user.username}</div>
+                <div className={styles.userEmail}>{user.email}</div>
                 <div className={styles.userStatus}>
                   <div className={styles.statusDot} />
                   Online
@@ -524,9 +621,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <button 
                 className={styles.userButton}
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
+                aria-label="User menu"
               >
-                <div className={styles.avatar}>JD</div>
-                <span>John Doe</span>
+                <div className={styles.avatar}>
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <span>{user?.username || 'User'}</span>
                 <FiChevronDown size={16} className={userMenuOpen ? styles.rotated : ''} />
               </button>
               
@@ -539,27 +639,52 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                     className={styles.userDropdown}
                   >
                     <div className={styles.dropdownHeader}>
-                      <div className={styles.avatar}>JD</div>
+                      <div className={styles.avatar}>
+                        {user?.username?.charAt(0).toUpperCase() || 'U'}
+                      </div>
                       <div>
-                        <div className={styles.userName}>John Doe</div>
-                        <div className={styles.userEmail}>john@example.com</div>
+                        <div className={styles.userName}>{user?.username || 'User'}</div>
+                        <div className={styles.userEmail}>{user?.email || ''}</div>
                       </div>
                     </div>
                     <div className={styles.dropdownDivider}></div>
-                    <a href="#" className={styles.dropdownItem}>
+                    <button 
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate('/profile');
+                      }}
+                    >
                       <FiUsers size={16} />
                       Your Profile
-                    </a>
-                    <a href="#" className={styles.dropdownItem}>
+                    </button>
+                    <button 
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate('/settings');
+                      }}
+                    >
                       <FiSettings size={16} />
                       Settings
-                    </a>
-                    <a href="#" className={styles.dropdownItem}>
+                    </button>
+                    <button 
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate('/starred');
+                      }}
+                    >
                       <FiStar size={16} />
                       Starred Projects
-                    </a>
+                    </button>
                     <div className={styles.dropdownDivider}></div>
-                    <a href="#" className={styles.dropdownItem}>Sign out</a>
+                    <button 
+                      className={styles.dropdownItem}
+                      onClick={handleLogout}
+                    >
+                      Sign out
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -619,4 +744,5 @@ const NavItem: React.FC<NavItemProps> = ({
   );
 };
 
-export default DashboardLayout;
+// Memoize the main component to prevent unnecessary re-renders
+export default memo(DashboardLayout);

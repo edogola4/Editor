@@ -21,6 +21,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '../components/dashboard/layout/DashboardLayout';
 import styles from './Dashboard.module.css';
 
+// Add this if not already present
+declare module 'react' {
+  interface CSSProperties {
+    '--color'?: string;
+  }
+}
+
 // Type definitions
 interface Project {
   id: number;
@@ -48,16 +55,16 @@ interface Activity {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  const { user } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const navigate = useNavigate();
 
   // Sample data with enhanced structure
   const recentProjects: Project[] = [
@@ -82,7 +89,8 @@ const Dashboard = () => {
       lastUpdated: '1 day ago',
       stars: 28,
       forks: 5,
-      collaborators: ['JD', 'TP', 'RK']
+      collaborators: ['JD', 'TP', 'RK'],
+      isPrivate: false
     },
     {
       id: 3,
@@ -92,7 +100,8 @@ const Dashboard = () => {
       lastUpdated: '3 days ago',
       stars: 15,
       forks: 3,
-      collaborators: ['AS', 'MP']
+      collaborators: ['AS', 'MP'],
+      isPrivate: false
     },
   ];
 
