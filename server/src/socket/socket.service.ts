@@ -11,13 +11,13 @@ import type {
   SocketData, 
   CursorPosition, 
   SelectionRange,
-  TextFormatting,
   DocumentOperation,
   User
 } from './types/events.js';
 import { authenticateSocket, requireAuth } from './middleware/auth.js';
 import { roomService } from './services/room.service.js';
 import { documentService } from './services/document.service.js';
+import { ChatService } from './services/chat.service.js';
 import { randomColor } from '../utils/color.js';
 
 export class SocketService {
@@ -309,17 +309,28 @@ export class SocketService {
     }
   }
 
+  private handleConnection(socket: CustomSocket): void {
+    console.log(`Socket connected: ${socket.id}`);
+
+    // Initialize services
+    roomService.initialize(socket);
+    documentService.initialize(socket);
+    
+    // Initialize chat service with default options
+    const chatService = new ChatService(this.io, socket, {
+      // Override any default options here if needed
+    });
+    chatService.initialize();
+  }
+
   private handleDisconnect(socket: CustomSocket): void {
     const user = socket.data.user;
     if (!user) return;
     
-    // Get room info before leaving
     const room = roomService.getUserRoom(user.id);
     
     // Clean up room membership
     const result = roomService.leaveRoom(user.id);
-    
-    // Notify other users in the room
     if (result && room) {
       const { roomId, isEmpty } = result;
       

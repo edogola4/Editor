@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 import { Redis } from 'ioredis';
-import { redis } from '../config/redis.js';
+import { redisClient as redis } from '../config/redis.js';
 
 interface StateData {
   state: string;

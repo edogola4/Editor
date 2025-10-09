@@ -1,5 +1,7 @@
-import { Redis, RedisOptions } from 'ioredis';
+import { Redis, type RedisOptions } from 'ioredis';
+import { testConnection } from './database';
 
+// Redis connection options
 const redisOptions: RedisOptions = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -22,26 +24,27 @@ const redisOptions: RedisOptions = {
   showFriendlyErrorStack: process.env.NODE_ENV !== 'production',
 };
 
-const redis = new Redis(redisOptions);
+// Create and export the Redis client
+export const redisClient = new Redis(redisOptions);
 
 // Connection event handlers
-redis.on('connect', () => {
+redisClient.on('connect', () => {
   console.log('✅ Redis client connected');  
 });
 
-redis.on('ready', () => {
+redisClient.on('ready', () => {
   console.log('✅ Redis client ready');
 });
 
-redis.on('error', (error) => {
+redisClient.on('error', (error) => {
   console.error('❌ Redis error:', error);
 });
 
-redis.on('reconnecting', (delay) => {
+redisClient.on('reconnecting', (delay) => {
   console.log(`🔄 Redis reconnecting in ${delay}ms`);
 });
 
-redis.on('end', () => {
+redisClient.on('end', () => {
   console.log('❌ Redis connection closed');
 });
 
@@ -49,12 +52,12 @@ redis.on('end', () => {
 const shutdown = async () => {
   console.log('Shutting down Redis connection...');
   try {
-    await redis.quit();
+    await redisClient.quit();
     console.log('Redis connection closed gracefully');
-    process.exit(0);
   } catch (error) {
     console.error('Error closing Redis connection:', error);
-    process.exit(1);
+  } finally {
+    process.exit(0);
   }
 };
 
@@ -62,13 +65,16 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
 // Test the connection on startup
-(async () => {
+const testConnection = async () => {
   try {
-    await redis.ping();
-    console.log('✅ Redis connection test successful');
+    await redisClient.ping();
+    console.log('Redis connection test successful');
   } catch (error) {
-    console.error('❌ Redis connection test failed:', error);
+    console.error('Redis connection test failed:', error);
+    process.exit(1);
   }
-})();
+};
 
-export { redis, redisOptions };
+testConnection().catch(console.error);
+
+export { redisOptions };
