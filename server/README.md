@@ -4,10 +4,10 @@
   <h2>🚀 Real-time Collaborative Editor - Backend</h2>
   <p>High-performance backend service with native WebSocket-based real-time collaboration</p>
 
-  ![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
-  ![Express](https://img.shields.io/badge/Express-5+-000000.svg)
+  ![Express](https://img.shields.io/badge/Express-4+-000000.svg)
   ![WebSocket](https://img.shields.io/badge/WebSocket-100%25-010101.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
@@ -20,14 +20,16 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v4.1.0
+## 🌟 What's New in v1.0.0
 
-- **Enhanced Database Schema**: Added support for user profiles and session management
-- **Improved Authentication**: Secure session handling with JWT and refresh tokens
-- **Better Error Handling**: More descriptive error messages and validation feedback
-- **Simplified Setup**: Streamlined database initialization and configuration
-- **Performance Optimizations**: Improved database queries and WebSocket handling
-- **Comprehensive Logging**: Enhanced logging for better debugging and monitoring
+- **Initial Release**: Complete backend implementation for collaborative code editing
+- **Modern Architecture**: TypeScript, Express.js 4+, Socket.IO 4.8+
+- **Database Integration**: PostgreSQL 16+ with Sequelize 6+ ORM
+- **Real-time Features**: WebSocket-based collaboration with operational transformation
+- **Authentication System**: JWT-based auth with GitHub OAuth integration
+- **API Documentation**: Auto-generated OpenAPI/Swagger documentation
+- **Testing Suite**: Comprehensive unit and integration tests
+- **Production Ready**: Docker containerization and deployment support
 
 This is the backend service for the Collaborative Code Editor, built with TypeScript and Node.js to provide a scalable and performant real-time collaboration experience.
 
