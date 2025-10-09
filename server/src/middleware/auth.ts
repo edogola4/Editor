@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { sequelize } from "../config/database.js";
-import UserModel, { UserInstance } from "../models/User.js";
+import { db } from "../models/index.js";
 import { CustomError } from "../utils/errors.js";
 import { config } from "../config/config.js";
 
-// Initialize the User model with the sequelize instance
-const User = UserModel(sequelize);
+// Use the User model from the db object (already initialized)
+const User = db.User;
 
 // Extend the Express Request type to include the user property
 declare global {

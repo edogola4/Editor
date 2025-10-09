@@ -9,10 +9,13 @@ import compression from "compression";
 import morgan from "morgan";
 import session from "express-session";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 import { config } from "./config/config.js";
 import passport from "./config/passport.js";
 import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
-import { db, testConnection } from "./models/index.js";
+import { db } from "./models/index.js";
+import { testConnection } from "./config/database.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { redis } from "./config/redis.js";
 import { githubRoutes } from "./routes/github.routes.js";
@@ -28,6 +31,11 @@ const rootDir = path.resolve(__dirname, '..');
 moduleAlias.addAliases({
   "@db": path.join(rootDir, "db"),
 });
+
+// Initialize swagger documentation
+const swaggerDocument = YAML.load(
+  path.join(__dirname, "../../docs/api/openapi.yaml"),
+);
 
 // Initialize Express app
 const app = express();
@@ -76,6 +84,21 @@ app.use("/api/auth", (await import("./routes/auth.routes.js")).default);
 app.use("/api/documents", (await import("./routes/document.routes.js")).default);
 app.use("/api/github", githubRoutes);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Collaborative Code Editor Backend API",
+    version: process.env.npm_package_version || "1.0.0",
+    endpoints: {
+      health: "/health",
+      api: "/api",
+      docs: "/api-docs"
+    },
+    documentation: "/api-docs",
+  });
+});
+
 // Initialize WebSocket Service
 const webSocketService = new WebSocketService(server);
 
@@ -99,6 +122,9 @@ app.post('/api/documents', (req, res) => {
     users: []
   });
 });
+
+// API Documentation with Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Error handling
 app.use(notFoundHandler);
