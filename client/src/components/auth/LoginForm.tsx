@@ -4,105 +4,174 @@ import { useAuthStore } from '../../store/authStore';
 import './LoginForm.css';
 
 interface FormErrors {
+  name?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
 }
 
 const LoginForm = () => {
+  // State
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
-  const { login, register, isLoading, error } = useAuthStore();
-  const navigate = useNavigate();
-
-  const [searchParams] = useSearchParams();
   
-  // Handle GitHub OAuth popup
-  const handleGitHubLogin = () => {
-    // Store the current path to redirect back after login
-    const redirectAfterLogin = window.location.pathname + window.location.search;
-    localStorage.setItem('redirectAfterLogin', redirectAfterLogin);
-    
-    // Generate a random state parameter for CSRF protection
-    const state = Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('oauth_state', state);
-    
-    // Open GitHub OAuth in a popup
-    const width = 600;
-    const height = 700;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
-    
-    // Build the OAuth URL with state parameter
-    const githubAuthUrl = new URL(`${import.meta.env.VITE_API_URL}/api/auth/github`);
-    githubAuthUrl.searchParams.append('state', state);
-    
-    const popup = window.open(
-      githubAuthUrl.toString(),
-      'github-oauth',
-      `width=${width},height=${height},top=${top},left=${left}`
-    );
-    
-    if (!popup) {
-      setErrors({
-        ...errors,
-        github: 'Pop-up was blocked. Please allow pop-ups for this site.'
+  // Hooks
+  const { login, register, isLoading, error, isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
+  
+  // Handle redirection if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !hasRedirected) {
+      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      console.log('Already authenticated, redirecting to:', redirectTo);
+      setHasRedirected(true);
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, navigate, searchParams, hasRedirected]);
+  
+  // Handle successful authentication after form submission
+  useEffect(() => {
+    if (isSubmitting && isAuthenticated && !hasRedirected) {
+      console.log('Form submission successful, redirecting...');
+      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      setHasRedirected(true);
+      setIsSubmitting(false);
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isSubmitting, isAuthenticated, navigate, searchParams, hasRedirected]);
+  
+  // Debug logging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Auth state:', { 
+        isAuthenticated, 
+        user: user ? { id: user.id, username: user.username } : 'No user',
+        isSubmitting,
+        hasRedirected
       });
-      return;
+    }
+  }, [isAuthenticated, user, isSubmitting, hasRedirected]);
+
+  // Toggle between login and signup modes
+  const toggleAuthMode = () => {
+    setErrors({});
+    setIsLogin(!isLogin);
+    setName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+  };
+
+  // Form validation
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    // Username validation (only for registration)
+    if (!isLogin) {
+      if (!name.trim()) {
+        newErrors.name = 'Username is required';
+      } else if (name.trim().length < 3) {
+        newErrors.name = 'Username must be at least 3 characters';
+      } else if (name.trim().length > 30) {
+        newErrors.name = 'Username must be less than 30 characters';
+      } else if (!/^[a-zA-Z0-9_]+$/.test(name.trim())) {
+        newErrors.name = 'Username can only contain letters, numbers, and underscores';
+      }
     }
     
-    // Poll to check if the popup was closed
-    const checkPopup = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(checkPopup);
-        // Check if we have a redirect URL in localStorage (set by the callback)
-        const redirectUrl = localStorage.getItem('oauth_redirect');
-        if (redirectUrl) {
-          localStorage.removeItem('oauth_redirect');
-          // Use replace instead of push to prevent the popup from being reopened on back button
-          navigate(redirectUrl, { replace: true });
-        }
-      }
-    }, 100);
+    // Email validation
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please provide a valid email';
+    }
+
+    // Password validation
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (!/[0-9]/.test(password)) {
+      newErrors.password = 'Password must contain at least one number';
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = 'Password must contain at least one lowercase letter';
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[^a-zA-Z0-9]/.test(password)) {
+      newErrors.password = 'Password must contain at least one special character';
+    }
+
+    // Confirm password validation (only for registration)
+    if (!isLogin && password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Listen for messages from the popup
-    const messageHandler = (event: MessageEvent) => {
-      // Verify the origin of the message
-      if (event.origin !== window.location.origin) return;
+    if (!validateForm()) {
+      return;
+    }
+
+    if (isSubmitting) return; // Prevent multiple submissions
+    
+    try {
+      console.log('Starting authentication...');
+      setIsSubmitting(true);
       
-      if (event.data.type === 'OAUTH_SUCCESS') {
-        const { accessToken, refreshToken, user } = event.data.payload;
-        
-        // Update auth store with user data and tokens
-        useAuthStore.getState().set({
-          user,
-          tokens: { accessToken, refreshToken },
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-        
-        // Redirect to dashboard or intended URL
-        const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
-        localStorage.removeItem('redirectAfterLogin');
-        navigate(redirectTo);
-        
-        // Clean up the event listener
-        window.removeEventListener('message', messageHandler);
+      if (isLogin) {
+        console.log('Attempting login...');
+        await login(email, password);
+        console.log('Login successful');
+      } else {
+        console.log('Attempting registration...');
+        await register(name, email, password, password);
+        console.log('Registration successful');
       }
-    };
-    
-    window.addEventListener('message', messageHandler);
-    
-    // Check if the popup was blocked
-    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-      useAuthStore.getState().setError('Pop-up was blocked. Please allow pop-ups for this site.');
+    } catch (err) {
+      console.error('Authentication error:', err);
+      setIsSubmitting(false);
+      setHasRedirected(false);
+      // The error will be handled by the auth store and displayed in the UI
     }
   };
 
+  // Handle OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    if (code && state) {
+      // Handle OAuth callback
+      const storedState = localStorage.getItem('oauth_state');
+      if (state !== storedState) {
+        console.error('Invalid state parameter');
+        return;
+      }
+      
+      // Clear the state from localStorage
+      localStorage.removeItem('oauth_state');
+      
+      // Redirect to the stored URL or home
+      const redirectAfterLogin = localStorage.getItem('redirectAfterLogin') || '/';
+      localStorage.removeItem('redirectAfterLogin');
+      navigate(redirectAfterLogin);
+    }
+  }, [navigate]);
+  
   // Handle OAuth errors that might be passed back via URL (fallback)
   useEffect(() => {
     const error = searchParams.get('error');
@@ -110,7 +179,11 @@ const LoginForm = () => {
     const refreshToken = searchParams.get('refreshToken');
     
     if (error) {
-      setErrors(prev => ({ ...prev, form: decodeURIComponent(error) }));
+      setErrors(prev => ({
+        ...prev,
+        form: decodeURIComponent(error)
+      }));
+      
       // Clean up the URL
       const url = new URL(window.location.href);
       url.searchParams.delete('error');
@@ -147,80 +220,17 @@ const LoginForm = () => {
         window.history.replaceState({}, document.title, url.toString());
         
         // Redirect to dashboard or intended URL
-        const redirectTo = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+        const redirectTo = localStorage.getItem('redirectAfterLogin') || '/';
         localStorage.removeItem('redirectAfterLogin');
         navigate(redirectTo);
       }
     }
   }, [searchParams, navigate]);
 
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setErrors({});
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    // Password validation
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
-    } else if (!/[0-9]/.test(password)) {
-      newErrors.password = 'Password must contain at least one number';
-    } else if (!/[a-z]/.test(password)) {
-      newErrors.password = 'Password must contain at least one lowercase letter';
-    } else if (!/[A-Z]/.test(password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter';
-    } else if (!/[^a-zA-Z0-9]/.test(password)) {
-      newErrors.password = 'Password must contain at least one special character';
-    }
-
-    // Confirm password validation (only for registration)
-    if (!isLogin) {
-      if (!confirmPassword) {
-        newErrors.confirmPassword = 'Please confirm your password';
-      } else if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        // Generate a username from email (first part before @)
-        const username = email.split('@')[0];
-        // Include confirmPassword in the registration request
-        await register(username, email, password, confirmPassword);
-      }
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Authentication error:', error);
-      // The error will be handled by the auth store and displayed in the UI
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (errors.name) {
+      setErrors(prev => ({ ...prev, name: '' }));
     }
   };
 
@@ -238,21 +248,37 @@ const LoginForm = () => {
     }
   };
 
+  const handleGitHubLogin = async () => {
+    try {
+      // Generate a random state token to prevent CSRF attacks
+      const state = Math.random().toString(36).substring(2);
+      // Store the state in localStorage to verify it later
+      localStorage.setItem('oauth_state', state);
+      
+      // Store the current URL to redirect back after login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
+      
+      // GitHub OAuth URL - replace CLIENT_ID with your GitHub OAuth app's client ID
+      const clientId = process.env.REACT_APP_GITHUB_CLIENT_ID || 'YOUR_GITHUB_CLIENT_ID';
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/github/callback`);
+      const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=user:email`;
+      
+      // Redirect to GitHub for authentication
+      window.location.href = githubAuthUrl;
+    } catch (error) {
+      console.error('GitHub login error:', error);
+      setErrors(prev => ({
+        ...prev,
+        form: 'Failed to initiate GitHub login. Please try again.'
+      }));
+    }
+  };
+
   return (
     <div className="loginFormContainer">
       <div className="loginFormCard">
         <div className="loginFormHeader">
-          <div className="loginFormToggle">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-            <button 
-              type="button" 
-              onClick={toggleAuthMode} 
-              className="loginFormToggleBtn"
-              disabled={isLoading}
-            >
-              {isLogin ? 'Sign Up' : 'Sign In'}
-            </button>
-          </div>
+          <h2>{isLogin ? 'Welcome back' : 'Create an account'}</h2>
           <p className="loginFormSubtitle">
             {isLogin ? 'Sign in to your account to continue' : 'Create your account to get started'}
           </p>
@@ -265,6 +291,27 @@ const LoginForm = () => {
         )}
 
         <form className="loginFormForm" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div className="loginFormGroup">
+              <label className="loginFormLabel" htmlFor="name">
+                Full Name
+              </label>
+              <div className="inputWrapper">
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={handleNameChange}
+                  className={`loginFormInput ${errors.name ? 'error' : ''}`}
+                  placeholder="Enter your full name"
+                  required={!isLogin}
+                  disabled={isLoading}
+                />
+                {errors.name && <span className="fieldError">{errors.name}</span>}
+              </div>
+            </div>
+          )}
+
           <div className="loginFormGroup">
             <label className="loginFormLabel" htmlFor="email">
               Email Address
@@ -278,6 +325,7 @@ const LoginForm = () => {
                 className={`loginFormInput ${errors.email ? 'error' : ''}`}
                 placeholder="Enter your email"
                 required
+                disabled={isLoading}
               />
               {errors.email && <span className="fieldError">{errors.email}</span>}
             </div>
@@ -296,6 +344,7 @@ const LoginForm = () => {
                 className={`loginFormInput ${errors.password ? 'error' : ''}`}
                 placeholder="Enter your password"
                 required
+                disabled={isLoading}
               />
               {errors.password && <span className="fieldError">{errors.password}</span>}
             </div>
@@ -315,6 +364,7 @@ const LoginForm = () => {
                   className={`loginFormInput ${errors.confirmPassword ? 'error' : ''}`}
                   placeholder="Confirm your password"
                   required
+                  disabled={isLoading}
                 />
                 {errors.confirmPassword && (
                   <span className="fieldError">{errors.confirmPassword}</span>
