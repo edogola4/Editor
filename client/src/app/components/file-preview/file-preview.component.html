@@ -1,0 +1,104 @@
+<div class="file-preview" [ngStyle]="{ 'max-height': maxHeight }">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="32"></mat-spinner>
+    <span>Loading preview...</span>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Preview Content -->
+  <div *ngIf="!loading && !error" class="preview-content">
+    <!-- Code Preview -->
+    <pre *ngIf="isCodePreview" class="code-preview">
+      <code [highlight]="content" [languages]="[getFileType()]"></code>
+    </pre>
+
+    <!-- Markdown Preview -->
+    <div *ngIf="isMarkdownPreview" class="markdown-preview" [innerHTML]="content | markdown">
+    </div>
+
+    <!-- Image Preview -->
+    <div *ngIf="isImagePreview" class="image-preview">
+      <img [src]="content" [alt]="file.name" (load)="onImageLoad()">
+    </div>
+
+    <!-- PDF Preview -->
+    <iframe *ngIf="isPdfPreview" 
+            [src]="content" 
+            class="pdf-preview"
+            frameborder="0">
+      Your browser does not support PDFs. Please download the PDF to view it.
+    </iframe>
+
+    <!-- Media Preview (Audio/Video) -->
+    <div *ngIf="isMediaPreview" class="media-preview">
+      <video *ngIf="mediaType === 'video'" 
+             [src]="content" 
+             controls
+             controlsList="nodownload">
+        Your browser does not support the video element.
+      </video>
+      
+      <audio *ngIf="mediaType === 'audio'" 
+             [src]="content" 
+             controls
+             controlsList="nodownload">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+
+    <!-- Office Preview -->
+    <iframe *ngIf="isOfficePreview"
+            [src]="content"
+            class="office-preview"
+            frameborder="0">
+      Your browser does not support iframes. Please download the file to view it.
+    </iframe>
+
+    <!-- Unsupported File Type -->
+    <div *ngIf="!isCodePreview && !isMarkdownPreview && !isImagePreview && 
+                !isPdfPreview && !isMediaPreview && !isOfficePreview" 
+         class="unsupported-preview">
+      <mat-icon>insert_drive_file</mat-icon>
+      <p>No preview available for this file type</p>
+      <button mat-stroked-button color="primary" (click)="downloadFile()">
+        <mat-icon>download</mat-icon>
+        Download File
+      </button>
+    </div>
+  </div>
+
+  <!-- File Info -->
+  <div class="file-info" *ngIf="!loading && !error">
+    <div class="file-meta">
+      <span class="file-name">{{ file.name }}</span>
+      <span class="file-size" *ngIf="file.size">{{ file.size | fileSize }}</span>
+      <span class="file-type">{{ getFileType() | uppercase }}</span>
+    </div>
+    <div class="file-actions">
+      <button mat-icon-button [matMenuTriggerFor]="fileMenu" title="More actions">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #fileMenu="matMenu">
+        <button mat-menu-item (click)="downloadFile()">
+          <mat-icon>download</mat-icon>
+          <span>Download</span>
+        </button>
+        <button mat-menu-item (click)="openInNewTab()">
+          <mat-icon>open_in_new</mat-icon>
+          <span>Open in new tab</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="copyLink()">
+          <mat-icon>link</mat-icon>
+          <span>Copy link</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+</div>

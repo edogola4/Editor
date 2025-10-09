@@ -1,0 +1,40 @@
+/**
+ * This is a simplified implementation of the Operation type used in the application.
+ * In a real-world scenario, this would be imported from a shared package.
+ */
+
+export interface Operation {
+  // The type of operation (e.g., 'insert', 'delete', 'retain')
+  type: string;
+  
+  // The position in the document where the operation applies
+  position: number;
+  
+  // The text to insert or delete (for 'insert' and 'delete' operations)
+  text?: string;
+  
+  // The length to retain (for 'retain' operations)
+  length?: number;
+  
+  // Optional metadata
+  [key: string]: any;
+}
+
+// Helper functions for working with operations
+export const createInsertOperation = (position: number, text: string): Operation => ({
+  type: 'insert',
+  position,
+  text,
+});
+
+export const createDeleteOperation = (position: number, text: string): Operation => ({
+  type: 'delete',
+  position,
+  text,
+});
+
+export const createRetainOperation = (length: number): Operation => ({
+  type: 'retain',
+  position: 0,
+  length,
+});

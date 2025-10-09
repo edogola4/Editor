@@ -1,0 +1,97 @@
+<div class="file-explorer" (contextmenu)="onContextMenu($event)">
+  <!-- Search Bar -->
+  <div class="search-container">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search files...</mat-label>
+      <input matInput [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Search files...">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <!-- Search Results -->
+  <div *ngIf="searchResults.length > 0" class="search-results">
+    <h3>Search Results</h3>
+    <mat-nav-list>
+      <mat-list-item *ngFor="let file of searchResults" (click)="selectFile(file)">
+        <mat-icon mat-list-icon>{{ getFileIcon(file.name) }}</mat-icon>
+        <div mat-line>{{ file.name }}</div>
+        <div mat-line class="file-path">{{ file.path }}</div>
+      </mat-list-item>
+    </mat-nav-list>
+  </div>
+
+  <!-- Recent Files -->
+  <div class="recent-files" *ngIf="!searchQuery && recentFiles.length > 0">
+    <div class="section-header">
+      <h3>Recent</h3>
+      <button mat-icon-button>
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </div>
+    <mat-nav-list>
+      <mat-list-item *ngFor="let file of recentFiles" (click)="selectFile(file)" [class.active]="selectedFile?.id === file.id">
+        <mat-icon mat-list-icon>{{ getFileIcon(file.name) }}</mat-icon>
+        <div mat-line>{{ file.name }}</div>
+        <div mat-line class="file-path">{{ file.path }}</div>
+      </mat-list-item>
+    </mat-nav-list>
+  </div>
+
+  <!-- File Explorer -->
+  <div class="file-tree" *ngIf="!searchQuery">
+    <div class="section-header">
+      <h3>Explorer</h3>
+      <button mat-icon-button (click)="createNewFile(null)">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+    
+    <mat-tree [dataSource]="files" [treeControl]="treeControl" class="tree">
+      <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+        <button mat-icon-button disabled></button>
+        <div class="node-content" (click)="toggleExpand(node)" (contextmenu)="onContextMenu($event, node)">
+          <mat-icon class="node-icon">{{ getFileIcon(node.name) }}</mat-icon>
+          <span class="node-name" [class.active]="selectedFile?.id === node.id">{{ node.name }}</span>
+        </div>
+      </mat-tree-node>
+
+      <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+        <div class="tree-node" [class.expanded]="node.isExpanded">
+          <button mat-icon-button matTreeNodeToggle (click)="node.isExpanded = !node.isExpanded">
+            <mat-icon class="mat-icon-rtl-mirror">
+              {{ node.isExpanded ? 'expand_more' : 'chevron_right' }}
+            </mat-icon>
+          </button>
+          <div class="node-content" (click)="toggleExpand(node)" (contextmenu)="onContextMenu($event, node)">
+            <mat-icon class="node-icon">
+              {{ node.isExpanded ? 'folder_open' : 'folder' }}
+            </mat-icon>
+            <span class="node-name" [class.active]="selectedFile?.id === node.id">{{ node.name }}</span>
+          </div>
+        </div>
+        <div [class.tree-children]="true" [class.collapsed]="!node.isExpanded">
+          <ng-container matTreeNodeOutlet></ng-container>
+        </div>
+      </mat-tree-node>
+    </mat-tree>
+  </div>
+
+  <!-- Context Menu -->
+  <div 
+    *ngIf="contextMenu.visible" 
+    class="context-menu" 
+    [style.left.px]="contextMenu.x" 
+    [style.top.px]="contextMenu.y"
+    (click)="$event.stopPropagation()"
+  >
+    <button 
+      mat-menu-item 
+      *ngFor="let item of menuItems" 
+      (click)="onContextMenuAction(item.action)"
+      [class.hidden]="!contextMenu.target && ['rename', 'delete', 'cut', 'copy'].includes(item.action)"
+    >
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.label }}</span>
+    </button>
+  </div>
+</div>

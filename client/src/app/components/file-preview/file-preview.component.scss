@@ -1,0 +1,270 @@
+@import 'src/styles/theme';
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: mat-color($background, card);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: mat-color($foreground, secondary-text);
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    color: mat-color($warn);
+  }
+}
+
+.preview-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  
+  // All preview types
+  pre, 
+  .markdown-preview,
+  .image-preview,
+  .pdf-preview,
+  .media-preview,
+  .office-preview,
+  .unsupported-preview {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+  }
+  
+  // Code preview
+  .code-preview {
+    background-color: mat-color($background, background);
+    color: mat-color($foreground, text);
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    tab-size: 2;
+    
+    code {
+      display: block;
+      padding: 1rem;
+    }
+  }
+  
+  // Markdown preview
+  .markdown-preview {
+    padding: 1.5rem;
+    
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      color: mat-color($primary);
+    }
+    
+    p {
+      margin: 1em 0;
+      line-height: 1.6;
+    }
+    
+    pre {
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 1em;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    
+    code {
+      font-family: 'Fira Code', 'Courier New', monospace;
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+      
+      th, td {
+        border: 1px solid mat-color($foreground, divider);
+        padding: 0.5em 1em;
+        text-align: left;
+      }
+      
+      th {
+        background-color: mat-color($background, hover);
+      }
+    }
+  }
+  
+  // Image preview
+  .image-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      image-orientation: from-image;
+    }
+  }
+  
+  // PDF preview
+  .pdf-preview {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  // Media preview (audio/video)
+  .media-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    
+    video, audio {
+      max-width: 100%;
+      max-height: 100%;
+      outline: none;
+    }
+  }
+  
+  // Office preview
+  .office-preview {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  // Unsupported file type
+  .unsupported-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: mat-color($foreground, secondary-text);
+    
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      color: mat-color($primary);
+    }
+    
+    p {
+      margin: 1rem 0;
+    }
+  }
+}
+
+// File info bar at the bottom
+.file-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: mat-color($background, app-bar);
+  border-top: 1px solid mat-color($foreground, divider);
+  
+  .file-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    
+    .file-name {
+      font-weight: 500;
+      color: mat-color($foreground, text);
+    }
+    
+    .file-size,
+    .file-type {
+      color: mat-color($foreground, secondary-text);
+      font-size: 0.8em;
+      background-color: mat-color($background, hover);
+      padding: 0.2em 0.5em;
+      border-radius: 4px;
+    }
+  }
+  
+  .file-actions {
+    button {
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      
+      mat-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .file-meta {
+    flex-wrap: wrap;
+    gap: 0.25rem !important;
+    
+    .file-name {
+      flex: 0 0 100%;
+    }
+  }
+}
+
+// Dark theme adjustments
+:host-context(.dark-theme) {
+  .code-preview,
+  .markdown-preview pre,
+  .markdown-preview code {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+  }
+  
+  .image-preview {
+    background-color: #1e1e1e;
+  }
+  
+  .unsupported-preview {
+    background-color: #1e1e1e;
+  }
+  
+  .file-info {
+    background-color: #252526;
+    border-top-color: #3c3c3c;
+  }
+  
+  .file-size,
+  .file-type {
+    background-color: #3c3c3c !important;
+  }
+}
