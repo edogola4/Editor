@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, Settings, Sun, Moon, Users, Zap, Command, MoreVertical, Maximize2, Minimize2, GitBranch, Search } from 'lucide-react';
+import { Share2, Settings, Sun, Moon, Users, Zap, Command, MoreVertical, Maximize2, Minimize2, GitBranch, Search, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 import type { HeaderProps } from '../types/index';
 import type { ToolbarAction } from '../types/index';
@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/Tooltip';
 import { useTheme } from '../hooks/use-theme';
+import { ChatToggle } from './chat/ChatToggle';
 
 interface HeaderAction extends ToolbarAction {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
@@ -14,6 +15,7 @@ interface HeaderAction extends ToolbarAction {
   shortcut?: string;
   tooltip?: string;
   isActive?: boolean;
+  customComponent?: React.ReactNode;
 }
 
 const HeaderActionButton: React.FC<HeaderAction> = ({
@@ -26,8 +28,13 @@ const HeaderActionButton: React.FC<HeaderAction> = ({
   tooltip,
   shortcut,
   isActive = false,
-  className
+  className,
+  customComponent
 }) => {
+  // If custom component is provided, render it directly
+  if (customComponent) {
+    return customComponent;
+  }
   return (
     <TooltipProvider>
       <Tooltip>
@@ -127,6 +134,15 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const actions: HeaderAction[] = [
+    {
+      id: 'chat',
+      label: 'Chat',
+      icon: MessageSquare,
+      onClick: () => {},
+      variant: 'ghost',
+      tooltip: 'Open chat (Ctrl+Shift+C)',
+      customComponent: <ChatToggle />
+    },
     {
       id: 'branch',
       label: 'Branch',

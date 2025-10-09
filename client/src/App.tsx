@@ -6,6 +6,8 @@ import { useEditorStore } from './store/editorStore';
 import { useEffect } from 'react';
 import { useSocket } from './utils/socket';
 import { ThemeProvider } from './components/theme-provider';
+import { ChatProvider } from './contexts/ChatContext';
+import { ChatContainer } from './components/chat/ChatContainer';
 
 // Import global styles with theme variables
 import './globals.css';
@@ -105,6 +107,7 @@ function AppContent() {
             },
           }}
         />
+        <ChatContainer />
       </div>
   )
 }
@@ -112,7 +115,9 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
-      <AppContent />
+      <ChatProvider>
+        <AppContent />
+      </ChatProvider>
     </ThemeProvider>
   );
 }
