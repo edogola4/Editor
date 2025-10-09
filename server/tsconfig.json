@@ -2,10 +2,15 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node16",
     "baseUrl": ".",
     "outDir": "./dist",
     "rootDir": ".",
+    "paths": {
+      "@/models/*": ["src/models/*"],
+      "@/services/*": ["src/services/*"],
+      "@/test/*": ["test/*"]
+    },
     "lib": ["ES2022"],
     "types": ["node", "vitest/globals"],
     "isolatedModules": true,

@@ -1,31 +1,63 @@
 import { Sequelize } from 'sequelize';
 import { config } from '../src/config/config';
-import { db } from '../src/services/database/DatabaseService';
-import { rateLimiter } from '../src/services/rate-limiting/RateLimiterService';
-import { monitoringService } from '../src/services/monitoring/MonitoringService';
+import { User } from '../src/models/User';
+import { Document } from '../src/models/Document';
+import { DocumentVersion } from '../src/models/DocumentVersion';
+import { DocumentPermission } from '../src/models/DocumentPermission';
+import { Operation } from '../src/models/Operation';
 
-export const TEST_DB_NAME = 'test_db';
+// Test database configuration
+const TEST_DB_NAME = `test_${Date.now()}`;
 
 // Create a test database connection
 export const createTestDb = async () => {
-  // Connect to the default database to create the test database
   const sequelize = new Sequelize({
     dialect: 'postgres',
-    host: config.db.host,
-    port: config.db.port,
-    username: config.db.username,
-    password: config.db.password,
+    host: process.env.TEST_DB_HOST || 'localhost',
+    port: parseInt(process.env.TEST_DB_PORT || '5432'),
+    username: process.env.TEST_DB_USER || 'postgres',
+    password: process.env.TEST_DB_PASSWORD || 'postgres',
     logging: false,
   });
 
   try {
-    // Drop the test database if it exists
-    await sequelize.query(`DROP DATABASE IF EXISTS ${TEST_DB_NAME};`);
-    
     // Create a new test database
     await sequelize.query(`CREATE DATABASE ${TEST_DB_NAME};`);
+    console.log(`Test database '${TEST_DB_NAME}' created successfully`);
+  } catch (error) {
+    console.error('Error creating test database:', error);
+    throw error;
+  } finally {
+    await sequelize.close();
+  }
+};
+
+// Drop test database
+export const dropTestDb = async () => {
+  const sequelize = new Sequelize({
+    dialect: 'postgres',
+    host: process.env.TEST_DB_HOST || 'localhost',
+    port: parseInt(process.env.TEST_DB_PORT || '5432'),
+    username: process.env.TEST_DB_USER || 'postgres',
+    password: process.env.TEST_DB_PASSWORD || 'postgres',
+    logging: false,
+  });
+
+  try {
+    // Close all connections to the test database
+    await sequelize.query(`
+      SELECT pg_terminate_backend(pg_stat_activity.pid)
+      FROM pg_stat_activity
+      WHERE pg_stat_activity.datname = '${TEST_DB_NAME}'
+      AND pid <> pg_backend_pid();
+    `);
     
-    logger.info(`Test database '${TEST_DB_NAME}' created successfully`);
+    // Drop the test database
+    await sequelize.query(`DROP DATABASE IF EXISTS ${TEST_DB_NAME};`);
+    console.log(`Test database '${TEST_DB_NAME}' dropped successfully`);
+  } catch (error) {
+    console.error('Error dropping test database:', error);
+    throw error;
   } finally {
     await sequelize.close();
   }
@@ -33,21 +65,35 @@ export const createTestDb = async () => {
 
 // Initialize test environment
 export const setupTestEnvironment = async () => {
-  // Use a different database for tests
-  process.env.NODE_ENV = 'test';
-  process.env.DB_DATABASE = TEST_DB_NAME;
-  
-  // Create test database
-  await createTestDb();
-  
-  // Initialize database
-  await db.initialize();
-  
-  // Initialize rate limiter
-  await rateLimiter.initialize();
-  
-  // Initialize monitoring service
-  await monitoringService.initialize();
+  try {
+    // Set test environment variables
+    process.env.NODE_ENV = 'test';
+    process.env.DB_DATABASE = TEST_DB_NAME;
+    
+    // Create and initialize test database
+    await createTestDb();
+    
+    // Initialize Sequelize with test database
+    const sequelize = new Sequelize({
+      dialect: 'postgres',
+      database: TEST_DB_NAME,
+      username: process.env.TEST_DB_USER || 'postgres',
+      password: process.env.TEST_DB_PASSWORD || 'postgres',
+      host: process.env.TEST_DB_HOST || 'localhost',
+      port: parseInt(process.env.TEST_DB_PORT || '5432'),
+      logging: false,
+      models: [User, Document, DocumentVersion, DocumentPermission, Operation],
+    });
+    
+    // Sync all models
+    await sequelize.sync({ force: true });
+    
+    return sequelize;
+  } catch (error) {
+    console.error('Error setting up test environment:', error);
+    throw error;
+  }
+};
 };
 
 // Clean up test environment
