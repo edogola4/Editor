@@ -1,4 +1,32 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
+import './theme.types';
+
+// Extend the Theme type to include our custom palette
+declare module '@mui/material/styles' {
+  interface Theme {
+    palette: {
+      accent: {
+        blue: string;
+        green: string;
+        yellow: string;
+        red: string;
+        purple: string;
+      };
+    };
+  }
+  // Allow configuration using `createTheme`
+  interface ThemeOptions {
+    palette?: {
+      accent?: {
+        blue?: string;
+        green?: string;
+        yellow?: string;
+        red?: string;
+        purple?: string;
+      };
+    };
+  }
+}
 
 export const theme = createTheme({
   palette: {

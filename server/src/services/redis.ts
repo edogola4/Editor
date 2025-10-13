@@ -45,70 +45,21 @@ export class RedisService {
    */
   private initializeEventHandlers(): void {
     this.client.on("connect", () => {
-      logger.info("Redis client connecting...");
-    });
-
-    this.client.on("ready", () => {
-      logger.info("Redis client ready and connected");
+      logger.info("Redis client connected");
       this.isConnected = true;
     });
 
+    this.client.on("ready", () => {
+      logger.info("Redis client ready");
+    });
+
     this.client.on("error", (error: Error) => {
-      logger.error("Redis client error", {
-        error: error.message,
-        stack: error.stack,
-      });
+      logger.error("Redis client error:", error);
       this.isConnected = false;
     });
 
     this.client.on("close", () => {
-      logger.warn("Redis client connection closed");
-      this.isConnected = false;
-    });
-
-    this.client.on("reconnecting", (delay: number) => {
-      logger.info(`Redis client reconnecting in ${delay}ms`);
-    });
-  }
-      retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-      },
-      maxRetriesPerRequest: 3,
-      lazyConnect: true,
-      reconnectOnError: (error: Error) => {
-        logger.warn("Redis reconnect on error", { error: error.message });
-        return error.message.includes("READONLY");
-      },
-    };
-
-    return new IORedis(redisConfig) as RedisClient;
-  }
-
-  /**
-   * Initialize Redis event handlers
-   */
-{{ ... }}
-  private initializeEventHandlers(): void {
-    this.client.on("connect", () => {
-      logger.info("Redis client connecting...");
-    });
-
-    this.client.on("ready", () => {
-      logger.info("Redis client ready and connected");
-      this.isConnected = true;
-    });
-
-    this.client.on("error", (error: Error) => {
-      logger.error("Redis client error", {
-        error: error.message,
-        stack: error.stack,
-      });
-      this.isConnected = false;
-    });
-
-    this.client.on("close", () => {
-      logger.warn("Redis client connection closed");
+      logger.info("Redis client connection closed");
       this.isConnected = false;
     });
 
@@ -151,8 +102,10 @@ export class RedisService {
       await this.client.quit();
       this.isConnected = false;
       logger.info("Redis client disconnected");
-    } catch (error) {
+    } catch (error: any) {
       logger.error("Error disconnecting from Redis", { error: error.message });
+      throw error;
+    }
   }
 
   /**

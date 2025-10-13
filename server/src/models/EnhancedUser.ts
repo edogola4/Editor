@@ -1,6 +1,7 @@
-import { Model, DataTypes, Sequelize, Optional } from "sequelize";
+import { Model, DataTypes, Sequelize, ModelStatic, Optional, HasManyGetAssociationsMixin, Association } from "sequelize";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { Document } from "./Document.js";
 
 export enum UserRole {
   USER = 'user',
@@ -45,199 +46,190 @@ interface UserAttributes {
   emailVerificationExpires?: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
-}
-
-// Define the attributes required to create a new User
-interface UserCreationAttributes
-  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt" | "loginCount" | "emailNotifications" | "isVerified" | "twoFactorEnabled"> {}
-
-// Define the User instance methods
-interface UserInstance
-  extends Model<UserAttributes, UserCreationAttributes>,
-    UserAttributes {
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generatePasswordResetToken(): { resetToken: string; resetTokenExpiry: Date };
-  generateEmailVerificationToken(): { token: string; expires: Date };
-  toJSON(): UserAttributes;
+  readonly deletedAt?: Date;
+  
+  // Association mixins
+  documents?: Document[];
+  getDocuments?: HasManyGetAssociationsMixin<Document>;
+  
   [key: string]: any;
 }
 
+// Define UserCreationAttributes type
+type UserCreationAttributes = Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Define the instance methods and properties
+interface UserInstance extends Model<UserAttributes, UserCreationAttributes>, UserAttributes {
+  // Instance methods
+  comparePassword: (candidatePassword: string) => Promise<boolean>;
+  generatePasswordResetToken: () => { resetToken: string; resetTokenExpiry: Date };
+  generateEmailVerificationToken: () => { token: string; expires: Date };
+  // Override toJSON to exclude sensitive data
+  toJSON: () => Omit<UserAttributes, 'password' | 'passwordResetToken' | 'passwordResetExpires' | 'emailVerificationToken' | 'emailVerificationExpires'>;
+}
+
 // Define the static methods of the User model
-type UserModelStatic = typeof Model & {
+interface UserModelStatic extends ModelStatic<UserInstance> {
   new (values?: object, options?: any): UserInstance;
   associate?: (models: any) => void;
   findByPk: (id: string, options?: any) => Promise<UserInstance | null>;
   findOne: (options: any) => Promise<UserInstance | null>;
+  prototype: UserInstance;
+  
+  // Add associations
+  associations: {
+    documents: Association<UserInstance, Document>;
+  };
 };
 
-// Define the model initialization function
-export default function User(sequelize: Sequelize): UserModelStatic {
-  const SALT_ROUNDS = 10;
-  const TOKEN_EXPIRY_HOURS = 1;
+// Constants
+const SALT_ROUNDS = 10;
+const TOKEN_EXPIRY_HOURS = 1;
 
-  // Define the model
-  const User = sequelize.define<UserInstance>(
-    "User",
-    {
-      id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
-      username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-          len: [3, 50],
-          is: /^[a-zA-Z0-9_]+$/,
-        },
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-          isEmail: true,
-        },
-      },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: true, // Nullable for OAuth users
-        validate: {
-          len: [8, 100],
-        },
-      },
-      role: {
-        type: DataTypes.ENUM(...Object.values(UserRole)),
-        defaultValue: UserRole.USER,
-        allowNull: false,
-      },
-      status: {
-        type: DataTypes.ENUM(...Object.values(UserStatus)),
-        defaultValue: UserStatus.PENDING_VERIFICATION,
-        allowNull: false,
-      },
-      githubId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
-      },
-      avatarUrl: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          isUrl: true,
-        },
-      },
-      firstName: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      lastName: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      bio: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      company: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      location: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      website: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          isUrl: true,
-        },
-      },
-      lastLoginAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      loginCount: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-        allowNull: false,
-      },
-      timezone: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      preferredLanguage: {
-        type: DataTypes.STRING,
-        defaultValue: 'en',
-        allowNull: false,
-      },
-      emailNotifications: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-        allowNull: false,
-      },
-      isVerified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false,
-      },
-      twoFactorEnabled: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false,
-      },
-      passwordResetToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      passwordResetExpires: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      emailVerificationToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      emailVerificationExpires: {
-        type: DataTypes.DATE,
-        allowNull: true,
+// Model definition
+export const User = (sequelize: Sequelize): UserModelStatic => {
+  const UserModel = sequelize.define<UserInstance, UserCreationAttributes>('User', {
+    // Model attributes are defined here
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: true,
       },
     },
-    {
-      tableName: 'users',
-      timestamps: true,
-      indexes: [
-        { unique: true, fields: ['email'] },
-        { unique: true, fields: ['username'] },
-        { fields: ['role'] },
-        { fields: ['status'] },
-      ],
-      hooks: {
-        beforeCreate: async (user: UserInstance) => {
-          if (user.password) {
-            user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
-          }
-        },
-        beforeUpdate: async (user: UserInstance) => {
-          if (user.changed('password') && user.password) {
-            user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
-          }
-        },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: true, // Can be null for OAuth users
+    },
+    role: {
+      type: DataTypes.ENUM(...Object.values(UserRole)),
+      defaultValue: UserRole.USER,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM(...Object.values(UserStatus)),
+      defaultValue: UserStatus.PENDING_VERIFICATION,
+      allowNull: false,
+    },
+    // Add other fields as needed
+    githubId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    avatarUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    company: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    website: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastLoginAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    loginCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      allowNull: false,
+    },
+    timezone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    preferredLanguage: {
+      type: DataTypes.STRING,
+      defaultValue: 'en',
+      allowNull: false,
+    },
+    emailNotifications: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+    },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+    twoFactorEnabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+    passwordResetToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    passwordResetExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    emailVerificationToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    emailVerificationExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    // Timestamps are handled by Sequelize
+  }, {
+    timestamps: true,
+    paranoid: true, // Enable soft deletes
+    tableName: 'users',
+    hooks: {
+      beforeCreate: async (user: UserInstance) => {
+        if (user.password) {
+          user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
+        }
       },
-    }
-  ) as UserModelStatic;
+      beforeUpdate: async (user: UserInstance) => {
+        if (user.changed('password') && user.password) {
+          user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
+        }
+      },
+    },
+  }) as unknown as UserModelStatic;
 
-  // Instance methods
-  User.prototype.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  // Add instance methods
+  UserModel.prototype.comparePassword = async function(candidatePassword: string): Promise<boolean> {
     if (!this.password) return false;
     return bcrypt.compare(candidatePassword, this.password);
   };
 
-  User.prototype.generatePasswordResetToken = function() {
+  UserModel.prototype.generatePasswordResetToken = function() {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date();
     resetTokenExpiry.setHours(resetTokenExpiry.getHours() + TOKEN_EXPIRY_HOURS);
@@ -247,48 +239,62 @@ export default function User(sequelize: Sequelize): UserModelStatic {
       .update(resetToken)
       .digest('hex');
     this.passwordResetExpires = resetTokenExpiry;
-
+    
     return { resetToken, resetTokenExpiry };
   };
 
-  User.prototype.generateEmailVerificationToken = function() {
+  UserModel.prototype.generateEmailVerificationToken = function() {
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date();
-    expires.setHours(expires.getHours() + TOKEN_EXPIRY_HOURS * 24); // 24 hours
-
+    expires.setHours(expires.getHours() + TOKEN_EXPIRY_HOURS);
+    
     this.emailVerificationToken = crypto
       .createHash('sha256')
       .update(token)
       .digest('hex');
     this.emailVerificationExpires = expires;
-
+    
     return { token, expires };
   };
 
   // Override toJSON to exclude sensitive data
-  User.prototype.toJSON = function() {
-    const values = Object.assign({}, this.get());
-    delete values.password;
-    delete values.passwordResetToken;
-    delete values.passwordResetExpires;
-    delete values.emailVerificationToken;
-    delete values.emailVerificationExpires;
-    return values;
-  };
-
-  // Class methods
-  User.associate = (models: any) => {
-    // Define associations here
-    User.hasMany(models.Session, {
-      foreignKey: 'userId',
-      as: 'sessions'
+  UserModel.prototype.toJSON = function() {
+    // Get all values and explicitly type them as Partial to allow deletion
+    const values = { ...this.get() } as Partial<UserAttributes>;
+    
+    // These fields will be removed from the output
+    const sensitiveFields: (keyof UserAttributes)[] = [
+      'password',
+      'passwordResetToken',
+      'passwordResetExpires',
+      'emailVerificationToken',
+      'emailVerificationExpires'
+    ];
+    
+    // Remove sensitive fields
+    sensitiveFields.forEach(field => {
+      if (field in values) {
+        delete values[field];
+      }
     });
     
-    // Add other associations as needed
+    return values as Omit<UserAttributes, 
+      'password' | 
+      'passwordResetToken' | 
+      'passwordResetExpires' | 
+      'emailVerificationToken' | 
+      'emailVerificationExpires'
+    >;
   };
 
-  return User;
-}
+  return UserModel;
+};
 
-// Export the User model and interfaces
-export type { UserAttributes, UserInstance, UserModelStatic };
+export default User;
+
+export type { 
+  UserAttributes as IEnhancedUser,
+  UserInstance,
+  UserModelStatic,
+  UserCreationAttributes 
+};

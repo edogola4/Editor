@@ -1,8 +1,8 @@
 # Collaborative Code Editor - Frontend
 
 <div align="center">
-  <h2>🚀 Real-time Collaborative Editor</h2>
-  <p>Professional VS Code-like collaborative coding experience with WebSocket synchronization</p>
+  <h2>🚀 Real-time Collaborative Editor with Code Execution</h2>
+  <p>Professional VS Code-like collaborative coding experience with WebSocket synchronization and built-in code execution</p>
 
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
@@ -10,17 +10,34 @@
   ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0+-06B6D4.svg)
   ![Monaco Editor](https://img.shields.io/badge/Monaco-0.53.0-007acc.svg)
   ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-010101.svg)
+  ![Judge0](https://img.shields.io/badge/Judge0-1.4.0-FF6B6B.svg)
   ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
   [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg?flag=client)](https://codecov.io/gh/edogola4/Editor)
   [![CI/CD](https://github.com/edogola4/Editor/actions/workflows/ci.yml/badge.svg)](https://github.com/edogola4/Editor/actions)
   [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 </div>
 
-This is the frontend client for the Collaborative Code Editor application, built with React 19, TypeScript 5.8, Vite 5, and Monaco Editor for real-time collaborative coding.
+This is the frontend client for the Collaborative Code Editor application, built with React 19, TypeScript 5.8, Vite 5, and Monaco Editor. It provides a real-time collaborative coding environment with built-in code execution capabilities powered by Judge0.
+
+## 🆕 What's New in v1.1.0
+
+### ✨ New Features
+- **Code Execution**: Run code in 50+ programming languages directly in the editor
+- **Feature Flags**: Gradual feature rollout with user targeting
+- **Enhanced Error Handling**: Improved error boundaries and user feedback
+- **UI Improvements**: Better mobile responsiveness and accessibility
+
+### 🛠 Technical Improvements
+- **Feature Flag System**: Dynamic feature management with runtime configuration
+- **Code Execution Panel**: Integrated panel for running and debugging code
+- **Performance Optimizations**: Reduced bundle size and improved load times
+- **Dependency Updates**: Latest versions of all dependencies
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
+- **Code Execution**: Execute code in 50+ languages with Judge0 integration
+- **Feature Flags**: Gradual feature rollout with user targeting
 - **Real-time Collaboration**: Multi-user editing with operational transformation
 - **WebSocket Synchronization**: Low-latency document synchronization
 - **Professional Code Editor**: Monaco Editor with VS Code's powerful features
@@ -34,20 +51,26 @@ This is the frontend client for the Collaborative Code Editor application, built
 - **Efficient Sync**: Delta synchronization for large documents
 - **Operation Batching**: Minimize network traffic with operation batching
 - **Debounced Updates**: Optimize cursor and selection updates
-- **Offline Support**: Continue editing with offline queue (coming soon)
+- **Code Splitting**: Route-based code splitting for faster initial load
+- **Lazy Loading**: Load features on demand
 
 ### 🛡 **Security**
 - **JWT Authentication**: Secure token-based authentication
 - **WebSocket Security**: Encrypted communication with WSS
 - **Input Validation**: Comprehensive client-side validation
 - **Rate Limiting**: Protection against rapid operations
+- **Content Security Policy**: Protection against XSS attacks
 
 ### 🎨 **Editor Features**
+- **Integrated Terminal**: Run and debug code with real-time output
 - **Monaco Editor**: Full VS Code editing experience with extensions support
 - **IntelliSense**: Smart code completion, parameter hints, and hover information
 - **Multi-cursor Support**: Multiple cursors for efficient editing
 - **Themes**: Built-in light, dark, and high-contrast themes
 - **Keybindings**: VS Code keybindings with customization options
+- **Execution History**: View and manage previous code execution results
+- **Custom Input**: Provide custom input for code execution
+- **Resource Monitoring**: Track execution time and memory usage
 - **Minimap**: Code overview for easy navigation
 - **Bracket Pair Colorization**: Visual matching of brackets and indentation
 - **Word Wrap**: Configurable text wrapping with word wrap guides

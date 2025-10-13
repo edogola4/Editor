@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  NODE_ENV: production
+  REACT_APP_API_URL: https://your-domain.com/api
+  REACT_APP_WS_URL: wss://your-domain.com/socket.io
+  REACT_APP_GA_TRACKING_ID: ""
+  REACT_APP_SENTRY_DSN: ""

@@ -4,7 +4,7 @@
   <h1>🚀 Real-time Collaborative Code Editor</h1>
   <p><strong>Professional VS Code-like collaborative coding experience with real-time WebSocket synchronization</strong></p>
 
-  ![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
   ![React](https://img.shields.io/badge/React-19-61dafb.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
@@ -21,27 +21,49 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v4.3.0
+## 🌟 What's New in v1.1.0
 
-### 🏗 State Management Overhaul
-- **Zustand Integration**: Lightweight, fast state management with minimal boilerplate
-- **Type-Safe Stores**: Full TypeScript support with strict type checking
-- **Optimistic UI Updates**: Smooth user experience with instant feedback
-- **Modular Architecture**: Separated concerns with dedicated stores for editor, room, user, and UI states
-- **Redux DevTools Integration**: Powerful debugging with time-travel capabilities
-- **Persistence Middleware**: Automatic state persistence across page reloads
-- **Performance Optimized**: Memoized selectors and batched updates
+### 🚀 New Features
+- **Code Execution**: Integrated Judge0 API for executing code in 50+ programming languages
+- **Feature Flags**: Gradual feature rollout with user targeting capabilities
+- **Enhanced Error Handling**: Improved error boundaries and user feedback
+- **UI Improvements**: Better mobile responsiveness and accessibility
 
-### 🛠 Enhanced Features
-- **Room Management System**: Comprehensive room-based collaboration with role-based access control
-- **Real-time State Sync**: Seamless synchronization across clients with operational transformation
-- **Error Boundaries**: Graceful error handling and recovery
-- **Performance Monitoring**: Built-in performance tracking and optimization
-- **Testing Utilities**: Comprehensive test coverage for state management
+### 🛠 Technical Improvements
+- **Feature Flag System**: Dynamic feature management with runtime configuration
+- **Code Execution Service**: Secure sandboxed code execution with resource limits
+- **Performance Optimizations**: Reduced bundle size and improved load times
+- **Dependency Updates**: Latest versions of all dependencies with security patches
+
+### 🐛 Bug Fixes
+- Fixed cursor synchronization issues in collaborative editing
+- Resolved race conditions in WebSocket message handling
+- Addressed performance bottlenecks in large document editing
+
+### 🔒 Security
+- Enhanced input validation for code execution
+- Improved rate limiting for API endpoints
+- Added security headers and CSP policies
+
+## 🌟 Previous Versions
+
+<details>
+<summary>v1.0.0 - Initial Release</summary>
+- **Complete Implementation**: Full-stack collaborative code editor with real-time synchronization
+- **Modern Tech Stack**: React 19, TypeScript 5.8+, Node.js 22+, PostgreSQL 16+, Redis 7+
+- **WebSocket Integration**: Real-time collaboration using Socket.IO 4.8+
+- **Operational Transformation**: Conflict-free collaborative editing algorithm
+- **Authentication System**: JWT-based authentication with GitHub OAuth
+- **Database Design**: Comprehensive PostgreSQL schema with proper relationships
+- **API Documentation**: Auto-generated OpenAPI/Swagger documentation
+- **Testing Suite**: Unit, integration, and end-to-end tests
+</details>
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
+- **Code Execution**: Execute code in 50+ languages with Judge0 integration
+- **Feature Flags**: Gradual feature rollout with user targeting
 - **Room-based Collaboration**: Organize work in dedicated rooms with access controls
 - **Role-based Access Control**: Granular permissions (Owner, Admin, Editor, Viewer, Guest)
 - **Real-time Editing**: Multi-user editing with operational transformation (OT)
@@ -74,6 +96,7 @@
 - **Security Headers**: Helmet.js for secure HTTP headers
 
 ### 🛠 **Editor Features**
+- **Code Execution**: Run code directly in the editor with real-time output
 - **Monaco Editor**: Full VS Code editing experience with extensions support
 - **IntelliSense**: Smart code completion, parameter hints, and hover information
 - **Multi-cursor Support**: Multiple cursors for efficient editing
@@ -87,6 +110,9 @@
 - **Search & Replace**: Advanced search with regex support
 - **Snippets**: Built-in code snippets for common patterns
 - **Emmet Support**: HTML/CSS abbreviations expansion
+- **Execution History**: View and manage previous code execution results
+- **Custom Input**: Provide custom input for code execution
+- **Resource Monitoring**: Track execution time and memory usage
 
 ### 🎨 **User Interface**
 - **Modern Design**: Clean, professional interface inspired by VS Code
@@ -179,13 +205,10 @@ For more details, see the [State Management Documentation](./client/src/store/RE
 - **Vite 5+** - Next-generation frontend tooling
 - **Zustand 5+** - Lightweight state management with hooks
 - **Immer 10+** - Immutable state with mutable syntax
-- **React Query 5+** - Server state management and caching
+- **TanStack Query 5+** - Server state management and caching
 - **Tailwind CSS 4+** - Utility-first CSS with JIT compiler
 - **Monaco Editor 0.53+** - VS Code's editor component
 - **Socket.IO Client 4.8+** - Real-time communication
-- **Zustand 5+** - Lightweight state management
-- **Immer 10+** - Immutable state updates
-- **TanStack Query 5+** - Server state management
 - **React Hook Form 7+** - Performant form handling
 - **Axios 1.7+** - Promise-based HTTP client
 - **React Hot Toast 2.4+** - Beautiful toast notifications
@@ -194,32 +217,16 @@ For more details, see the [State Management Documentation](./client/src/store/RE
 - **Framer Motion** - Animation library
 - **Zod** - TypeScript-first schema validation
 - **date-fns** - Date utility library
-- **Vite PWA** - Progressive Web App support
 
 ### **Backend**
 - **Node.js 22+** - Latest LTS with ESM support
-- **Express.js 5+** - Fast, unopinionated web framework
+- **Express.js 4+** - Fast, unopinionated web framework
 - **TypeScript 5.8+** - Type-safe backend with strict mode
 - **Socket.IO 4.8.1** - Real-time WebSocket communication
 - **PostgreSQL 16+** - Advanced relational database
 - **Redis 7+** - Caching, pub/sub, and rate limiting
-- **Sequelize 7+** - Modern TypeScript ORM
+- **Sequelize 6+** - Modern TypeScript ORM
 - **JWT** - Stateless authentication with refresh tokens
-- **Winston** - Logging with daily rotation
-- **Zod** - TypeScript-first schema validation
-- **Node-cron** - Job scheduling
-- **Multer** - File upload handling
-- **Bcrypt** - Password hashing
-- **CORS** - Cross-Origin Resource Sharing
-- **Helmet** - Security headers
-- **Compression** - Response compression
-- **Rate Limit** - Request rate limiting
-- **Swagger UI** - API documentation
-- **Jest** - Testing framework
-- **Supertest** - HTTP assertions
-- **ESLint & Prettier** - Code quality
-- **Sequelize 7+** - Type-safe ORM with migrations
-- **Winston 3.11+** - Structured logging
 - **bcryptjs 2.4+** - Password hashing
 - **Zod 3.22+** - TypeScript-first schema validation
 - **CORS 2.8+** - Cross-origin resource sharing
@@ -428,11 +435,15 @@ pnpm typecheck
 
 2. **Use the access token for authenticated requests:**
    ```bash
-   curl http://localhost:5000/api/users \
+   curl http://localhost:5000/api/users/profile \
      -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
    ```
 
-3. **When token expires (after 15 minutes), login again for a fresh token**
+3. **When token expires (after 15 minutes), use refresh token to get new access token:**
+   ```bash
+   curl -X POST http://localhost:5000/api/auth/refresh-token \
+     -H "Authorization: Bearer YOUR_REFRESH_TOKEN"
+   ```
 
 ### Demo Credentials
 
@@ -449,23 +460,23 @@ Or register a new account directly in the application.
 ## 📚 API Endpoints
 
 ### Public Endpoints
-- `GET /` - API documentation and info
-- `GET /api` - API v1 root endpoint
-- `GET /api/health` - Server health check
-- `GET /api/rooms` - List public rooms
-- `GET /api/rooms/:id` - Get specific room (public rooms only)
+- `GET /` - API information and available endpoints
+- `GET /health` - Server health check
+- `GET /api-docs` - Interactive API documentation (Swagger UI)
 
-### Authentication Required
-- `POST /api/auth/login` - User login
+### Authentication Routes
 - `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 - `POST /api/auth/refresh-token` - Refresh access token
+- `GET /api/auth/github` - GitHub OAuth login
+- `GET /api/auth/github/callback` - GitHub OAuth callback
 
-### Admin Only (JWT + Admin Role Required)
-- `GET /api/users` - List all users (admin only)
-- `GET /api/users/:id` - Get specific user (admin only)
+### Document Management
+- `GET /api/documents/:id` - Get document by ID
+- `POST /api/documents` - Create new document
 
-### User Profile (JWT Required)
+### User Management (Authenticated)
 - `GET /api/users/profile` - Get current user profile
 - `PUT /api/users/profile` - Update user profile
 - `DELETE /api/users/profile` - Delete user account
@@ -473,7 +484,6 @@ Or register a new account directly in the application.
 ### Development Routes (Dev Only)
 - `GET /api/dev/users` - List all users (no auth required)
 - `POST /api/dev/promote-to-admin` - Promote user to admin (auth required)
-- `POST /api/dev/promote-user-to-admin` - Promote user by email (no auth required)
 - `POST /api/dev/reset-database` - Reset database (dev only)
 
 ## 🧪 Testing Real-time Collaboration

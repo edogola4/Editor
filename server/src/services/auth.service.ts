@@ -1,22 +1,41 @@
-import { UserRole, UserStatus } from '../models/User.js';
-import { sequelize } from '../config/database.js';
+import { User, UserRole, UserStatus } from '../models/User';
+import { Session } from '../models/Session.js';
+import { getSequelize } from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { Op, FindOptions } from 'sequelize';
+import { Op, FindOptions, Model } from 'sequelize';
 import crypto from 'crypto';
-import type { UserInstance } from '../models/User.js';
-import type { SessionInstance } from '../models/Session.js';
-import db from '../models/index.js';
+import logger from '../utils/logger.js';
+
+// Define the User model type with custom methods
+type UserModel = typeof User & {
+  findOneWithPassword: (options: any) => Promise<InstanceType<typeof User> | null>;
+};
 
 // Extend Express types
 declare global {
   namespace Express {
-    interface User extends UserInstance {}
+    interface User extends InstanceType<typeof User> {}
   }
 }
 
-type SessionModel = typeof db.Session;
-type UserModel = typeof db.User;
+// Add the findOneWithPassword method to the User model
+const userModel = User as UserModel;
+userModel.findOneWithPassword = async function(options: any) {
+  try {
+    options = { 
+      ...options, 
+      attributes: { 
+        include: ['password'] 
+      } 
+    };
+    const result = await User.findOne(options);
+    return result as InstanceType<typeof User> | null;
+  } catch (error) {
+    console.error('Error in findOneWithPassword:', error);
+    throw error;
+  }
+};
 
 interface DeviceInfo {
   userAgent: string;
@@ -40,13 +59,9 @@ interface LocationInfo {
 
 class AuthService {
   private static instance: AuthService;
-  private Session: SessionModel;
-  private User: UserModel;
-  
+
   private constructor() {
-    // Use models from the central models/index.ts
-    this.Session = db.Session;
-    this.User = db.User;
+    // Models will be accessed directly from sequelize when needed
   }
 
   public static getInstance(): AuthService {
@@ -54,6 +69,18 @@ class AuthService {
       AuthService.instance = new AuthService();
     }
     return AuthService.instance;
+  }
+
+  private async getSequelizeInstance() {
+    return await getSequelize();
+  }
+
+  private get User() {
+    return this.getSequelizeInstance().then(seq => seq.models.User);
+  }
+
+  private get Session() {
+    return this.getSequelizeInstance().then(seq => seq.models.Session);
   }
 
   /**
@@ -68,7 +95,8 @@ class AuthService {
     role?: string;
   }): Promise<{ user: UserInstance; token: string }> {
     // Check if user already exists
-    const existingUser = await this.User.findOne({
+    const UserModel1 = await this.User;
+    const existingUser = await UserModel1.findOne({
       where: {
         [Op.or]: [
           { email: userData.email },
@@ -82,7 +110,8 @@ class AuthService {
     }
 
     // Create new user - let the model's beforeCreate hook handle password hashing
-    const user = await this.User.create({
+    const UserModel2 = await this.User;
+    const user = await UserModel2.create({
       username: userData.username,
       email: userData.email,
       password: userData.password, // Will be hashed by the model hook
@@ -97,7 +126,8 @@ class AuthService {
     const hashedToken = await bcrypt.hash(token, 10);
 
     // Create session
-    await (this.Session as any).create({
+    const SessionModel1 = await this.Session;
+    await SessionModel1.create({
       userId: user.id,
       token: hashedToken,
       deviceInfo: {
@@ -114,71 +144,114 @@ class AuthService {
       },
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       lastActiveAt: new Date(),
-      isActive: true,
+      isActive: true
     });
-
+    
     return { user, token };
   }
 
   /**
-   * Login user
+   * Login user with email and password
    */
   public async login(credentials: {
     email: string;
     password: string;
     deviceInfo?: DeviceInfo;
     ipAddress?: string;
-  }): Promise<{ user: UserInstance; token: string }> {
+  }): Promise<{ user: InstanceType<typeof User>; token: string }> {
     const { email, password, deviceInfo, ipAddress } = credentials;
 
-    // Find user by email
-    const user = await this.User.findOne({ where: { email } });
-    if (!user) {
-      throw new Error('Invalid email or password');
+    try {
+      logger.info(`Login attempt for email: ${email}`);
+      
+      // Validate input
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      // Find user by email with password included
+      const UserModelLogin = await this.User;
+      const user = await UserModelLogin.findOne({
+        where: { 
+          email: email.toLowerCase().trim(),
+          status: UserStatus.ACTIVE 
+        },
+        attributes: ['id', 'email', 'password', 'firstName', 'lastName', 'role', 'status']
+      });
+
+      if (!user) {
+        logger.warn(`Login failed: User not found or inactive for email: ${email}`);
+        throw new Error('Invalid email or password');
+      }
+
+      logger.debug(`User found: ${user.id}`);
+
+      // Check if password is correct
+      let isMatch = false;
+      
+      // First try bcrypt compare
+      if (password && user.password) {
+        isMatch = await bcrypt.compare(password, user.password);
+      }
+      
+      // If bcrypt compare fails, try direct comparison (for backwards compatibility)
+      if (!isMatch && password === user.password) {
+        isMatch = true;
+        
+        // If direct match worked, upgrade the password hash
+        if (isMatch) {
+          logger.info(`Upgrading password hash for user: ${user.id}`);
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(password, salt);
+          await user.save();
+        }
+      }
+      
+      if (!isMatch) {
+        logger.warn(`Login failed: Invalid password for user: ${user.id}`);
+        throw new Error('Invalid email or password');
+      }
+
+      logger.debug(`Password verified for user: ${user.id}`);
+      
+      // Generate JWT token
+      const token = await this.generateAuthToken(user);
+      logger.debug(`Generated token for user: ${user.id}`);
+
+      // Create session
+      if (this.createSession) {
+        try {
+          await this.createSession({
+            userId: user.id,
+            token,
+            deviceInfo: deviceInfo || {
+              userAgent: 'unknown',
+              platform: 'unknown',
+              browser: 'unknown',
+              os: 'unknown',
+              ip: ipAddress || 'unknown'
+            },
+            ipAddress: ipAddress || 'unknown'
+          });
+          logger.info(`Session created for user: ${user.id}`);
+        } catch (sessionError) {
+          logger.error(`Failed to create session for user ${user.id}:`, sessionError);
+          // Don't fail login if session creation fails
+        }
+      } else {
+        logger.warn('createSession method not available');
+      }
+
+      logger.info(`Login successful for user: ${user.id}`);
+      return { 
+        user: user.toJSON() as InstanceType<typeof User>, 
+        token 
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      logger.error(`Login error for email ${email}:`, error);
+      throw new Error(errorMessage);
     }
-
-    // Check if password is correct
-    let isMatch = false;
-    
-    // First try direct comparison (in case password is already hashed)
-    if (password === user.password) {
-      isMatch = true;
-    } 
-    // If direct comparison fails, try bcrypt compare
-    else if (password && user.password) {
-      isMatch = await bcrypt.compare(password, user.password);
-    }
-    
-    if (!isMatch) {
-      throw new Error('Invalid email or password');
-    }
-
-    // Generate auth token
-    const token = uuidv4();
-    const hashedToken = await bcrypt.hash(token, 10);
-
-    // Create session
-    await (this.Session as any).create({
-      userId: user.id,
-      token: hashedToken,
-      deviceInfo: {
-        userAgent: deviceInfo?.userAgent || 'unknown',
-        platform: deviceInfo?.platform || 'unknown',
-        browser: deviceInfo?.browser || 'unknown',
-        os: deviceInfo?.os || 'unknown',
-        ip: ipAddress || 'unknown',
-      },
-      locationInfo: {
-        country: 'unknown',
-        region: 'unknown',
-        city: 'unknown',
-      },
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      lastActiveAt: new Date(),
-      isActive: true,
-    });
-
-    return { user, token };
   }
 
   /**

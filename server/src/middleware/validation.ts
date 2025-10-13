@@ -1,20 +1,23 @@
 import { body, ValidationChain } from 'express-validator';
 import { CustomError } from '../utils/errors.js';
-import db from '../models/index.js';
+import { getSequelize } from '../config/database.js';
 
-const UserModel = db.User;
+const UserModel = async () => {
+  const sequelize = await getSequelize();
+  return sequelize.models.User as any;
+};
 
 export const validateRegister = (): ValidationChain[] => [
   body('username')
-    .trim()
     .isLength({ min: 3, max: 30 })
     .withMessage('Username must be between 3 and 30 characters')
     .matches(/^[a-zA-Z0-9_]+$/)
     .withMessage('Username can only contain letters, numbers, and underscores')
     .custom(async (value) => {
-      const user = await UserModel.findOne({ where: { username: value } });
+      const User = await UserModel();
+      const user = await User.findOne({ where: { username: value } });
       if (user) {
-        throw new Error('Username already in use');
+        throw new CustomError('Username already exists', 409);
       }
       return true;
     }),
@@ -24,7 +27,8 @@ export const validateRegister = (): ValidationChain[] => [
     .withMessage('Please provide a valid email')
     .normalizeEmail()
     .custom(async (value) => {
-      const user = await UserModel.findOne({ where: { email: value } });
+      const User = await UserModel();
+      const user = await User.findOne({ where: { email: value } });
       if (user) {
         throw new Error('Email already in use');
       }
@@ -70,7 +74,8 @@ export const validateUpdateProfile = (): ValidationChain[] => [
     .withMessage('Username can only contain letters, numbers, and underscores')
     .custom(async (value, { req }) => {
       if (!value) return true;
-      const user = await UserModel.findOne({ where: { username: value } });
+      const User = await UserModel();
+      const user = await User.findOne({ where: { username: value } });
       if (user && user.id !== req.user!.id) {
         throw new Error('Username already in use');
       }
@@ -84,7 +89,8 @@ export const validateUpdateProfile = (): ValidationChain[] => [
     .normalizeEmail()
     .custom(async (value, { req }) => {
       if (!value) return true;
-      const user = await UserModel.findOne({ where: { email: value } });
+      const User = await UserModel();
+      const user = await User.findOne({ where: { email: value } });
       if (user && user.id !== req.user!.id) {
         throw new Error('Email already in use');
       }

@@ -1,6 +1,36 @@
-import { Model, DataTypes, Sequelize, Optional } from "sequelize";
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import { 
+  Table, 
+  Column, 
+  Model, 
+  DataType, 
+  HasMany, 
+  BeforeCreate, 
+  BeforeUpdate, 
+  PrimaryKey, 
+  Default, 
+  Unique, 
+  Validate,
+  Scopes,
+  AllowNull,
+  Index,
+  BeforeDestroy,
+  AfterCreate,
+  AfterUpdate,
+  AfterDestroy,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
+  IsEmail
+} from 'sequelize-typescript';
+import type { NonAttribute, Association } from 'sequelize';
+import { Document } from './Document.js';
+import { Optional } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { UserCreationAttributes } from './EnhancedUser.js';
+// Import models
+// Note: We're not importing Document and DocumentPermission here to avoid circular dependencies
+// The associations will be set up in the model's associate method
 
 export enum UserRole {
   USER = 'user',
@@ -16,279 +46,278 @@ export enum UserStatus {
   PENDING_VERIFICATION = 'pending_verification'
 }
 
-// Define the attributes of the User model
-interface UserAttributes {
+// User interface
+// User interface
+export interface IUserAttributes {
   id: string;
   username: string;
   email: string;
-  password: string | null;
-  role: UserRole;
-  status: UserStatus;
-  githubId?: string;
-  avatarUrl?: string;
+  password: string;
   firstName?: string;
   lastName?: string;
-  bio?: string;
-  company?: string;
-  location?: string;
-  website?: string;
+  role: UserRole;
+  status: UserStatus;
   lastLoginAt?: Date;
-  loginCount: number;
-  timezone?: string;
-  preferredLanguage: string;
-  emailNotifications: boolean;
-  isVerified: boolean;
-  twoFactorEnabled: boolean;
-  passwordResetToken?: string;
-  passwordResetExpires?: Date;
+  emailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  profilePictureUrl?: string;
+  timezone?: string;
+  preferredLanguage?: string;
+  isOnline: boolean;
+  lastActiveAt?: Date;
+  loginAttempts: number;
+  lockUntil?: number;
+  twoFactorEnabled: boolean;
+  twoFactorRecoveryCodes?: string[];
+  settings?: Record<string, any>;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// Define the attributes required to create a new User
-interface UserCreationAttributes
-  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt" | "loginCount" | "emailNotifications" | "isVerified" | "twoFactorEnabled"> {}
-
-// Define the User instance methods
-interface UserInstance
-  extends Model<UserAttributes, UserCreationAttributes>,
-    UserAttributes {
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generatePasswordResetToken(): { resetToken: string; resetTokenExpiry: Date };
-  generateEmailVerificationToken(): { token: string; expires: Date };
-  toJSON(): UserAttributes;
-  [key: string]: any; // Allow additional methods
-}
-
-// Define the static methods of the User model
-type UserModelStatic = typeof Model & {
-  new (values?: object, options?: any): UserInstance;
-  associate?: (models: any) => void;
-  findByPk: (id: string, options?: any) => Promise<UserInstance | null>;
-  findOne: (options: any) => Promise<UserInstance | null>;
-  // Add other static methods as needed
-};
-
-// Define the model initialization function
-export const User = (sequelize: Sequelize): UserModelStatic => {
-  // Define the model
-  const User = sequelize.define<UserInstance>(
-    "User",
+// User model class
+@Table({
+  tableName: 'users',
+  timestamps: true,
+  paranoid: true,
+  underscored: true,
+  indexes: [
     {
-      id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
-      username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-          len: [3, 50],
-          is: /^[a-zA-Z0-9_]+$/,
-        },
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-          isEmail: true,
-        },
-      },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: true, // Nullable for OAuth users
-        validate: {
-          len: [8, 100],
-        },
-      },
-      role: {
-        type: DataTypes.ENUM(...Object.values(UserRole)),
-        defaultValue: UserRole.USER,
-        allowNull: false,
-      },
-      status: {
-        type: DataTypes.ENUM(...Object.values(UserStatus)),
-        defaultValue: UserStatus.PENDING_VERIFICATION,
-        allowNull: false,
-      },
-      githubId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
-      },
-      avatarUrl: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          isUrl: true,
-        },
-      },
-      firstName: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      lastName: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      bio: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      company: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      location: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      website: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          isUrl: true,
-        },
-      },
-      lastLoginAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      loginCount: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-        allowNull: false,
-      },
-      timezone: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      preferredLanguage: {
-        type: DataTypes.STRING,
-        defaultValue: 'en',
-        allowNull: false,
-      },
-      emailNotifications: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-        allowNull: false,
-      },
-      isVerified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false,
-      },
-      twoFactorEnabled: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false,
-      },
-      passwordResetToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      passwordResetExpires: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      emailVerificationToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      emailVerificationExpires: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
+      name: 'users_email_idx',
+      unique: true,
+      fields: ['email']
     },
     {
-      tableName: 'users',
-      timestamps: true,
-      indexes: [
-        {
-          unique: true,
-          fields: ['email'],
-        },
-        {
-          unique: true,
-          fields: ['username'],
-        },
-        {
-          fields: ['role'],
-        },
-        {
-          fields: ['status'],
-        },
-      ],
-      hooks: {
-        beforeCreate: async (user: UserInstance) => {
-          if (user.password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
-          }
-        },
-        beforeUpdate: async (user: UserInstance) => {
-          if (user.changed("password")) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
-          }
-        },
-      },
+      name: 'users_username_idx',
+      unique: true,
+      fields: ['username']
     },
-  ) as unknown as UserModelStatic;
+    {
+      name: 'users_status_idx',
+      fields: ['status']
+    }
+  ]
+})
+export class User extends Model<IUserAttributes, UserCreationAttributes> implements IUserAttributes {
+  @PrimaryKey
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    allowNull: false
+  })
+  declare id: string;
 
-  // Add instance method to check password
-  const userPrototype = User.prototype as UserInstance;
-  
-  // Instance methods
-  userPrototype.comparePassword = async function (
-    candidatePassword: string,
-  ): Promise<boolean> {
-    if (!this.password) return false; // For OAuth users without password
-    return bcrypt.compare(candidatePassword, this.password);
+  @Column({
+    type: DataType.STRING(50),
+    allowNull: false,
+    unique: true,
+    validate: {
+      len: [3, 50],
+      is: /^[a-zA-Z0-9_]+$/
+    }
+  })
+  username!: string;
+
+  @IsEmail
+  @Unique
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: false,
+    validate: {
+      isEmail: true,
+      notEmpty: true
+    }
+  })
+  declare email: string;
+
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: false,
+    set(value: string) {
+      if (value) {
+        const salt = bcrypt.genSaltSync(10);
+        this.setDataValue('password', bcrypt.hashSync(value, salt));
+      }
+    }
+  })
+  password!: string;
+
+  @Column(DataType.STRING(50))
+  declare firstName?: string;
+
+  @Column(DataType.STRING(50))
+  declare lastName?: string;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(UserRole) as string[]),
+    defaultValue: UserRole.USER,
+    allowNull: false
+  })
+  role!: UserRole;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(UserStatus)),
+    defaultValue: UserStatus.PENDING_VERIFICATION,
+    allowNull: false
+  })
+  status!: UserStatus;
+
+  @Column(DataType.DATE)
+  declare lastLoginAt?: Date;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  })
+  emailVerified!: boolean;
+
+  @Column(DataType.STRING)
+  emailVerificationToken?: string;
+
+  @Column(DataType.DATE)
+  emailVerificationExpires?: Date;
+
+  @Column(DataType.STRING)
+  passwordResetToken?: string;
+
+  @Column(DataType.DATE)
+  passwordResetExpires?: Date;
+
+  @Column(DataType.STRING)
+  profilePictureUrl?: string;
+
+  @Column(DataType.STRING(50))
+  timezone?: string;
+
+  @Column(DataType.STRING(10))
+  preferredLanguage?: string;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  })
+  isOnline!: boolean;
+
+  @Column(DataType.DATE)
+  lastActiveAt?: Date;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+    allowNull: false
+  })
+  loginAttempts!: number;
+
+  @Column(DataType.BIGINT)
+  lockUntil?: number;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  })
+  twoFactorEnabled!: boolean;
+
+  @Column(DataType.STRING)
+  twoFactorSecret?: string;
+
+  @Column(DataType.ARRAY(DataType.STRING))
+  twoFactorRecoveryCodes?: string[];
+
+  @Column(DataType.JSONB)
+  settings?: Record<string, any>;
+
+  @Column(DataType.JSONB)
+  metadata?: Record<string, any>;
+
+  @CreatedAt
+  declare createdAt: Date;
+
+  @UpdatedAt
+  declare updatedAt: Date;
+
+  @DeletedAt
+  declare deletedAt?: Date;
+
+  // Document associations
+  @HasMany(() => Document, 'userId')
+  declare documents?: NonAttribute<Document[]>;
+
+  declare static associations: {
+    documents: Association<User, Document>;
   };
 
-  userPrototype.createPasswordResetToken = function (): string {
+  // Add any other model methods or hooks here
+
+  // Instance methods
+  async comparePassword(candidatePassword: string): Promise<boolean> {
+    return bcrypt.compare(candidatePassword, this.password);
+  }
+  generatePasswordResetToken(): { resetToken: string; resetTokenExpiry: Date } {
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
     this.passwordResetToken = crypto
       .createHash('sha256')
       .update(resetToken)
       .digest('hex');
-    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    return resetToken;
-  };
+    this.passwordResetExpires = resetTokenExpiry;
+    
+    return { resetToken, resetTokenExpiry };
+  }
 
-  userPrototype.markAsVerified = async function (): Promise<void> {
-    this.isVerified = true;
-    this.passwordResetToken = null;
-    this.passwordResetExpires = null;
-    await this.save();
-  };
+  generateEmailVerificationToken(): { token: string; expires: Date } {
+    const token = crypto.randomBytes(20).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    this.emailVerificationToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+    this.emailVerificationExpires = expires;
+    
+    return { token, expires };
+  }
 
-  return User;
+  toJSON(): any {
+    const values = { ...this.get() };
+    // Use optional chaining and nullish coalescing to safely delete properties
+    const safeDelete = (obj: any, prop: string) => {
+      if (prop in obj) {
+        const { [prop]: _, ...rest } = obj;
+        return rest;
+      }
+      return obj;
+    };
+
+    return [
+      'password',
+      'twoFactorSecret',
+      'twoFactorRecoveryCodes',
+      'passwordResetToken',
+      'passwordResetExpires',
+      'emailVerificationToken',
+      'emailVerificationExpires'
+    ].reduce((acc, prop) => safeDelete(acc, prop), values);
+  }
+  // Define the model
+  // Hooks
+  @BeforeCreate
+  @BeforeUpdate
+  static async hashPassword(instance: User) {
+    if (instance.changed('password') && instance.password) {
+      const salt = await bcrypt.genSalt(10);
+      instance.password = await bcrypt.hash(instance.password, salt);
+    }
+  }
+
+  // Associations
+  // Associations will be set up in the model's associate method;
 }
-
-// Export the User model and interfaces
-export type { UserAttributes, UserInstance, UserModelStatic };
 
 export default User;
-
-declare global {
-  namespace Express {
-    interface User extends UserInstance {}
-  }
-}

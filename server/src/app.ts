@@ -17,6 +17,7 @@ import { logger, httpLogger } from "./utils/logger.js";
 import { sequelize } from "./config/database.js";
 import { redisService } from "./services/redis.js";
 import passport from "passport";
+import executionRoutes from "./routes/execution.routes.js";
 import session from "express-session";
 import { sessionConfig, initializeRedis } from "./config/session.js";
 import "./config/passport.js"; // Initialize passport strategies
