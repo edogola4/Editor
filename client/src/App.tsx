@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { ErrorBoundary } from 'react-error-boundary';
 import { CodeEditor } from './components/CodeEditor';
 import { Header } from './components/Header';
 import { StatusBar } from './components/StatusBar';
@@ -8,6 +9,7 @@ import { useSocket } from './utils/socket';
 import { ThemeProvider } from './components/theme-provider';
 import { ChatContainer } from './components/chat/ChatContainer';
 import { ChatProvider } from './contexts/ChatContext';
+import { FeatureFlagProvider, useFeatureFlag } from './features/featureFlags/FeatureFlagProvider';
 
 // Import global styles with theme variables
 import './globals.css';
@@ -15,7 +17,19 @@ import './globals.css';
 function App() {
   const { documentId } = useEditorStore();
   const { joinDocument } = useSocket();
-  const [hasError, setHasError] = useState(false);
+  
+  // Example of using feature flags
+  const isCodeExecutionEnabled = useFeatureFlag('codeExecution');
+  const isVoiceChatEnabled = useFeatureFlag('voiceChat');
+  
+  // Log enabled features in development
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('Code Execution feature enabled:', isCodeExecutionEnabled);
+      console.log('Voice Chat feature enabled:', isVoiceChatEnabled);
+      // Add more feature flag logs as needed
+    }
+  }, [isCodeExecutionEnabled, isVoiceChatEnabled]);
 
   // Use a fixed document ID so all tabs can collaborate together
   useEffect(() => {
@@ -85,12 +99,60 @@ function App() {
   );
 }
 
+function AppWithErrorBoundary() {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background text-foreground p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <p className="mb-4">The application encountered an unexpected error.</p>
+          <button
+            onClick={() => {
+              setHasError(false);
+              window.location.reload();
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Reload Application
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary 
+      fallback={
+        <div className="flex items-center justify-center h-screen bg-background text-foreground p-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+            <p className="mb-4">The application encountered an unexpected error.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Reload Application
+            </button>
+          </div>
+        </div>
+      }
+      onError={() => setHasError(true)}
+    >
+      <App />
+    </ErrorBoundary>
+  );
+}
+
 function AppWrapper() {
   return (
-    <ThemeProvider defaultTheme="system" enableSystem>
-      <ChatProvider>
-        <App />
-      </ChatProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <FeatureFlagProvider>
+        <ChatProvider>
+          <AppWithErrorBoundary />
+        </ChatProvider>
+      </FeatureFlagProvider>
     </ThemeProvider>
   );
 }
