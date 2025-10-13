@@ -21,9 +21,34 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v1.0.0
+## 🌟 What's New in v1.1.0
 
-### 🚀 Initial Release
+### 🚀 New Features
+- **Code Execution**: Integrated Judge0 API for executing code in 50+ programming languages
+- **Feature Flags**: Gradual feature rollout with user targeting capabilities
+- **Enhanced Error Handling**: Improved error boundaries and user feedback
+- **UI Improvements**: Better mobile responsiveness and accessibility
+
+### 🛠 Technical Improvements
+- **Feature Flag System**: Dynamic feature management with runtime configuration
+- **Code Execution Service**: Secure sandboxed code execution with resource limits
+- **Performance Optimizations**: Reduced bundle size and improved load times
+- **Dependency Updates**: Latest versions of all dependencies with security patches
+
+### 🐛 Bug Fixes
+- Fixed cursor synchronization issues in collaborative editing
+- Resolved race conditions in WebSocket message handling
+- Addressed performance bottlenecks in large document editing
+
+### 🔒 Security
+- Enhanced input validation for code execution
+- Improved rate limiting for API endpoints
+- Added security headers and CSP policies
+
+## 🌟 Previous Versions
+
+<details>
+<summary>v1.0.0 - Initial Release</summary>
 - **Complete Implementation**: Full-stack collaborative code editor with real-time synchronization
 - **Modern Tech Stack**: React 19, TypeScript 5.8+, Node.js 22+, PostgreSQL 16+, Redis 7+
 - **WebSocket Integration**: Real-time collaboration using Socket.IO 4.8+
@@ -32,10 +57,13 @@
 - **Database Design**: Comprehensive PostgreSQL schema with proper relationships
 - **API Documentation**: Auto-generated OpenAPI/Swagger documentation
 - **Testing Suite**: Unit, integration, and end-to-end tests
+</details>
 
 ## ✨ Features
 
 ### 🎯 **Core Features**
+- **Code Execution**: Execute code in 50+ languages with Judge0 integration
+- **Feature Flags**: Gradual feature rollout with user targeting
 - **Room-based Collaboration**: Organize work in dedicated rooms with access controls
 - **Role-based Access Control**: Granular permissions (Owner, Admin, Editor, Viewer, Guest)
 - **Real-time Editing**: Multi-user editing with operational transformation (OT)
@@ -68,6 +96,7 @@
 - **Security Headers**: Helmet.js for secure HTTP headers
 
 ### 🛠 **Editor Features**
+- **Code Execution**: Run code directly in the editor with real-time output
 - **Monaco Editor**: Full VS Code editing experience with extensions support
 - **IntelliSense**: Smart code completion, parameter hints, and hover information
 - **Multi-cursor Support**: Multiple cursors for efficient editing
@@ -81,6 +110,9 @@
 - **Search & Replace**: Advanced search with regex support
 - **Snippets**: Built-in code snippets for common patterns
 - **Emmet Support**: HTML/CSS abbreviations expansion
+- **Execution History**: View and manage previous code execution results
+- **Custom Input**: Provide custom input for code execution
+- **Resource Monitoring**: Track execution time and memory usage
 
 ### 🎨 **User Interface**
 - **Modern Design**: Clean, professional interface inspired by VS Code
