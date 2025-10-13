@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { gitHubService } from '../services/github/GitHubService.js';
-import User from '../models/User.js';
+import { User } from '../models/User.js';
 import { AppError } from '../utils/error.js';
 import type { GitHubError, GitHubSearchParams, GitHubSearchResult } from '../types/github.js';
 

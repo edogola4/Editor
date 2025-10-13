@@ -13,14 +13,15 @@ import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import { config } from "./config/config.js";
 import passport from "./config/passport.js";
+import { getPassport } from "./config/passport.js";
 import { setupSocketIO, cleanupSocketIO } from "./socket/setup.js";
-import { db } from "./models/index.js";
-import { testConnection } from "./config/database.js";
+import { initializeDatabase } from "./config/database.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
-import { redis } from "./config/redis.js";
+import { redisClient } from "./config/redis.js";
 import { githubRoutes } from "./routes/github.routes.js";
 import WebSocketService from "./services/WebSocketService.js";
 import { v4 as uuidv4 } from 'uuid';
+import { initializePassport } from "./config/passport.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -99,6 +100,55 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await sequelize.authenticate();
+
+    // Check Redis connection (simple ping)
+    let redisStatus = false;
+    try {
+      redisStatus = await redisClient.ping();
+    } catch (error) {
+      console.warn("Redis health check failed:", error.message);
+    }
+
+    res.status(200).json({
+      status: "ok",
+      database: "connected",
+      redis: redisStatus ? "connected" : "disconnected",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memoryUsage: process.memoryUsage(),
+    });
+  } catch (error) {
+    logger.error("Health check failed", { error });
+    res.status(503).json({
+      status: "error",
+      message: "Service Unavailable",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+
+// API information endpoint
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Collaborative Code Editor API v1",
+    version: process.env.npm_package_version || "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      documents: "/api/documents",
+      github: "/api/github",
+      users: "/api/users",
+      docs: "/api-docs"
+    },
+    documentation: "/api-docs",
+  });
+});
+
 // Initialize WebSocket Service
 const webSocketService = new WebSocketService(server);
 
@@ -125,7 +175,6 @@ app.post('/api/documents', (req, res) => {
 
 // API Documentation with Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -133,15 +182,21 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
+// Initialize database and services
+const initializeApp = async () => {
   try {
-    await testConnection();
-    console.log("✅ Database connected successfully");
+    // Initialize database first
+    console.log('🔌 Connecting to database...');
+    const sequelize = await initializeDatabase();
+    console.log('✅ Database connected successfully');
+
+    // Initialize passport after database is ready
+    const passport = await getPassport();
     
+    // Start the server
     const serverInstance = server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📱 Frontend URL: http://localhost:${process.env.FRONTEND_PORT || 5173}`);
-      console.log(`🔌 WebSocket URL: ws://localhost:${PORT}`);
       console.log(`📋 API Documentation: http://localhost:${PORT}/api-docs`);
     });
 
@@ -190,7 +245,7 @@ process.on('SIGTERM', async () => {
 });
 
 // Start the server
-startServer().catch(error => {
+initializeApp().catch(error => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
