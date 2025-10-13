@@ -1,0 +1,110 @@
+name: CD - Production
+
+on:
+  push:
+    tags:
+      - 'v*' # Matches semantic version tags (e.g., v1.0.0)
+
+env:
+  DOCKER_IMAGE: ghcr.io/edogola4/editor
+  DOCKER_TAG: ${{ github.ref_name }}
+  KUBE_NAMESPACE: code-editor
+  
+  # These should be set in your repository's secrets
+  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+  REGISTRY_USERNAME: ${{ secrets.GHCR_USERNAME }}
+  REGISTRY_PASSWORD: ${{ secrets.GHCR_TOKEN }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./server
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}/backend:${{ env.DOCKER_TAG }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./client
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}/frontend:${{ env.DOCKER_TAG }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Update image tags in k8s manifests
+      run: |
+        sed -i "s|image: .*/backend:.*|image: ${{ env.DOCKER_IMAGE }}/backend:${{ env.DOCKER_TAG }}|" k8s/backend/deployment.yaml
+        sed -i "s|image: .*/frontend:.*|image: ${{ env.DOCKER_IMAGE }}/frontend:${{ env.DOCKER_TAG }}|" k8s/frontend/deployment.yaml
+        
+        # Commit the changes
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@github.com'
+        git add k8s/
+        git commit -m "chore: update image tags to ${{ env.DOCKER_TAG }}" || echo "No changes to commit"
+        git push
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ env.KUBE_CONFIG }}
+    
+    - name: Deploy to Kubernetes
+      run: |
+        # Apply all k8s manifests
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/ -n ${{ env.KUBE_NAMESPACE }}
+        
+        # Wait for rollout to complete
+        kubectl rollout status deployment/backend -n ${{ env.KUBE_NAMESPACE }}
+        kubectl rollout status deployment/frontend -n ${{ env.KUBE_NAMESPACE }}
+    
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
+        kubectl get svc -n ${{ env.KUBE_NAMESPACE }}
+        kubectl get ingress -n ${{ env.KUBE_NAMESPACE }}
+
+  notify:
+    name: Notify
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Send Slack notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_TITLE: "Deployment ${{ job.status }} for ${{ github.repository }}@${{ github.ref_name }}"
+        SLACK_MESSAGE: "${{ github.repository }} has been deployed to production"
+        SLACK_COLOR: "${{ job.status == 'success' && 'good' || 'danger' }}"
