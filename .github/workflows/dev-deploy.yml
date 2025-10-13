@@ -1,0 +1,155 @@
+name: CD - Development
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+env:
+  DOCKER_IMAGE: ghcr.io/edogola4/editor
+  DOCKER_TAG: develop-latest
+  KUBE_NAMESPACE: code-editor-staging
+  
+  # These should be set in your repository's secrets
+  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_STAGING }}
+  REGISTRY_USERNAME: ${{ secrets.GHCR_USERNAME }}
+  REGISTRY_PASSWORD: ${{ secrets.GHCR_TOKEN }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd server && npm ci
+        cd ../client && npm ci
+      working-directory: .
+    
+    - name: Run server tests
+      run: npm test -- --coverage
+      working-directory: server
+      env:
+        NODE_ENV: test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+    
+    - name: Run client tests
+      run: npm test -- --coverage
+      working-directory: client
+
+  build-and-push:
+    name: Build and Push Docker Images
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./server
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}/backend:${{ env.DOCKER_TAG }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./client
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}/frontend:${{ env.DOCKER_TAG }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Staging
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ env.KUBE_CONFIG }}
+    
+    - name: Deploy to Kubernetes
+      run: |
+        # Create namespace if it doesn't exist
+        kubectl create namespace ${{ env.KUBE_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Apply all k8s manifests with staging overrides
+        for f in k8s/*.yaml; do
+          envsubst < "$f" | kubectl apply -f - -n ${{ env.KUBE_NAMESPACE }}
+        done
+        
+        # Wait for rollout to complete
+        kubectl rollout status deployment/backend -n ${{ env.KUBE_NAMESPACE }}
+        kubectl rollout status deployment/frontend -n ${{ env.KUBE_NAMESPACE }}
+    
+    - name: Run integration tests
+      run: |
+        # Add your integration tests here
+        echo "Running integration tests against staging environment"
+        # Example: npm run test:integration -- --baseUrl=http://staging.yourdomain.com
+    
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
+        kubectl get svc -n ${{ env.KUBE_NAMESPACE }}
+        kubectl get ingress -n ${{ env.KUBE_NAMESPACE }}
+
+  notify:
+    name: Notify
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Send Slack notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_TITLE: "Staging Deployment ${{ job.status }} for ${{ github.repository }}@${{ github.sha }}"
+        SLACK_MESSAGE: "${{ github.repository }} has been deployed to staging"
+        SLACK_COLOR: "${{ job.status == 'success' && 'good' || 'danger' }}"
+        SLACK_USERNAME: GitHub Actions
+        SLACK_ICON: https://github.githubassets.com/favicon.ico
