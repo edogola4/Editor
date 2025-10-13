@@ -22,6 +22,9 @@ import { githubRoutes } from "./routes/github.routes.js";
 import WebSocketService from "./services/WebSocketService.js";
 import { v4 as uuidv4 } from 'uuid';
 import { initializePassport } from "./config/passport.js";
+import { securityHeaders, httpParamProtection, sanitizeInput, rateLimiter, apiLimiter, corsOptions as securityCorsOptions } from "./middleware/security.js";
+import { monitoring } from "./utils/monitoring.js";
+import { createIndexes, optimizeTables } from "./utils/dbOptimization.js";
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
