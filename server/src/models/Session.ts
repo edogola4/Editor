@@ -1,23 +1,19 @@
-import { Model, DataTypes, Sequelize, Optional } from "sequelize";
-
-// Define the attributes of the Session model
-export interface SessionAttributes {
-  userId: string;
-  token: string;
-  deviceInfo: DeviceInfo;
-  locationInfo: LocationInfo;
-  expiresAt: Date;
-  lastActiveAt: Date;
-  isActive: boolean;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
-// Define the attributes required to create a new Session
-export interface SessionCreationAttributes
-  extends Optional<
-    SessionAttributes,
-    "id" | "createdAt" | "updatedAt" | "lastActiveAt" | "isActive"
-  > {}
+import { 
+  Table, 
+  Column, 
+  Model, 
+  ForeignKey, 
+  Default, 
+  AllowNull, 
+  Index, 
+  UpdatedAt,
+  BelongsTo,
+  CreatedAt,
+  Optional,
+  DataType
+} from 'sequelize-typescript';
+import { Op } from 'sequelize';
+import { User } from './User';
 
 // Define device information interface
 export interface DeviceInfo {
@@ -25,197 +21,148 @@ export interface DeviceInfo {
   platform: string;
   browser: string;
   os: string;
-  ip: string;
-  fingerprint?: string;
+  source: string;
 }
 
 // Define location information interface
 export interface LocationInfo {
+  ip: string;
   country?: string;
   region?: string;
   city?: string;
   timezone?: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
+  latitude?: number;
+  longitude?: number;
 }
 
-// Define the Session instance methods
-export interface SessionInstance
-  extends Model<SessionAttributes, SessionCreationAttributes>,
-    SessionAttributes {
-  // Instance methods
-  refreshActivity(): Promise<void>;
-  isExpired(): boolean;
-  revoke(): Promise<void>;
-  extendSession(durationMinutes: number): Promise<void>;
-  matchesDevice(deviceInfo: Partial<DeviceInfo>): boolean;
-  [key: string]: any; // Allow additional methods
+// Define the attributes of the Session model
+export interface SessionAttributes {
+  id: string;
+  userId: string;
+  token: string;
+  deviceInfo: DeviceInfo;
+  locationInfo?: LocationInfo;
+  expiresAt: Date;
+  lastActiveAt: Date;
+  isActive: boolean;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  deletedAt?: Date;
 }
 
-// Define the static methods of the Session model
-export type SessionModelStatic = typeof Model & {
-  new (values?: object, options?: any): SessionInstance;
-  associate?: (models: any) => void;
-  findByPk: (id: string, options?: any) => Promise<SessionInstance | null>;
-  findOne: (options: any) => Promise<SessionInstance | null>;
-  findAll: (options?: any) => Promise<SessionInstance[]>;
-  findByToken: (
-    token: string,
-    options?: any,
-  ) => Promise<SessionInstance | null>;
-  findByUserId: (userId: string, options?: any) => Promise<SessionInstance[]>;
-  cleanupExpired: () => Promise<number>;
-  // Add other static methods as needed
-};
+// Define the attributes required to create a new Session
+export interface SessionCreationAttributes
+  extends Optional<
+    SessionAttributes,
+    'id' | 'createdAt' | 'updatedAt' | 'lastActiveAt' | 'isActive' | 'deletedAt'
+  > {}
 
-/**
- * Initialize Session model
- */
-export default function Session(sequelize: Sequelize): SessionModelStatic {
-  // Define the model
-  const SessionModel = sequelize.define<SessionInstance>(
-    "Session",
+@Table({
+  tableName: 'sessions',
+  timestamps: true,
+  paranoid: true,
+  indexes: [
     {
-      id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
-      userId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "users",
-          key: "id",
-        },
-      },
-      token: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      deviceInfo: {
-        type: DataTypes.JSON,
-        allowNull: false,
-      },
-      locationInfo: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
-      expiresAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      lastActiveAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false,
-      },
-      isActive: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-        allowNull: false,
-      },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-    },
-    {
-      tableName: "sessions",
-      timestamps: true,
-    },
-  ) as unknown as SessionModelStatic;
-
-  // Add instance methods
-  const sessionPrototype = SessionModel.prototype as SessionInstance;
-
-  sessionPrototype.refreshActivity = async function (): Promise<void> {
-    this.lastActiveAt = new Date();
-    await this.save();
-  };
-
-  sessionPrototype.isExpired = function (): boolean {
-    return new Date() > this.expiresAt;
-  };
-
-  sessionPrototype.revoke = async function (): Promise<void> {
-    this.isActive = false;
-    this.expiresAt = new Date();
-    await this.save();
-  };
-
-  sessionPrototype.extendSession = async function (
-    durationMinutes: number,
-  ): Promise<void> {
-    const newExpiry = new Date();
-    newExpiry.setMinutes(newExpiry.getMinutes() + durationMinutes);
-    this.expiresAt = newExpiry;
-    await this.save();
-  };
-
-  sessionPrototype.matchesDevice = function (
-    deviceInfo: Partial<DeviceInfo>,
-  ): boolean {
-    const current = this.deviceInfo;
-
-    if (deviceInfo.ip && current.ip !== deviceInfo.ip) {
-      return false;
+      name: 'sessions_is_active_idx',
+      fields: ['is_active']
     }
+  ]
+})
+export default class Session extends Model<SessionAttributes, SessionCreationAttributes>
+  implements SessionAttributes {
 
-    if (deviceInfo.userAgent && current.userAgent !== deviceInfo.userAgent) {
-      return false;
-    }
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    defaultValue: DataType.UUIDV4,
+  })
+  id!: string;
 
-    if (
-      deviceInfo.fingerprint &&
-      current.fingerprint !== deviceInfo.fingerprint
-    ) {
-      return false;
-    }
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+  })
+  userId!: string;
 
-    return true;
-  };
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    unique: true,
+  })
+  token!: string;
 
-  // Add static methods
-  SessionModel.findByToken = async function (
-    token: string,
-    options?: any,
-  ): Promise<SessionInstance | null> {
-    return this.findOne({
-      where: { token },
-      ...options,
-    });
-  };
+  @Column({
+    type: DataType.JSONB,
+    allowNull: false,
+  })
+  deviceInfo!: DeviceInfo;
 
-  SessionModel.findByUserId = async function (
-    userId: string,
-    options?: any,
-  ): Promise<SessionInstance[]> {
-    return this.findAll({
-      where: { userId },
-      order: [["created_at", "DESC"]],
-      ...options,
-    });
-  };
+  @AllowNull
+  @Column({
+    type: DataType.JSONB,
+  })
+  locationInfo?: LocationInfo;
 
-  SessionModel.cleanupExpired = async function (): Promise<number> {
-    const result = await this.destroy({
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+  })
+  expiresAt!: Date;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+    defaultValue: DataType.NOW,
+  })
+  lastActiveAt!: Date;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+    field: 'is_active',
+  })
+  isActive!: boolean;
+
+  @CreatedAt
+  @Column({
+    type: DataType.DATE,
+    field: 'created_at',
+    allowNull: false
+  })
+  createdAt!: Date;
+
+  @UpdatedAt
+  @Column({
+    type: DataType.DATE,
+    field: 'updated_at',
+    allowNull: false
+  })
+  updatedAt!: Date;
+
+  @AllowNull
+  @Column({
+    type: DataType.DATE,
+    field: 'deleted_at'
+  })
+  deletedAt?: Date;
+
+  @BelongsTo(() => User as any)
+  user!: User;
+
+  // Static method to clean up expired sessions
+  static async cleanupExpiredSessions(): Promise<number> {
+    const count = await this.destroy({
       where: {
         expiresAt: {
-          [Sequelize.Op.lt]: new Date(),
-        },
-        isActive: true,
-      },
+          [Op.lt]: new Date()
+        }
+      }
     });
-    return result;
-  };
-
-  return SessionModel;
+    return count;
+  }
 }
+
+// Export interfaces for type safety
+export interface ISession extends Session {}

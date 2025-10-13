@@ -3,19 +3,34 @@ import {
   Column, 
   Model, 
   DataType, 
-  IsEmail, 
   HasMany, 
   BeforeCreate, 
   BeforeUpdate, 
   PrimaryKey, 
   Default, 
-  IsUnique, 
-  Validate 
+  Unique, 
+  Validate,
+  Scopes,
+  AllowNull,
+  Index,
+  BeforeDestroy,
+  AfterCreate,
+  AfterUpdate,
+  AfterDestroy,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
+  IsEmail
 } from 'sequelize-typescript';
+import type { NonAttribute, Association } from 'sequelize';
+import { Document } from './Document.js';
+import { Optional } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { Document } from './Document';
-import DocumentPermission from './DocumentPermission';
+import { UserCreationAttributes } from './EnhancedUser.js';
+// Import models
+// Note: We're not importing Document and DocumentPermission here to avoid circular dependencies
+// The associations will be set up in the model's associate method
 
 export enum UserRole {
   USER = 'user',
@@ -31,21 +46,69 @@ export enum UserStatus {
   PENDING_VERIFICATION = 'pending_verification'
 }
 
+// User interface
+// User interface
+export interface IUserAttributes {
+  id: string;
+  username: string;
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  role: UserRole;
+  status: UserStatus;
+  lastLoginAt?: Date;
+  emailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  profilePictureUrl?: string;
+  timezone?: string;
+  preferredLanguage?: string;
+  isOnline: boolean;
+  lastActiveAt?: Date;
+  loginAttempts: number;
+  lockUntil?: number;
+  twoFactorEnabled: boolean;
+  twoFactorRecoveryCodes?: string[];
+  settings?: Record<string, any>;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// User model class
 @Table({
   tableName: 'users',
-  underscored: true,
+  timestamps: true,
   paranoid: true,
-  version: true,
-  timestamps: true
+  underscored: true,
+  indexes: [
+    {
+      name: 'users_email_idx',
+      unique: true,
+      fields: ['email']
+    },
+    {
+      name: 'users_username_idx',
+      unique: true,
+      fields: ['username']
+    },
+    {
+      name: 'users_status_idx',
+      fields: ['status']
+    }
+  ]
 })
-export class User extends Model<UserAttributes, UserCreationAttributes> {
+export class User extends Model<IUserAttributes, UserCreationAttributes> implements IUserAttributes {
   @PrimaryKey
   @Column({
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
     allowNull: false
   })
-  id!: string;
+  declare id: string;
 
   @Column({
     type: DataType.STRING(50),
@@ -59,35 +122,37 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   username!: string;
 
   @IsEmail
+  @Unique
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
-    unique: true,
     validate: {
       isEmail: true,
       notEmpty: true
     }
   })
-  email!: string;
+  declare email: string;
 
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
     set(value: string) {
-      const salt = bcrypt.genSaltSync(10);
-      this.setDataValue('password', bcrypt.hashSync(value, salt));
+      if (value) {
+        const salt = bcrypt.genSaltSync(10);
+        this.setDataValue('password', bcrypt.hashSync(value, salt));
+      }
     }
   })
   password!: string;
 
   @Column(DataType.STRING(50))
-  firstName?: string;
+  declare firstName?: string;
 
   @Column(DataType.STRING(50))
-  lastName?: string;
+  declare lastName?: string;
 
   @Column({
-    type: DataType.ENUM(...Object.values(UserRole)),
+    type: DataType.ENUM(...Object.values(UserRole) as string[]),
     defaultValue: UserRole.USER,
     allowNull: false
   })
@@ -101,7 +166,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   status!: UserStatus;
 
   @Column(DataType.DATE)
-  lastLoginAt?: Date;
+  declare lastLoginAt?: Date;
 
   @Column({
     type: DataType.BOOLEAN,
@@ -170,20 +235,29 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   @Column(DataType.JSONB)
   metadata?: Record<string, any>;
 
-  @Column(DataType.DATE)
-  createdAt!: Date;
+  @CreatedAt
+  declare createdAt: Date;
 
-  @Column(DataType.DATE)
-  updatedAt!: Date;
+  @UpdatedAt
+  declare updatedAt: Date;
 
-  @Column(DataType.DATE)
-  deletedAt?: Date;
+  @DeletedAt
+  declare deletedAt?: Date;
+
+  // Document associations
+  @HasMany(() => Document, 'userId')
+  declare documents?: NonAttribute<Document[]>;
+
+  declare static associations: {
+    documents: Association<User, Document>;
+  };
+
+  // Add any other model methods or hooks here
 
   // Instance methods
   async comparePassword(candidatePassword: string): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
   }
-
   generatePasswordResetToken(): { resetToken: string; resetTokenExpiry: Date } {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
@@ -212,14 +286,24 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
 
   toJSON(): any {
     const values = { ...this.get() };
-    delete values.password;
-    delete values.twoFactorSecret;
-    delete values.twoFactorRecoveryCodes;
-    delete values.passwordResetToken;
-    delete values.passwordResetExpires;
-    delete values.emailVerificationToken;
-    delete values.emailVerificationExpires;
-    return values;
+    // Use optional chaining and nullish coalescing to safely delete properties
+    const safeDelete = (obj: any, prop: string) => {
+      if (prop in obj) {
+        const { [prop]: _, ...rest } = obj;
+        return rest;
+      }
+      return obj;
+    };
+
+    return [
+      'password',
+      'twoFactorSecret',
+      'twoFactorRecoveryCodes',
+      'passwordResetToken',
+      'passwordResetExpires',
+      'emailVerificationToken',
+      'emailVerificationExpires'
+    ].reduce((acc, prop) => safeDelete(acc, prop), values);
   }
   // Define the model
   // Hooks
@@ -233,14 +317,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   }
 
   // Associations
-  @HasMany(() => Document, 'ownerId')
-  documents!: Document[];
-
-  @HasMany(() => DocumentPermission, 'userId')
-  documentPermissions!: DocumentPermission[];
+  // Associations will be set up in the model's associate method;
 }
-
-// Export interfaces for type safety
-export interface IUser extends User {}
 
 export default User;
