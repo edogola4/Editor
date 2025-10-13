@@ -52,6 +52,7 @@ coverage/
 # Temporary and development files
 server/test-db*.js
 server/src/models/associations_fixed_new*.ts
+server/src/models/associations.ts
 server/src/utils/dbInit_new*.ts
 server/src/models/initModels.ts
 .DS_Store?
