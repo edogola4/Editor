@@ -1,36 +1,41 @@
-import { Sequelize } from "sequelize";
-import { config } from "./config.js";
+import { Sequelize } from 'sequelize-typescript';
+import { config } from './config.js';
+import path from 'path';
 
-// Initialize Sequelize with PostgreSQL configuration
-const sequelize = new Sequelize({
-  dialect: "postgres",
-  host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT || "5432"),
-  database: process.env.DB_NAME || "collaborative_editor",
-  username: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "postgres",
-  logging: process.env.NODE_ENV === "development" ? console.log : false,
-  define: {
-    timestamps: true,
-    underscored: true,
-  },
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-});
+// This will be initialized in initializeDatabase()
+let _sequelize: Sequelize;
 
-// Test the database connection
-const testConnection = async () => {
+export const initializeDatabase = async (): Promise<Sequelize> => {
+  if (_sequelize) {
+    return _sequelize;
+  }
+
   try {
-    await sequelize.authenticate();
-    console.log("✅ Database connection has been established successfully.");
+    // Import the database initialization function
+    const { dbInit } = await import('../utils/dbInit.ts');
+
+    // Initialize the database and get the sequelize instance
+    const sequelize = await dbInit();
+    if (!sequelize) {
+      throw new Error('Failed to initialize database: dbInit returned null');
+    }
+    _sequelize = sequelize;
+    return _sequelize;
   } catch (error) {
-    console.error("❌ Unable to connect to the database:", error);
+    console.error('❌ Unable to connect to the database:');
+    console.error(error);
     process.exit(1);
   }
 };
 
-export { sequelize, testConnection };
+// Export sequelize instance for direct access
+/**
+ * Get the initialized Sequelize instance
+ * @throws {Error} If the database has not been initialized
+ */
+export const getSequelize = (): Sequelize => {
+  if (typeof _sequelize === 'undefined') {
+    throw new Error('Database not initialized. Call initializeDatabase() first.');
+  }
+  return _sequelize;
+};
