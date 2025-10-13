@@ -2,15 +2,16 @@
 
 <div align="center">
   <h2>🚀 Real-time Collaborative Editor - Backend</h2>
-  <p>High-performance backend service with native WebSocket-based real-time collaboration</p>
+  <p>High-performance backend service with native WebSocket-based real-time collaboration and code execution</p>
 
-  ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+  ![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
   ![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-3178c6.svg)
   ![Express](https://img.shields.io/badge/Express-4+-000000.svg)
   ![WebSocket](https://img.shields.io/badge/WebSocket-100%25-010101.svg)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg)
   ![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)
+  ![Judge0](https://img.shields.io/badge/Judge0-1.4.0-FF6B6B.svg)
   ![Jest](https://img.shields.io/badge/Jest-29.7+-C21325.svg)
   
   [![Test Coverage](https://img.shields.io/codecov/c/github/edogola4/Editor/main.svg?flag=server)](https://codecov.io/gh/edogola4/Editor)
@@ -20,21 +21,39 @@
   [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-85EA2D.svg)](https://editor.swagger.io/?url=https://raw.githubusercontent.com/edogola4/Editor/main/docs/api/openapi.yaml)
 </div>
 
-## 🌟 What's New in v1.0.0
+## 🌟 What's New in v1.1.0
 
-- **Initial Release**: Complete backend implementation for collaborative code editing
-- **Modern Architecture**: TypeScript, Express.js 4+, Socket.IO 4.8+
-- **Database Integration**: PostgreSQL 16+ with Sequelize 6+ ORM
-- **Real-time Features**: WebSocket-based collaboration with operational transformation
-- **Authentication System**: JWT-based auth with GitHub OAuth integration
-- **API Documentation**: Auto-generated OpenAPI/Swagger documentation
-- **Testing Suite**: Comprehensive unit and integration tests
-- **Production Ready**: Docker containerization and deployment support
+### 🚀 New Features
+- **Code Execution Service**: Integrated Judge0 for secure code execution in 50+ languages
+- **Feature Flags**: Dynamic feature management with runtime configuration
+- **Enhanced API**: New endpoints for code execution and language support
+- **Improved WebSocket**: Better handling of real-time updates and presence
 
-This is the backend service for the Collaborative Code Editor, built with TypeScript and Node.js to provide a scalable and performant real-time collaboration experience.
+### 🛠 Technical Improvements
+- **Performance**: Optimized WebSocket message handling
+- **Security**: Enhanced input validation and rate limiting
+- **Documentation**: Updated API documentation with new endpoints
+- **Testing**: Added integration tests for new features
+
+## 🌟 Previous Versions
+
+<details>
+<summary>v1.0.0 - Initial Release</summary>
+- Complete backend implementation for collaborative code editing
+- Modern Architecture: TypeScript, Express.js 4+, Socket.IO 4.8+
+- Database Integration: PostgreSQL 16+ with Sequelize 6+ ORM
+- Real-time Features: WebSocket-based collaboration with operational transformation
+- Authentication System: JWT-based auth with GitHub OAuth integration
+- API Documentation: Auto-generated OpenAPI/Swagger documentation
+- Testing Suite: Comprehensive unit and integration tests
+- Production Ready: Docker containerization and deployment support
+</details>
+
+This is the backend service for the Collaborative Code Editor, built with TypeScript and Node.js to provide a scalable and performant real-time collaboration experience with built-in code execution capabilities.
 
 ## ✨ Key Features
 
+- **Code Execution**: Secure sandboxed code execution with Judge0 integration
 - **Real-time Collaboration**: Native WebSocket-based document synchronization with operational transformation
 - **High Performance**: Optimized for low-latency real-time updates
 - **Scalable Architecture**: Built to handle thousands of concurrent users with Redis pub/sub
@@ -48,6 +67,77 @@ This is the backend service for the Collaborative Code Editor, built with TypeSc
 ## ✨ Features
 
 ### 🎯 **Core Features**
+- **Code Execution**: Execute code in 50+ programming languages with Judge0
+- **Feature Flags**: Gradual feature rollout with user targeting
+- **Real-time Collaboration**: Multi-user editing with operational transformation
+- **Document Management**: Version control and history tracking
+- **User Management**: Authentication, authorization, and session handling
+- **Room-based Access Control**: Fine-grained permissions for collaborative editing
+- **Presence & Activity**: Real-time user presence and activity tracking
+- **WebSocket API**: Real-time communication between clients and server
+- **RESTful API**: Comprehensive API for all editor functionality
+- **Webhook Support**: Event-driven architecture with webhook integrations
+- **Rate Limiting**: Protection against abuse and DoS attacks
+- **Input Validation**: Comprehensive input validation and sanitization
+- **Error Handling**: Graceful error handling and reporting
+- **Logging**: Structured logging with correlation IDs
+- **Metrics**: Performance and usage metrics collection
+- **Health Checks**: System health monitoring and reporting
+- **Configuration Management**: Environment-based configuration
+- **Dependency Injection**: Modular and testable architecture
+- **Database Migrations**: Version-controlled database schema changes
+- **Data Seeding**: Development and testing data population
+- **Caching**: Redis-based caching for improved performance
+- **Background Jobs**: Asynchronous task processing
+- **File Uploads**: Secure file upload and storage
+- **Search**: Full-text search capabilities
+- **Internationalization**: Multi-language support
+- **Accessibility**: WCAG 2.1 compliance
+- **API Versioning**: Semantic versioning for API endpoints
+- **Request Validation**: Request body, query, and parameter validation
+- **Response Transformation**: Consistent API response format
+- **Pagination**: Standardized pagination for collections
+- **Filtering & Sorting**: Flexible data filtering and sorting
+- **Field Selection**: Client-specified field selection
+- **Relation Loading**: Eager and lazy loading of related data
+- **Data Validation**: Comprehensive data validation rules
+- **Error Responses**: Standardized error response format
+- **API Documentation**: Auto-generated OpenAPI documentation
+- **API Testing**: Automated API testing
+- **Performance Testing**: Load and stress testing
+- **Security Testing**: Vulnerability scanning and penetration testing
+- **Unit Testing**: Comprehensive unit test coverage
+- **Integration Testing**: End-to-end integration testing
+- **Mocking**: API mocking for development and testing
+- **Docker Support**: Containerization for development and production
+- **Kubernetes Support**: Orchestration and scaling
+- **CI/CD**: Continuous integration and deployment
+- **Monitoring**: Application performance monitoring
+- **Alerting**: Proactive alerting for issues
+- **Logging**: Centralized logging and analysis
+- **Tracing**: Distributed request tracing
+- **Metrics**: Application and system metrics
+- **Profiling**: CPU and memory profiling
+- **Debugging**: Remote debugging capabilities
+- **CLI**: Command-line interface for administration
+- **Migration Tools**: Database migration utilities
+- **Seed Data**: Development and testing data generation
+- **Code Generation**: Boilerplate code generation
+- **Linting**: Code style and quality enforcement
+- **Formatting**: Consistent code formatting
+- **Type Checking**: Static type checking
+- **Dependency Management**: Versioned dependency management
+- **Security Auditing**: Dependency vulnerability scanning
+- **License Compliance**: Open source license compliance
+- **Documentation**: Comprehensive documentation
+- **Examples**: Code examples and tutorials
+- **Community Support**: Active community and support
+- **Enterprise Support**: Commercial support options
+- **Roadmap**: Feature roadmap and planning
+- **Contributing**: Contribution guidelines
+- **Code of Conduct**: Community standards
+- **License**: Open source licensing
+
 - **Real-time Collaboration**: WebSockets with Socket.IO for live editing
 - **Operational Transformation**: Conflict-free collaborative editing
 - **Document Versioning**: Track changes and history
